@@ -1,0 +1,44 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    always_use_package_imports: ignore
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "build/**"
+    - "lib/generated_plugin_registrant.dart"
+
+linter:
+  rules:
+    # Essential rules for EntryTestGuru
+    avoid_print: true
+    prefer_single_quotes: true
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_final_fields: true
+    prefer_final_locals: true
+    always_use_package_imports: true
+    sort_child_properties_last: true
+    use_key_in_widget_constructors: true
+    avoid_unnecessary_containers: true
+    prefer_collection_literals: true
+    prefer_conditional_assignment: true
+    prefer_if_null_operators: true
+    prefer_is_empty: true
+    prefer_is_not_empty: true
+    unnecessary_const: true
+    unnecessary_new: true
+    unnecessary_this: true
+    avoid_empty_else: true
+    curly_braces_in_flow_control_structures: true
+    always_declare_return_types: true
+    annotate_overrides: true
+    avoid_init_to_null: true
+    avoid_return_types_on_setters: true
+    empty_constructor_bodies: true
+    library_names: true
+    non_constant_identifier_names: true
+    slash_for_doc_comments: true
+    type_init_formals: true
