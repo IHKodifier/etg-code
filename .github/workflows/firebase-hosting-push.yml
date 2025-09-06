@@ -26,9 +26,11 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+        working-directory: './entrytestguru'  # Specify the correct project root
 
       - name: Build Flutter web app for release
         run: flutter build web --release
+        working-directory: './entrytestguru'  # Specify the correct project root
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
