@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "source": "build/web",
+    "public": "entrytestguru/build/web",
     "ignore": [
       "firebase.json",
       "**/.*",
