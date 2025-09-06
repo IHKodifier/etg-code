@@ -1,1 +1,1 @@
-const double minScreenWidth = 395.0;
+const double minScreenWidth = 319.0;
