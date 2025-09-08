@@ -6,17 +6,17 @@
 Comprehensive authentication system supporting anonymous users, social logins, and seamless tier transitions with Firebase Auth integration. Handles user onboarding, exam category selection, tier-based access control, and multi-device management with 3-device limit enforcement across the entire platform.
 
 #### Tech Involved
-* Firebase Auth (Google/Facebook/Phone/Email)
-* Flutter device_info_plus package for device fingerprinting
+* Firebase Auth (Google/Facebook/Phone/Email) with Anonymous Authentication for guest users
+* Flutter device_info_plus package for device fingerprinting (registered users only)
 * Flutter Riverpod for state management
-* FastAPI user management service with device tracking
+* FastAPI user management service with device tracking (registered users) and Firebase Anonymous UID tracking
 * Cloud Firestore for user profiles, preferences, and device registry
 * JWT token management for API authentication with device validation
 * Real-time notifications via Firebase Cloud Messaging for device management
 
 #### Main Requirements
-* Anonymous user session tracking with device-specific usage limits (no cross-device sync)
-* Seamless upgrade path from anonymous → free → paid tiers
+* Anonymous user session tracking via Firebase Anonymous Authentication with browser-specific usage limits (no cross-device sync)
+* Seamless upgrade path from anonymous → free → paid tiers with Firebase Auth UID migration
 * Real-time sync of user tier limitations and usage statistics for registered users only (free/paid)
 * Secure token refresh and validation across all API endpoints
 * Support for multiple authentication providers with unified user experience
@@ -25,48 +25,46 @@ Comprehensive authentication system supporting anonymous users, social logins, a
 * 4th device login flow: block access, notify existing devices, require device removal before allowing new device (registered users only)
 * Real-time device status updates across all active sessions for registered users
 * Device metadata display with user-customizable device names, automatic device type detection, browser session tracking, last active timestamps, and registration dates (registered users only)
-* Anonymous users: device-specific usage limits with no cross-device synchronization or session management
+* Anonymous users: Firebase Anonymous UID-based usage limits with browser-session persistence, no cross-device synchronization or session management
 
 ### Question Bank & Content Management System
 Centralized question repository serving 10,000+ MCQs with advanced filtering, ARDE probability tagging, and comprehensive content versioning. Supports batch content updates with approval workflows and real-time question delivery optimized for mobile consumption.
 
 #### Tech Involved
-* Cloud Firestore with composite indexing for complex queries
-* Firebase Storage for images and video content
-* FastAPI content management service with async operations
-* Redis caching layer for frequently accessed questions
-* Content delivery via Firebase CDN
+* Cloud Firestore for structured question storage with real-time updates
+* Firebase Storage for question images, diagrams, and video explanations
+* FastAPI content management service with version control and approval workflows
+* Background Cloud Functions for automated content processing and distribution
+* Redis caching for frequently accessed questions and ARDE probability data
 
 #### Main Requirements
-* Millisecond-precision tracking of question interactions and timing data
-* Complex filtering by subject, difficulty, ARDE probability, and user performance history
-* Batch content creation workflow with review/approval pipeline
-* Question variation support with dynamic variable substitution
-* Efficient content caching strategy supporting 100K concurrent users
-* Version control for questions with rollback capabilities
+* 10,000+ MCQs with comprehensive subject coverage across all supported exam categories
+* Advanced question tagging system including ARDE probability, difficulty, topic hierarchy, and appearance frequency
+* Real-time content delivery with intelligent caching and prefetching strategies
+* Version control system for question updates with rollback capabilities
+* Content approval workflow for admin review and quality assurance
+* Automated question variation generation to prevent memorization patterns
+* Performance tracking per question to optimize content difficulty and effectiveness
 
 ### Practice Mode & Learning Engine
-Interactive practice system with immediate feedback, attempt tracking, and intelligent question selection based on user performance patterns. Integrates with analytics engine for precision learning insights and supports tier-based explanation access controls.
+Intelligent practice system with adaptive question selection, immediate feedback, and comprehensive performance tracking. Implements tier-based usage limits with seamless progression and conversion incentives for enhanced user engagement.
 
 #### Tech Involved
-* FastAPI practice session service with WebSocket support
-* Cloud Firestore real-time listeners for live progress tracking
-* Redis for session state management and attempt counting
-* Flutter timer widgets with millisecond precision
-* Riverpod for reactive state management of practice sessions
+* FastAPI practice orchestration service with intelligent question selection algorithms
+* Cloud Firestore for real-time session state management and performance tracking
+* Background Cloud Functions for analytics computation and pattern recognition
+* Redis for session caching and performance metric aggregation
 
 #### Main Requirements
-* Millisecond-level timing precision for each question attempt
-* Real-time enforcement of tier-based daily limits (20/50/unlimited MCQs)
-* Anonymous users: device-specific limit enforcement with no cross-device synchronization
-* Registered users: cross-device limit synchronization and session continuity
-* Support for up to 3 attempts per question with state persistence
-* Integration with explanation service for tier-based access control
-* Bookmark functionality with cross-device synchronization for registered users only
-* Offline capability with automatic sync on connectivity restoration for registered users
+* Adaptive question selection based on user performance, weak areas, and ARDE probability
+* Real-time feedback system with immediate answer validation and explanation access
+* Comprehensive session analytics with timing precision and performance metrics
+* Tier-based practice limits (20/50/unlimited daily MCQs for anonymous/free/paid users)
+* Intelligent caching system for offline practice capabilities
+* Question bookmarking and review system for focused study sessions
 
-### Sprint Exams & Simulated Real Exams
-Comprehensive exam simulation engine delivering timed assessments with configurable parameters and realistic exam conditions. Provides detailed performance analytics and supports both custom sprint configurations and standardized real exam replicas.
+### Sprint Exams & Simulated Real Exams (SRE)
+Comprehensive exam simulation platform offering both custom sprint configurations and exact replicas of real exam conditions. Provides detailed performance analytics and supports both custom sprint configurations and standardized real exam replicas.
 
 #### Tech Involved
 * FastAPI exam orchestration service with precise timing controls
@@ -157,11 +155,11 @@ Community-driven learning platform with leaderboards, study groups, and competit
 * Social sharing integration with external platforms
 
 ### Device Management & Account Settings
-Comprehensive device management system for registered users (free/paid) allowing them to view, monitor, and control their registered devices with real-time status updates and intelligent browser consolidation. Anonymous users operate with device-specific usage limits without cross-device synchronization. Provides intuitive interface for device removal when registered users attempt to login on additional devices beyond the 3-device limit.
+Comprehensive device management system for registered users (free/paid) allowing them to view, monitor, and control their registered devices with real-time status updates and intelligent browser consolidation. Anonymous users operate with Firebase Anonymous UID-based usage limits without cross-device synchronization. Provides intuitive interface for device removal when registered users attempt to login on additional devices beyond the 3-device limit.
 
 #### Tech Involved
 * Flutter device management UI components with real-time updates and browser session displays
-* Flutter web platform channels and dart:html for web machine-level identification
+* Flutter web platform channels and dart:html for web machine-level identification (registered users only)
 * Cloud Firestore device registry with real-time synchronization for cross-device management visibility
 * Cloud Firestore real-time listeners for device status synchronization across browser sessions
 * FastAPI device management service with CRUD operations and browser session tracking
@@ -170,7 +168,7 @@ Comprehensive device management system for registered users (free/paid) allowing
 
 #### Main Requirements
 * Device management interface for registered users only (free/paid) showing all registered devices with browser session breakdowns
-* Anonymous users: device-specific usage tracking with local session storage only (no cross-device features)
+* Anonymous users: Firebase Anonymous UID-based usage tracking with browser session persistence only (no cross-device features)
 * Automated server-side device consolidation using weighted fingerprint similarity algorithm (85% threshold) for registered users
 * Interactive device removal functionality with immediate effect across all browser sessions (registered users only)
 * 4th device login workflow for registered users: block access, display removal interface with browser session details, require action before proceeding
@@ -178,7 +176,7 @@ Comprehensive device management system for registered users (free/paid) allowing
 * Device status monitoring (online/offline, last active timestamp) with per-browser session granularity for registered users
 * Device nickname editing functionality for registered users allowing personalized device names (e.g., "My Work Laptop", "Home Desktop")
 * Browser session tracking showing active browsers per desktop device for registered users (Chrome, Firefox, Safari, etc.)
-* Anonymous users: simplified tier limit enforcement tied to current device only with no device management features
+* Anonymous users: simplified tier limit enforcement tied to Firebase Anonymous UID with no device management features
 * Immediate session termination on device removal with graceful user experience across all browser sessions (registered users only)
 * Device management accessible from account settings on all platforms with consolidated desktop view (registered users only)
 
@@ -186,75 +184,72 @@ Comprehensive device management system for registered users (free/paid) allowing
 Quality management system for user-generated feedback, content corrections, and customer support workflows. Implements automated issue tracking with admin review processes and maintains content integrity across the platform.
 
 #### Tech Involved
-* FastAPI support ticket management service
-* Cloud Firestore for issue tracking and resolution workflows
-* Email integration for customer support communications
-* Admin dashboard components for content review and user management
-* Automated content flagging and quality scoring algorithms
+* Cloud Firestore for issue tracking and content flagging systems
+* FastAPI quality assurance service with automated workflow management
+* Admin dashboard for content review and issue resolution
+* Integration with content management system for immediate corrections
+* Email and push notification systems for issue updates
 
 #### Main Requirements
-* In-app issue reporting system with categorization and priority handling
-* Admin review workflow for content corrections and quality control
-* Customer support integration with ticketing system and phone support
+* User-driven content feedback and correction submission system
 * Automated content quality monitoring with flagging mechanisms
-* User feedback aggregation and analysis for continuous improvement
+* Admin workflow for content review and approval processes
+* Real-time issue tracking with priority classification systems
+* Integration with user support ticket system for comprehensive issue resolution
 
-## System Diagram
+## System Architecture Diagram
 
 ```mermaid
 graph TB
-    %% Client Layer
-    FlutterApp[Flutter Mobile App<br/>Riverpod State Management]
-    WebApp[Web Application<br/>Responsive Design]
-    AdminPanel[Admin Panel<br/>Content Management]
-
-    %% API Gateway Layer
-    APIGateway[FastAPI Gateway<br/>Rate Limiting & Auth]
+    %% Client Applications
+    FlutterApp[Flutter Mobile App<br/>iOS & Android]
+    FlutterWeb[Flutter Web App<br/>Progressive Web App]
+    AdminPanel[Admin Panel<br/>Flutter Web]
     
-    %% Microservices Layer
-    AuthService[Authentication Service<br/>Firebase Auth + Device Management]
-    UserService[User Management Service<br/>Profile & Device Registry]
-    ContentService[Content Management Service<br/>Questions & Explanations]
-    PracticeService[Practice Engine Service<br/>Session Management]
-    ExamService[Exam Orchestration Service<br/>Sprint & SRE Management]
-    AnalyticsService[Analytics Engine Service<br/>Performance Tracking]
-    AIService[AI Tutoring Service<br/>LLM Integration]
-    SocialService[Social Platform Service<br/>Groups & Leaderboards]
-    SubscriptionService[Subscription Service<br/>Paddle Integration]
-    NotificationService[Notification Service<br/>FCM & Email]
-    DeviceService[Device Management Service<br/>Multi-Device Control]
-
-    %% Caching Layer
-    Redis[(Redis Cache<br/>Sessions & Performance)]
+    %% API Gateway
+    APIGateway[API Gateway<br/>FastAPI]
     
-    %% Database Layer
-    Firestore[(Cloud Firestore<br/>Primary Database)]
-    AnalyticsDB[(Analytics Database<br/>Separate Instance)]
-    BigQuery[(BigQuery<br/>Data Warehouse)]
-    
-    %% Storage Layer
-    FirebaseStorage[(Firebase Storage<br/>Media Content)]
-    CDN[Firebase CDN<br/>Global Distribution]
+    %% Microservices
+    AuthService[Authentication Service<br/>FastAPI]
+    UserService[User Management Service<br/>FastAPI]
+    ContentService[Content Management Service<br/>FastAPI]
+    PracticeService[Practice Engine Service<br/>FastAPI]
+    ExamService[Exam Orchestration Service<br/>FastAPI]
+    AnalyticsService[Analytics Service<br/>FastAPI]
+    AIService[AI Tutoring Service<br/>FastAPI]
+    SocialService[Social Features Service<br/>FastAPI]
+    SubscriptionService[Subscription Service<br/>FastAPI]
+    NotificationService[Push Notification Service<br/>FastAPI]
+    DeviceService[Device Management Service<br/>FastAPI]
     
     %% External Services
-    FirebaseAuth[Firebase Auth<br/>Multi-Provider]
-    PaddleAPI[Paddle.com API<br/>Payments]
+    FirebaseAuth[Firebase Auth<br/>Authentication Provider]
+    PaddleAPI[Paddle.com<br/>Payment Processing]
     OpenAI[OpenAI API<br/>GPT Models]
     Anthropic[Anthropic API<br/>Claude Models]
-    Gemini[Google Gemini API<br/>AI Models]
-    GoogleAnalytics[Google Analytics<br/>App Insights]
+    Gemini[Google Gemini API<br/>LLM Provider]
+    GoogleAnalytics[Google Analytics<br/>Usage Tracking]
     AdSense[Google AdSense<br/>Advertisement]
     FCM[Firebase Cloud Messaging<br/>Push Notifications]
+    
+    %% Databases
+    Firestore[Cloud Firestore<br/>Primary Database]
+    AnalyticsDB[Analytics Firestore<br/>Isolated Analytics DB]
+    BigQuery[BigQuery<br/>Data Warehouse]
+    FirebaseStorage[Firebase Storage<br/>Media Content]
+    
+    %% Caching & Performance
+    Redis[Redis<br/>Session & Cache Management]
     
     %% Background Processing
     CloudFunctions[Cloud Functions<br/>Background Jobs]
     
-    %% Client Connections
+    %% Client to API Gateway
     FlutterApp --> APIGateway
-    WebApp --> APIGateway
+    FlutterWeb --> APIGateway
     AdminPanel --> APIGateway
     
-    %% API Gateway Routing
+    %% API Gateway to Services
     APIGateway --> AuthService
     APIGateway --> UserService
     APIGateway --> ContentService
@@ -270,20 +265,21 @@ graph TB
     %% Service Dependencies
     AuthService --> FirebaseAuth
     AuthService --> Firestore
+    AuthService --> Redis
     UserService --> Firestore
     UserService --> Redis
     ContentService --> Firestore
     ContentService --> FirebaseStorage
-    ContentService --> CDN
+    ContentService --> Redis
     PracticeService --> Firestore
-    PracticeService --> Redis
     PracticeService --> AnalyticsDB
+    PracticeService --> Redis
     ExamService --> Firestore
-    ExamService --> Redis
     ExamService --> AnalyticsDB
+    ExamService --> Redis
     AnalyticsService --> AnalyticsDB
     AnalyticsService --> BigQuery
-    AnalyticsService --> GoogleAnalytics
+    AnalyticsService --> Firestore
     AIService --> OpenAI
     AIService --> Anthropic
     AIService --> Gemini
@@ -308,11 +304,11 @@ graph TB
     
     %% Advertisement Integration
     FlutterApp --> AdSense
-    WebApp --> AdSense
+    FlutterWeb --> AdSense
     
     %% Analytics Flow
     FlutterApp -.-> GoogleAnalytics
-    WebApp -.-> GoogleAnalytics
+    FlutterWeb -.-> GoogleAnalytics
     
     %% Styling
     classDef client fill:#e1f5fe
@@ -321,7 +317,7 @@ graph TB
     classDef external fill:#fff3e0
     classDef cache fill:#fce4ec
     
-    class FlutterApp,WebApp,AdminPanel client
+    class FlutterApp,FlutterWeb,AdminPanel client
     class AuthService,UserService,ContentService,PracticeService,ExamService,AnalyticsService,AIService,SocialService,SubscriptionService,NotificationService,DeviceService service
     class Firestore,AnalyticsDB,BigQuery,FirebaseStorage database
     class FirebaseAuth,PaddleAPI,OpenAI,Anthropic,Gemini,GoogleAnalytics,AdSense,FCM external
@@ -330,19 +326,20 @@ graph TB
 
 ## Architecture Decisions & Rationale
 
-### Microservices Architecture
-- **Service Isolation**: Each major feature domain is separated into dedicated microservices to enable independent scaling, deployment, and maintenance
-- **Technology Flexibility**: Allows different services to optimize for their specific requirements (e.g., AI service for LLM integration, Analytics service for data processing)
-- **Team Scalability**: Multiple content creators and developers can work on different services without conflicts
+### Flutter-First Architecture
+- **Cross-Platform Consistency**: Single codebase for iOS, Android, and Web using Flutter's unified development approach
+- **Performance Optimization**: Native compilation for mobile with efficient web rendering for browser-based access
+- **State Management**: Riverpod for reactive state management with provider-based architecture across all platforms
+- **UI Consistency**: Material Design 3 implementation with adaptive widgets for platform-specific behaviors
 
 ### Device Management Strategy
 - **Mobile Devices**: Hardware-based fingerprinting using device_info_plus package for unique, persistent device identification (registered users only)
 - **Web Browsers**: Machine fingerprinting payload stored in Cloud Firestore with automated server-side consolidation logic to treat multiple browsers on same desktop as single device (registered users only)
-- **Anonymous Users**: Device-specific usage limits with local session storage, no cross-device features or device registry
+- **Anonymous Users**: Firebase Anonymous UID-based usage limits with browser session persistence, no cross-device features or device registry
 - **Real-time Synchronization**: All device management operations visible across all user devices via Firestore real-time listeners (registered users only)
 - **Cross-Platform Consistency**: Unified device management experience across mobile apps and web browsers with instant cross-device updates for registered users
 - **Security-First Approach**: Automated fingerprint matching with weighted similarity algorithm (85% threshold) prevents user manipulation of device limits for registered users
-- **Simplified Anonymous Experience**: Basic tier enforcement tied to current device with no device management complexity
+- **Simplified Anonymous Experience**: Basic tier enforcement tied to Firebase Anonymous UID with no device management complexity
 
 ### Database Architecture
 - **Primary Database**: Cloud Firestore for real-time capabilities, horizontal scaling, and Firebase ecosystem integration
@@ -362,13 +359,13 @@ graph TB
 - **Regional Optimization**: Single region deployment initially with expansion capability
 
 ### Security & Privacy
-- **Authentication**: Firebase Auth with multi-provider support and JWT token validation
+- **Authentication**: Firebase Auth with multi-provider support, JWT token validation, and Anonymous Authentication for guest users
 - **Device Management**: 3-device limit enforcement for registered users only with Flutter device fingerprinting for mobile and automated server-side similarity matching for web browsers
-- **Anonymous User Limits**: Device-specific usage tracking with local session storage, no cross-device synchronization or device management features
+- **Anonymous User Limits**: Firebase Anonymous UID-based usage tracking with browser session persistence, no cross-device synchronization or device management features
 - **Cross-Browser Consolidation**: Multiple browsers on same desktop count as single device for registered users using weighted fingerprint similarity algorithm (85% threshold)
 - **Anti-Gaming Measures**: Multiple fingerprint factors (screen, platform, timezone, hardware) with weighted scoring for registered users to prevent device limit circumvention
 - **API Security**: Rate limiting, request validation, and secure API key management
-- **Data Privacy**: Anonymous user tracking without personal data collection, device-specific limits only
+- **Data Privacy**: Anonymous user tracking via Firebase Anonymous UIDs without personal data collection, browser-specific limits only
 - **Payment Security**: PCI-compliant processing through Paddle.com integration
 
 ### Monitoring & Observability
