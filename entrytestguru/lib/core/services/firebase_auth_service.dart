@@ -66,6 +66,7 @@ class FirebaseAuthService {
       tier: 'free',
       isActive: true,
       isVerified: firebaseUser.emailVerified,
+      isAnonymous: firebaseUser.isAnonymous,
       createdAt: firebaseUser.metadata.creationTime ?? DateTime.now(),
       profile: {
         'displayName': firebaseUser.displayName,

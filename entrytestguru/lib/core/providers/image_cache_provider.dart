@@ -19,8 +19,13 @@ final heroImageCachedProvider = FutureProvider<bool>((ref) async {
 /// Function to precache the hero image
 /// This should be called with a valid BuildContext
 Future<void> precacheHeroImage(BuildContext context) async {
-  await precacheImage(
-    const AssetImage('assets/images/exam_hero_bg.webp'),
-    context,
-  );
+  try {
+    await precacheImage(
+      const AssetImage('assets/images/hero_image.png'),
+      context,
+    );
+  } catch (e) {
+    // If precaching fails, continue without it
+    print('Failed to precache hero image: $e');
+  }
 }
