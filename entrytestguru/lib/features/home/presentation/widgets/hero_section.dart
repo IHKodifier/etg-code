@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/firebase_auth_service.dart';
 
 class HeroSection extends ConsumerWidget {
   const HeroSection({super.key});

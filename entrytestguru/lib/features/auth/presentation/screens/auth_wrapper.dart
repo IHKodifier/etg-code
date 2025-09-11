@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/firebase_auth_service.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../home/presentation/screens/user_home_screen.dart';
 
