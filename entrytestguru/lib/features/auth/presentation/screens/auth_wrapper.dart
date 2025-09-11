@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/firebase_auth_service.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../home/presentation/screens/user_home_screen.dart';
-import 'login_screen.dart';
 
 class AuthWrapper extends ConsumerWidget {
   const AuthWrapper({super.key});
@@ -12,13 +11,16 @@ class AuthWrapper extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
 
+    print('AuthWrapper: Auth state - $authState');
+
     return authState.when(
       data: (user) {
+        print('AuthWrapper: User data - $user');
         if (user != null) {
           // User is authenticated, show user-specific home screen
           return const UserHomeScreen();
         } else {
-          // User is not authenticated, show login screen
+          // User is not authenticated, show public home screen
           return const LandingPage();
         }
       },

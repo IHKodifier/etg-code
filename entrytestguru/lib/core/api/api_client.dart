@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 
 final apiClientProvider = Provider<ApiClient>((ref) {
-  final firebaseAuthService = ref.read(firebaseAuthServiceProvider);
+  final firebaseAuthService = ref.read(authServiceProvider);
   return ApiClient(firebaseAuthService);
 });
 

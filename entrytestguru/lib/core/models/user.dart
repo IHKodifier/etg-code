@@ -12,6 +12,7 @@ class User with _$User {
     required String tier,
     @JsonKey(name: 'is_active') required bool isActive,
     @JsonKey(name: 'is_verified') bool? isVerified,
+    @JsonKey(name: 'is_anonymous') required bool isAnonymous,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     required Map<String, dynamic> profile,
     @JsonKey(name: 'usage_stats') required Map<String, dynamic> usageStats,
