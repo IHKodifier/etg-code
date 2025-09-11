@@ -1,29 +1,34 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import '../models/user.dart' as app_models;
+import '../models/user.dart';
+import '../models/device.dart';
+import 'device_fingerprint_service.dart';
 import 'dart:async';
 
-final firebaseAuthServiceProvider = Provider<FirebaseAuthService>((ref) {
+final authServiceProvider = Provider<FirebaseAuthService>((ref) {
   return FirebaseAuthService();
 });
 
-final firebaseAuthStateProvider = StreamProvider<app_models.User?>((ref) {
-  final authService = ref.watch(firebaseAuthServiceProvider);
+final authStateProvider = StreamProvider<User?>((ref) {
+  final authService = ref.watch(authServiceProvider);
   return authService.authStateChanges;
 });
 
 class FirebaseAuthService {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final firebase_auth.FirebaseAuth _firebaseAuth =
+      firebase_auth.FirebaseAuth.instance;
   late final GoogleSignIn _googleSignIn;
+  final DeviceFingerprintService _deviceFingerprintService =
+      DeviceFingerprintService();
 
-  final StreamController<app_models.User?> _authStateController =
-      StreamController<app_models.User?>.broadcast();
-  app_models.User? _currentUser;
+  final StreamController<User?> _authStateController =
+      StreamController<User?>.broadcast();
+  User? _currentUser;
 
-  Stream<app_models.User?> get authStateChanges => _authStateController.stream;
-  app_models.User? get currentUser => _currentUser;
+  Stream<User?> get authStateChanges => _authStateController.stream;
+  User? get currentUser => _currentUser;
 
   FirebaseAuthService() {
     // Initialize GoogleSignIn based on platform
@@ -39,7 +44,7 @@ class FirebaseAuthService {
 
   Future<void> _initializeAuth() async {
     // Listen to Firebase auth state changes
-    _firebaseAuth.authStateChanges().listen((User? firebaseUser) {
+    _firebaseAuth.authStateChanges().listen((firebase_auth.User? firebaseUser) {
       if (firebaseUser != null) {
         _currentUser = _convertFirebaseUserToAppUser(firebaseUser);
         _authStateController.add(_currentUser);
@@ -58,15 +63,16 @@ class FirebaseAuthService {
   }
 
   /// Convert Firebase User to our app User model
-  app_models.User _convertFirebaseUserToAppUser(User firebaseUser) {
-    return app_models.User(
+  User _convertFirebaseUserToAppUser(firebase_auth.User firebaseUser) {
+    return User(
       id: firebaseUser.uid,
       email: firebaseUser.email,
       examType: null, // Will be set later during onboarding
       tier: 'free',
       isActive: true,
       isVerified: firebaseUser.emailVerified,
-      createdAt: firebaseUser.metadata.creationTime ?? DateTime.now(),
+      isAnonymous: firebaseUser.isAnonymous,
+      createdAt: firebaseUser.metadata!.creationTime ?? DateTime.now(),
       profile: {
         'displayName': firebaseUser.displayName,
         'photoURL': firebaseUser.photoURL,
@@ -83,15 +89,41 @@ class FirebaseAuthService {
   }
 
   /// Sign in anonymously
-  Future<app_models.AuthTokens> signInAnonymously() async {
+  Future<AuthTokens> signInAnonymously() async {
     try {
-      final UserCredential credential = await _firebaseAuth.signInAnonymously();
+      final firebase_auth.UserCredential credential = await _firebaseAuth
+          .signInAnonymously();
       final user = _convertFirebaseUserToAppUser(credential.user!);
 
       // Get Firebase ID token
       final idToken = await credential.user!.getIdToken();
 
-      return app_models.AuthTokens(
+      final authTokens = AuthTokens(
+        accessToken: idToken ?? '',
+        refreshToken:
+            'firebase_refresh_token', // Firebase handles refresh automatically
+        tokenType: 'Bearer',
+        user: user,
+      );
+      print('Anonymous sign-in successful: ${authTokens.user.id}');
+      return authTokens;
+    } catch (e) {
+      print('Anonymous sign-in failed: $e');
+      throw Exception('Anonymous sign-in failed: $e');
+    }
+  }
+
+  /// Sign in anonymously with device fingerprinting
+  Future<AuthTokens> signInAnonymouslyWithDeviceInfo() async {
+    try {
+      final firebase_auth.UserCredential credential = await _firebaseAuth
+          .signInAnonymously();
+      final user = _convertFirebaseUserToAppUser(credential.user!);
+
+      // Get Firebase ID token
+      final idToken = await credential.user!.getIdToken();
+
+      return AuthTokens(
         accessToken: idToken ?? '',
         refreshToken:
             'firebase_refresh_token', // Firebase handles refresh automatically
@@ -105,14 +137,14 @@ class FirebaseAuthService {
   }
 
   /// Create user with email and password
-  Future<app_models.User> createUserWithEmailAndPassword({
+  Future<User> createUserWithEmailAndPassword({
     required String email,
     required String password,
     required String examType,
     Map<String, dynamic>? profile,
   }) async {
     try {
-      final UserCredential credential = await _firebaseAuth
+      final firebase_auth.UserCredential credential = await _firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: password);
 
       final user = credential.user!;
@@ -130,8 +162,9 @@ class FirebaseAuthService {
       // Store exam type in custom claims (this would typically be done via backend)
       // For now, we'll handle this in Firestore or when the user first uses the app
 
+      print('Account creation successful: ${appUser.id}');
       return appUser;
-    } on FirebaseAuthException catch (e) {
+    } on firebase_auth.FirebaseAuthException catch (e) {
       String message = 'Registration failed';
       switch (e.code) {
         case 'weak-password':
@@ -153,24 +186,26 @@ class FirebaseAuthService {
   }
 
   /// Sign in with email and password
-  Future<app_models.AuthTokens> signInWithEmailAndPassword({
+  Future<AuthTokens> signInWithEmailAndPassword({
     required String email,
     required String password,
   }) async {
     try {
-      final UserCredential credential = await _firebaseAuth
+      final firebase_auth.UserCredential credential = await _firebaseAuth
           .signInWithEmailAndPassword(email: email, password: password);
 
       final user = _convertFirebaseUserToAppUser(credential.user!);
       final idToken = await credential.user!.getIdToken();
 
-      return app_models.AuthTokens(
+      final authTokens = AuthTokens(
         accessToken: idToken ?? '',
         refreshToken: 'firebase_refresh_token',
         tokenType: 'Bearer',
         user: user,
       );
-    } on FirebaseAuthException catch (e) {
+      print('Sign in successful: ${authTokens.user.id}');
+      return authTokens;
+    } on firebase_auth.FirebaseAuthException catch (e) {
       String message = 'Sign in failed';
       switch (e.code) {
         case 'user-not-found':
@@ -195,8 +230,9 @@ class FirebaseAuthService {
   }
 
   /// Sign in with Google
-  Future<app_models.AuthTokens> signInWithGoogle({String? examType}) async {
+  Future<AuthTokens> signInWithGoogle({String? examType}) async {
     try {
+      print('Starting Google Sign-In...');
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
@@ -209,26 +245,28 @@ class FirebaseAuthService {
           await googleUser.authentication;
 
       // Create a new credential
-      final credential = GoogleAuthProvider.credential(
+      final credential = firebase_auth.GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
       // Once signed in, return the UserCredential
-      final UserCredential userCredential = await _firebaseAuth
+      final firebase_auth.UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(credential);
 
       final user = _convertFirebaseUserToAppUser(userCredential.user!);
       final idToken = await userCredential.user!.getIdToken();
 
-      return app_models.AuthTokens(
+      final authTokens = AuthTokens(
         accessToken: idToken ?? '',
         refreshToken: 'firebase_refresh_token',
         tokenType: 'Bearer',
         user: user,
       );
+      print('Google sign in successful: ${authTokens.user.id}');
+      return authTokens;
     } catch (e) {
-      print('Google sign-in failed: $e');
+      print('Google sign in failed: $e');
       throw Exception('Google sign-in failed: $e');
     }
   }
@@ -237,6 +275,7 @@ class FirebaseAuthService {
   Future<void> signOut() async {
     try {
       await Future.wait([_firebaseAuth.signOut(), _googleSignIn.signOut()]);
+      print('Sign out successful');
     } catch (e) {
       print('Sign out failed: $e');
       throw Exception('Sign out failed: $e');
@@ -244,21 +283,31 @@ class FirebaseAuthService {
   }
 
   /// Get current user
-  Future<app_models.User?> getCurrentUser() async {
-    final firebaseUser = _firebaseAuth.currentUser;
-    if (firebaseUser != null) {
-      return _convertFirebaseUserToAppUser(firebaseUser);
+  Future<User?> getCurrentUser() async {
+    try {
+      final firebaseUser = _firebaseAuth.currentUser;
+      if (firebaseUser != null) {
+        return _convertFirebaseUserToAppUser(firebaseUser);
+      }
+      return null;
+    } catch (e) {
+      print('Get current user failed: $e');
+      return null;
     }
-    return null;
   }
 
   /// Get current Firebase ID token
   Future<String?> getIdToken() async {
-    final user = _firebaseAuth.currentUser;
-    if (user != null) {
-      return await user.getIdToken();
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user != null) {
+        return await user.getIdToken();
+      }
+      return null;
+    } catch (e) {
+      print('Get ID token failed: $e');
+      return null;
     }
-    return null;
   }
 
   /// Check if user is logged in
@@ -270,7 +319,8 @@ class FirebaseAuthService {
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email);
-    } on FirebaseAuthException catch (e) {
+      print('Password reset email sent to: $email');
+    } on firebase_auth.FirebaseAuthException catch (e) {
       String message = 'Password reset failed';
       switch (e.code) {
         case 'user-not-found':
@@ -293,9 +343,34 @@ class FirebaseAuthService {
       final user = _firebaseAuth.currentUser;
       return true; // If we can access FirebaseAuth, connection is good
     } catch (e) {
-      print('Firebase Auth connection test failed: $e');
+      print('Auth connection test failed: $e');
       return false;
     }
+  }
+
+  /// Get current device fingerprint
+  Future<String> getCurrentDeviceFingerprint() async {
+    return await _deviceFingerprintService.generateDeviceFingerprint();
+  }
+
+  /// Get current device info
+  Future<Map<String, dynamic>> getCurrentDeviceInfo() async {
+    return await _deviceFingerprintService.getDeviceInfo();
+  }
+
+  /// Check if device fingerprinting is supported
+  bool isDeviceFingerprintingSupported() {
+    return _deviceFingerprintService.isFingerprintingSupported();
+  }
+
+  /// Get device type for display
+  Future<String> getDeviceType() async {
+    return await _deviceFingerprintService.getDeviceType();
+  }
+
+  /// Get platform name
+  Future<String> getPlatformName() async {
+    return await _deviceFingerprintService.getPlatformName();
   }
 
   void dispose() {

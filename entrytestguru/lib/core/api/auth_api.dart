@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user.dart';
+import '../models/device.dart';
+import '../services/device_fingerprint_service.dart';
 import 'api_client.dart';
 
 final authApiServiceProvider = Provider<AuthApiService>((ref) {
@@ -10,6 +12,8 @@ final authApiServiceProvider = Provider<AuthApiService>((ref) {
 
 class AuthApiService {
   final ApiClient _apiClient;
+  final DeviceFingerprintService _deviceFingerprintService =
+      DeviceFingerprintService();
 
   AuthApiService(this._apiClient);
 
@@ -191,14 +195,158 @@ class AuthApiService {
     return token != null;
   }
 
+  /// Check device limit for current user
+  Future<DeviceLimitResponse> checkDeviceLimit() async {
+    try {
+      final response = await _apiClient.get('/auth/device-limit');
+
+      if (response.statusCode == 200) {
+        return DeviceLimitResponse.fromJson(response.data);
+      } else {
+        throw Exception(
+          'Failed to check device limit: ${response.statusMessage}',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Authentication required');
+      }
+      throw Exception('Failed to check device limit: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to check device limit: $e');
+    }
+  }
+
+  /// Register device for current user
+  Future<DeviceLimitResponse> registerDevice({
+    required String deviceFingerprint,
+    String? deviceName,
+  }) async {
+    try {
+      final deviceInfo = await _getDeviceInfo();
+
+      final response = await _apiClient.post(
+        '/auth/register-device',
+        data: {
+          'device_fingerprint': deviceFingerprint,
+          'device_name': deviceName,
+          'device_info': deviceInfo,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return DeviceLimitResponse.fromJson(response.data);
+      } else {
+        throw Exception('Failed to register device: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Authentication required');
+      } else if (e.response?.statusCode == 429) {
+        throw Exception('Device limit exceeded');
+      }
+      throw Exception('Failed to register device: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to register device: $e');
+    }
+  }
+
+  /// Remove device from current user
+  Future<DeviceLimitResponse> removeDevice(String deviceId) async {
+    try {
+      final response = await _apiClient.delete('/auth/devices/$deviceId');
+
+      if (response.statusCode == 200) {
+        return DeviceLimitResponse.fromJson(response.data);
+      } else {
+        throw Exception('Failed to remove device: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Authentication required');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Device not found');
+      }
+      throw Exception('Failed to remove device: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to remove device: $e');
+    }
+  }
+
+  /// Update device name
+  Future<DeviceInfo> updateDeviceName({
+    required String deviceId,
+    required String deviceName,
+  }) async {
+    try {
+      final response = await _apiClient.put(
+        '/auth/devices/$deviceId',
+        data: {'device_name': deviceName},
+      );
+
+      if (response.statusCode == 200) {
+        return DeviceInfo.fromJson(response.data);
+      } else {
+        throw Exception(
+          'Failed to update device name: ${response.statusMessage}',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Authentication required');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Device not found');
+      }
+      throw Exception('Failed to update device name: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to update device name: $e');
+    }
+  }
+
+  /// Get all devices for current user
+  Future<List<DeviceInfo>> getUserDevices() async {
+    try {
+      final response = await _apiClient.get('/auth/devices');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> devicesJson = response.data;
+        return devicesJson.map((json) => DeviceInfo.fromJson(json)).toList();
+      } else {
+        throw Exception(
+          'Failed to get user devices: ${response.statusMessage}',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Authentication required');
+      }
+      throw Exception('Failed to get user devices: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to get user devices: $e');
+    }
+  }
+
   Future<Map<String, dynamic>> _getDeviceInfo() async {
-    // This would typically use device_info_plus to get actual device info
-    // For now, returning basic info
-    return {
-      'platform': 'flutter',
-      'app_version': '1.0.0',
-      'timestamp': DateTime.now().toIso8601String(),
-    };
+    try {
+      final deviceInfo = await _deviceFingerprintService.getDeviceInfo();
+      final fingerprint = await _deviceFingerprintService
+          .generateDeviceFingerprint();
+
+      return {
+        ...deviceInfo,
+        'fingerprint': fingerprint,
+        'app_version': '1.0.0',
+      };
+    } catch (e) {
+      print('Error getting device info: $e');
+      // Fallback to basic info
+      return {
+        'platform': 'flutter',
+        'app_version': '1.0.0',
+        'timestamp': DateTime.now().toIso8601String(),
+        'fingerprint': 'fallback_fingerprint',
+      };
+    }
   }
 }
 

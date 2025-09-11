@@ -30,6 +30,8 @@ mixin _$User {
   bool get isActive => throw _privateConstructorUsedError;
   @JsonKey(name: 'is_verified')
   bool? get isVerified => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_anonymous')
+  bool get isAnonymous => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
   DateTime get createdAt => throw _privateConstructorUsedError;
   Map<String, dynamic> get profile => throw _privateConstructorUsedError;
@@ -57,6 +59,7 @@ abstract class $UserCopyWith<$Res> {
     String tier,
     @JsonKey(name: 'is_active') bool isActive,
     @JsonKey(name: 'is_verified') bool? isVerified,
+    @JsonKey(name: 'is_anonymous') bool isAnonymous,
     @JsonKey(name: 'created_at') DateTime createdAt,
     Map<String, dynamic> profile,
     @JsonKey(name: 'usage_stats') Map<String, dynamic> usageStats,
@@ -84,6 +87,7 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
     Object? tier = null,
     Object? isActive = null,
     Object? isVerified = freezed,
+    Object? isAnonymous = null,
     Object? createdAt = null,
     Object? profile = null,
     Object? usageStats = null,
@@ -114,6 +118,10 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
                 ? _value.isVerified
                 : isVerified // ignore: cast_nullable_to_non_nullable
                       as bool?,
+            isAnonymous: null == isAnonymous
+                ? _value.isAnonymous
+                : isAnonymous // ignore: cast_nullable_to_non_nullable
+                      as bool,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -147,6 +155,7 @@ abstract class _$$UserImplCopyWith<$Res> implements $UserCopyWith<$Res> {
     String tier,
     @JsonKey(name: 'is_active') bool isActive,
     @JsonKey(name: 'is_verified') bool? isVerified,
+    @JsonKey(name: 'is_anonymous') bool isAnonymous,
     @JsonKey(name: 'created_at') DateTime createdAt,
     Map<String, dynamic> profile,
     @JsonKey(name: 'usage_stats') Map<String, dynamic> usageStats,
@@ -171,6 +180,7 @@ class __$$UserImplCopyWithImpl<$Res>
     Object? tier = null,
     Object? isActive = null,
     Object? isVerified = freezed,
+    Object? isAnonymous = null,
     Object? createdAt = null,
     Object? profile = null,
     Object? usageStats = null,
@@ -201,6 +211,10 @@ class __$$UserImplCopyWithImpl<$Res>
             ? _value.isVerified
             : isVerified // ignore: cast_nullable_to_non_nullable
                   as bool?,
+        isAnonymous: null == isAnonymous
+            ? _value.isAnonymous
+            : isAnonymous // ignore: cast_nullable_to_non_nullable
+                  as bool,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -228,6 +242,7 @@ class _$UserImpl implements _User {
     required this.tier,
     @JsonKey(name: 'is_active') required this.isActive,
     @JsonKey(name: 'is_verified') this.isVerified,
+    @JsonKey(name: 'is_anonymous') required this.isAnonymous,
     @JsonKey(name: 'created_at') required this.createdAt,
     required final Map<String, dynamic> profile,
     @JsonKey(name: 'usage_stats')
@@ -254,6 +269,9 @@ class _$UserImpl implements _User {
   @JsonKey(name: 'is_verified')
   final bool? isVerified;
   @override
+  @JsonKey(name: 'is_anonymous')
+  final bool isAnonymous;
+  @override
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
   final Map<String, dynamic> _profile;
@@ -275,7 +293,7 @@ class _$UserImpl implements _User {
 
   @override
   String toString() {
-    return 'User(id: $id, email: $email, examType: $examType, tier: $tier, isActive: $isActive, isVerified: $isVerified, createdAt: $createdAt, profile: $profile, usageStats: $usageStats)';
+    return 'User(id: $id, email: $email, examType: $examType, tier: $tier, isActive: $isActive, isVerified: $isVerified, isAnonymous: $isAnonymous, createdAt: $createdAt, profile: $profile, usageStats: $usageStats)';
   }
 
   @override
@@ -292,6 +310,8 @@ class _$UserImpl implements _User {
                 other.isActive == isActive) &&
             (identical(other.isVerified, isVerified) ||
                 other.isVerified == isVerified) &&
+            (identical(other.isAnonymous, isAnonymous) ||
+                other.isAnonymous == isAnonymous) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             const DeepCollectionEquality().equals(other._profile, _profile) &&
@@ -311,6 +331,7 @@ class _$UserImpl implements _User {
     tier,
     isActive,
     isVerified,
+    isAnonymous,
     createdAt,
     const DeepCollectionEquality().hash(_profile),
     const DeepCollectionEquality().hash(_usageStats),
@@ -338,6 +359,7 @@ abstract class _User implements User {
     required final String tier,
     @JsonKey(name: 'is_active') required final bool isActive,
     @JsonKey(name: 'is_verified') final bool? isVerified,
+    @JsonKey(name: 'is_anonymous') required final bool isAnonymous,
     @JsonKey(name: 'created_at') required final DateTime createdAt,
     required final Map<String, dynamic> profile,
     @JsonKey(name: 'usage_stats')
@@ -361,6 +383,9 @@ abstract class _User implements User {
   @override
   @JsonKey(name: 'is_verified')
   bool? get isVerified;
+  @override
+  @JsonKey(name: 'is_anonymous')
+  bool get isAnonymous;
   @override
   @JsonKey(name: 'created_at')
   DateTime get createdAt;

@@ -2,7 +2,7 @@ import 'package:entrytestguru/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/user.dart';
-import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/firebase_auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -19,8 +19,11 @@ class UserHomeScreen extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final authService = ref.read(authServiceProvider);
 
+    print('UserHomeScreen: Building with auth state - $authState');
+
     return authState.when(
       data: (user) {
+        print('UserHomeScreen: User data received - $user');
         if (user != null) {
           return _buildUserHomeContent(context, user, ref);
         } else {
@@ -166,24 +169,36 @@ class UserHomeScreen extends ConsumerWidget {
                     } else if (value == 'sign_out') {
                       // Handle sign out
                       print('Sign Out selected');
+                    } else if (value == 'sign_up') {
+                      // Handle sign up for anonymous users
+                      print('Sign Up selected for anonymous user');
+                      // Navigate to login screen for sign up
+                      Navigator.pushNamed(context, '/login');
                     }
                   },
-                  itemBuilder: (BuildContext context) => [
-                    const PopupMenuItem<String>(
-                      value: 'edit_profile',
-                      child: Text('Edit Profile'),
-                    ),
-                    PopupMenuItem<String>(
-                      value: 'sign_out',
-                      child: const Text('Sign Out'),
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: signOutConfirmationDialogbuilder,
-                        );
-                      },
-                    ),
-                  ],
+                  itemBuilder: (BuildContext context) => user.isAnonymous
+                      ? [
+                          const PopupMenuItem<String>(
+                            value: 'sign_up',
+                            child: Text('Sign Up'),
+                          ),
+                        ]
+                      : [
+                          const PopupMenuItem<String>(
+                            value: 'edit_profile',
+                            child: Text('Edit Profile'),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'sign_out',
+                            child: const Text('Sign Out'),
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: signOutConfirmationDialogbuilder,
+                              );
+                            },
+                          ),
+                        ],
                 ),
               ],
             ),
@@ -487,9 +502,13 @@ class UserHomeScreen extends ConsumerWidget {
               ),
               AppButton(
                 text: 'Yes, Sign out',
-                onPressed: () {
+                onPressed: () async {
                   final authService = ref.read(authServiceProvider);
-                  authService.signOut();
+                  final currentUser = await authService.getCurrentUser();
+                  await authService.signOut();
+                  print(
+                    'UserHomeScreen: Sign out successful for user UID: ${currentUser?.id}',
+                  );
                   Navigator.pop(context);
                 },
               ),

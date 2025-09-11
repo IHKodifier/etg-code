@@ -155,65 +155,61 @@ class FeaturesSection extends StatelessWidget {
   Widget _buildFeatureCard(BuildContext context, _FeatureData feature) {
     final theme = Theme.of(context);
 
-    return Container(
-      constraints: const BoxConstraints(minHeight: 280),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(32),
-            ),
-            child: Icon(
-              feature.icon,
-              size: 32,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Flexible(
-            child: SelectableText(
-              feature.title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
+    return Card(
+      elevation: 20.0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 280),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceVariant,
+          border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(32),
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              minLines: 1,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Flexible(
-            flex: 2,
-            child: SelectableText(
-              feature.description,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
-                height: 1.4,
+              child: Icon(
+                feature.icon,
+                size: 32,
+                color: theme.colorScheme.primary,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 4,
-              minLines: 2,
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Flexible(
+              child: SelectableText(
+                feature.title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                minLines: 1,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Flexible(
+              flex: 2,
+              child: SelectableText(
+                feature.description,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 4,
+                minLines: 2,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,53 +1,32 @@
-# EntryTestGuru - UI States Brief
+# EntryTestGuru - Flutter UI State Specifications
 
 ## Authentication & User Management
 
-### Welcome Screen
-#### Welcome Screen State 1 - Initial Landing
-* **Background**: Clean gradient using `LinearGradient` from `AppColors.lightBgPrimary` to `AppColors.lightBgSecondary` (light theme) or `AppColors.darkBgPrimary` to `AppColors.darkBgSecondary` (dark theme)
-* **Header**: App logo "EntryTestGuru" centered with `AppTextStyles.displayLarge` in `AppColors.primary700`
-* **Theme Switcher**: `Positioned` widget top-right corner with `FloatingActionButton` using `Theme.of(context).colorScheme.surface` background, immediately functional but SharedPreferences persistence only available post-signup
-* **Hero Section**: `Center` widget with `SvgPicture` or `Image.asset` showing exam preparation graphics with `Container` background using `AppColors.primary100`
-* **Primary CTA**: `AppButton` widget with `ButtonType.primary` and `UserTier.anonymous`, full-width with `EdgeInsets.all(AppDimensions.space6)`
-* **Secondary CTAs**: `Row` of social login buttons using `OutlinedButton` with `AppColors.freePrimary` border
-* **Tertiary Option**: `TextButton` with "Sign in with Email" using `AppTextStyles.labelLarge` and `AppColors.primary500`
-* **Footer**: `Text` widget with `AppTextStyles.bodySmall` and `AppColors.lightTextMuted`
-* **Animations**: `AnimatedList` with `SlideTransition` and `FadeTransition`, `TweenAnimationBuilder` for hero illustration floating effect using `Transform.translate`
+### Anonymous User Experience
+#### Anonymous User State 1 - Welcome Screen
+* **Scaffold**: Main layout with `AppBar` containing app logo and "Sign In" `TextButton`
+* **Welcome Card**: `Container` with `AppColors.lightBgPrimary` background and rounded corners using `BorderRadius.circular(16)`
+* **Hero Section**: `Column` with app icon, welcome text using `AppTextStyles.headlineLarge`, and subtitle using `AppTextStyles.bodyLarge`
+* **CTA Buttons**: `ButtonBar` with primary "Continue as Guest" `ElevatedButton` and secondary "Sign Up" `OutlinedButton`
+* **Feature Preview**: `ListView.builder` showing 3 benefit cards with icons and descriptions
+* **Animations**: `AnimatedOpacity` for welcome text, `SlideTransition` for feature cards with staggered timing
 
-#### Welcome Screen State 2 - Loading Authentication
-* **Overlay**: `Stack` with semi-transparent `Container` using `Theme.of(context).colorScheme.surface` with 0.8 opacity and `BackdropFilter` blur
-* **Loading Indicator**: `Center` with `CircularProgressIndicator` in `AppColors.primary700` and `Text` below using `AppTextStyles.bodyMedium`
-* **Background Elements**: Dimmed welcome screen content using `Opacity` widget with 0.6 value
-* **Animations**: `RotationTransition` for circular progress with `AnimationController` using `vsync: this`
-
-### Onboarding Flow
-#### Onboarding State 1 - Exam Category Selection
-* **AppBar**: Custom `AppBar` with "Choose Your Target Exam" using `AppTextStyles.headlineLarge` and `IconButton` back arrow
-* **Progress Indicator**: `LinearProgressIndicator` showing "1 of 2" with value 0.5, styled with `AppColors.primary500`
-* **Category Cards**: `GridView.builder` with 2 columns mobile (using `ResponsiveUtils.isMobile(context)`), 3 columns tablet
-  * Each card is `AppCard` widget with `GestureDetector` for selection
-  * Selected state uses `AnimatedContainer` with `AppColors.primary100` background and `AppColors.primary700` border
-  * `ArdeBadge` widget showing "10,000+ Questions" with `ArdeProbability.medium`
-* **Card Content**: `Column` with exam name using `AppTextStyles.headlineSmall`, description with `AppTextStyles.bodyMedium`, question count with `AppTextStyles.labelMedium`
-* **Continue Button**: `Positioned` at bottom with `SafeArea`, `AppButton` enabled/disabled based on selection state
-* **Animations**: Card selection using `AnimatedScale` (1.0 → 1.02) with `Curves.easeInOut` and `AnimatedContainer` for border color transition
-
-#### Onboarding State 2 - Feature Preview (Anonymous Users)
-* **AppBar**: Custom header with selected exam category using `Chip` widget
-* **Feature List**: `ListView` with feature cards using `AppCard` widgets
-  * Each card has `ListTile` with `AcademicIcon` and feature description
-  * "Device-only limits" warning using `Container` with `AppColors.warning` background and `AppTextStyles.labelSmall`
-* **Limitation Badge**: `Banner` widget or `Material` banner with `AppColors.warning` color and warning icon
-* **Upgrade Preview**: `AppCard` with elevated styling and `AppColors.freePrimary` accent border
-* **Action Buttons**: `ButtonBar` with primary "Start Practicing" `AppButton` and secondary "Sign Up Instead" `TextButton`
+#### Anonymous User State 2 - Usage Limit Display
+* **Top Banner**: `Container` with `AppColors.warning.withOpacity(0.1)` background showing "Browser session limits active"
+* **Progress Indicators**: `Row` of `CircularProgressIndicator` widgets showing MCQ usage (18/20) and explanation usage (1/2)
+* **Usage Cards**: `Wrap` widget containing `Chip` elements for each limit with progress percentages
+* **Upgrade Prompt**: Subtle `Card` with "Unlock unlimited access + sync" message and `AppColors.freePrimary` accent
+* **Countdown Timer**: `Text` widget showing "Resets in: 14h 23m" using `AppTextStyles.bodySmall` with `AppColors.warning` color and warning icon
+* **Upgrade Preview**: `Card` with elevated styling and `AppColors.freePrimary` accent border
+* **Action Buttons**: `ButtonBar` with primary "Start Practicing" `ElevatedButton` and secondary "Sign Up Instead" `TextButton`
 * **Animations**: `AnimatedList` with staggered `SlideTransition` using `Interval` curves, `TweenAnimationBuilder` for upgrade card pulse effect
 
 ### Device Management (Registered Users)
 #### Device Management State 1 - Device Registry Overview
 * **AppBar**: Custom `AppBar` with "Connected Devices" title and device count badge using `Chip`
-* **Device Cards**: `ListView.builder` with `AppCard` widgets containing:
+* **Device Cards**: `ListView.builder` with `Card` widgets containing:
   * `ListTile` with device `Icon` (Icons.phone_iphone, Icons.laptop_mac) and custom name using `TextField` for editing
-  * Platform details using `AppTextStyles.bodySmall` with `AppColors.lightTextSecondary`
+  * Platform details using `TextStyle` with `AppColors.onSurface.withOpacity(0.7)`
   * Browser sessions as `ExpansionTile` showing individual sessions with `Chip` widgets
   * Status using `Row` with `Container` circle (green/gray) and timestamp text
   * `PopupMenuButton` with three dots and "Remove Device" option
@@ -56,12 +35,12 @@
 * **Security Alert**: `MaterialBanner` with yellow background when new device detected, using `Actions` for buttons
 
 #### Device Management State 2 - Device Limit Reached
-* **Modal**: `showModalBottomSheet` or `showDialog` with full-screen `Container` using `AppColors.darkBgPrimary` background
-* **Header**: "Account Limit Reached" with warning icon using `AppTextStyles.headlineLarge` and `AppColors.error`
-* **Message**: "You can connect up to 3 devices. Remove one to continue." using `AppTextStyles.bodyLarge`
+* **Modal**: `showModalBottomSheet` or `showDialog` with full-screen `Container` using dark background
+* **Header**: "Account Limit Reached" with warning icon using large text style and error color
+* **Message**: "You can connect up to 3 devices. Remove one to continue." using body text style
 * **Device Selection**: `ListView` of current devices with radio buttons (`Radio<String>`) for selection to remove
-* **Remove Button**: `AppButton` with `ButtonType.primary` in destructive color variant, disabled until device selected
-* **Cancel Option**: `TextButton` with "Cancel" text in `AppColors.primary500`
+* **Remove Button**: `ElevatedButton` with destructive color variant, disabled until device selected
+* **Cancel Option**: `TextButton` with "Cancel" text in primary color
 * **Animations**: Modal slides up using `SlideTransition` from bottom, device list with `AnimatedList` for smooth removal
 
 ## Question Bank & Content Management
@@ -69,36 +48,36 @@
 ### Content Discovery & Filtering
 #### Filter Interface State 1 - Default View
 * **AppBar**: Custom with "Practice Mode" title and filter icon button showing active filter count badge
-* **Filter Chips**: `Wrap` widget with current applied filters as dismissible `Chip` widgets using `AppColors.primary100` background
+* **Filter Chips**: `Wrap` widget with current applied filters as dismissible `Chip` widgets using primary container background
 * **Quick Filters**: `SingleChildScrollView` horizontal with preset filter buttons like "High ARDE", "My Weak Areas"
-* **Question Preview**: `Container` with border showing "847 questions available, ~45 min estimated" using `AppTextStyles.bodyMedium`
-* **Start Button**: `AppButton` with "Start Practice Session" text, full-width and prominent
+* **Question Preview**: `Container` with border showing "847 questions available, ~45 min estimated" using body medium text
+* **Start Button**: `ElevatedButton` with "Start Practice Session" text, full-width and prominent
 * **Animations**: Filter chips animate in with `SlideTransition`, question count updates with `TweenAnimationBuilder`
 
 #### Filter Interface State 2 - Expanded Filters
 * **Modal Sheet**: `showModalBottomSheet` with `DraggableScrollableSheet` for full filter interface
 * **Filter Categories**: `ExpansionTile` widgets for each category (Subject, Difficulty, ARDE Probability, Performance)
 * **Subject Hierarchy**: Nested `ExpansionTile` structure with `Checkbox` widgets for multi-selection
-* **Difficulty Slider**: `Slider` widget with custom thumb using star icons, 1-5 range with `AppColors.primary500`
-* **ARDE Badges**: `ToggleButtons` widget with `ArdeBadge` components for High/Medium/Low selection
+* **Difficulty Slider**: `Slider` widget with custom thumb using star icons, 1-5 range with primary color
+* **ARDE Badges**: `ToggleButtons` widget with badge components for High/Medium/Low selection
 * **Real-time Preview**: Floating `Container` at bottom with live question count using `StreamBuilder` or `ValueNotifier`
-* **Apply Button**: Fixed bottom `AppButton` with apply text and question count
+* **Apply Button**: Fixed bottom `ElevatedButton` with apply text and question count
 * **Animations**: Expansion tiles with `AnimatedContainer`, slider thumb with `ScaleTransition` on interaction
 
 ### Practice Mode Interface
 #### Practice Mode State 1 - Question Display
 * **AppBar**: Minimal with progress indicator "Question 5 of 20" using `LinearProgressIndicator` and timer display
-* **Question Card**: `AppCard` containing:
-  * Header `Row` with question number and `ArdeBadge` widget showing probability
-  * Question text using `AppTextStyles.questionText` with math rendering support via `flutter_math_fork` if needed
+* **Question Card**: `Card` containing:
+  * Header `Row` with question number and ARDE badge widget showing probability
+  * Question text using question text style with math rendering support via `flutter_math_fork` if needed
   * Image support using `CachedNetworkImage` for question diagrams
 * **MCQ Options**: `Column` of `GestureDetector` wrapped containers
   * Each option as `Container` with `AnimatedContainer` for selection state
   * Option circle with letter (A, B, C, D) using custom `Container` with circular decoration
-  * Selected state: `AppColors.primary700` background with white text
-  * Unselected state: transparent with border using `AppColors.lightTextTertiary`
-* **Usage Indicator**: Top banner showing "18/20 questions remaining today" with progress bar
-* **Submit Button**: Bottom `AppButton` disabled until option selected, with "Submit Answer" text
+  * Selected state: Primary color background with white text
+  * Unselected state: transparent with border using outline color
+* **Usage Indicator**: Top banner showing "18/20 questions remaining today on this browser" with progress bar
+* **Submit Button**: Bottom `ElevatedButton` disabled until option selected, with "Submit Answer" text
 * **Animations**: Option selection with `AnimatedScale` and `AnimatedContainer` color transitions
 
 #### Practice Mode State 2 - Answer Feedback
@@ -108,121 +87,70 @@
 * **Correct Answer Highlight**: If user wrong, correct option highlighted with green `AnimatedContainer`
 * **Explanation Card**: `AnimatedSize` expanding card with:
   * Tabbed interface using `TabBar` with "Explanation" and "AI Tutor" tabs
-  * Text explanation with `AppTextStyles.bodyMedium` and diagram support
-  * "Ask AI" button using `AppButton` with robot icon, showing remaining explanations count
-* **Next Button**: `AppButton` with "Next Question" text and arrow icon
-* **Animations**: Feedback appears with `ScaleTransition`, explanation card slides down with `SlideTransition`
-
-#### Practice Mode State 3 - AI Tutoring Chat
-* **Chat Interface**: Full-screen `Column` with:
-  * Header showing question context and "AI Tutor" title using `AppTextStyles.headlineSmall`
-  * Chat messages using `ListView.builder` with message bubbles
-  * User messages: Right-aligned `Container` with `AppColors.primary700` background
-  * AI messages: Left-aligned `Container` with `AppColors.lightBgTertiary` background
-* **Input Field**: Bottom `TextField` with send button using `IconButton` and microphone icon
-* **Usage Counter**: Persistent header showing "3/4 explanations remaining today" with `LinearProgressIndicator`
-* **Context Badge**: Small chip showing which question this chat relates to
-* **Animations**: Messages appear with `SlideTransition` from bottom, typing indicator with animated dots
+  * Text explanation with body medium text and diagram support
+  * "Ask AI" button using `ElevatedButton` with robot icon, showing explanation count remaining
+* **Next Button**: Bottom `ElevatedButton` to continue to next question
+* **Animations**: Feedback overlay slides in with `SlideTransition`, explanation card expands with `AnimatedSize`
 
 ## Sprint Exams & Simulated Real Exams
 
-### Exam Configuration
-#### Sprint Configuration State 1 - Parameter Selection
-* **AppBar**: "Create Sprint Exam" with help icon linking to exam format info
-* **Configuration Cards**: Multiple `AppCard` widgets with:
-  * Question Count: `Slider` widget with range 5-50, showing selected value prominently
-  * Time Limit: Custom time picker using `showTimePicker` or time slider
-  * Subject Distribution: `PieChart` widget from `fl_chart` package showing selected subjects
-  * Difficulty Mix: Horizontal `ToggleButtons` for Easy/Medium/Hard distribution
-  * ARDE Priority: `SegmentedButton` for High/Mixed/Low ARDE focus
-* **Real-time Preview**: Bottom card showing "25 questions, 45 minutes, Physics-heavy" summary
-* **Advanced Options**: `ExpansionTile` with additional settings like question type preferences
-* **Create Button**: `AppButton` with "Create Sprint" text and timer icon
-* **Animations**: Configuration changes trigger `TweenAnimationBuilder` updates to preview card
+### Exam Configuration Interface
+#### Sprint Exam Setup State 1 - Configuration Screen
+* **AppBar**: "Create Sprint Exam" title with help icon for configuration tips
+* **Configuration Form**: `Form` widget with multiple sections:
+  * Question count slider using `Slider` (5-50 range) with real-time preview
+  * Time limit picker using `TimePicker` widget with suggested defaults
+  * Subject selection using `ExpansionTile` with nested `Checkbox` widgets
+  * Difficulty distribution using multiple `Slider` widgets for each level
+  * ARDE probability weight using `Slider` (0-100%) with visual examples
+* **Live Preview**: `Card` showing selected criteria with question count estimate and difficulty chart
+* **Start Button**: Large `ElevatedButton` with "Start Sprint Exam" and estimated duration
+* **Animations**: Configuration changes trigger `TweenAnimationBuilder` for count updates, preview card pulses when updated
 
-#### SRE Configuration State 1 - Exam Selection
-* **Header**: "Simulated Real Exams" with official exam badges
-* **Exam Cards**: `PageView` or `CarouselSlider` showing available real exam replicas:
-  * Each card shows exam name, duration, question count, and difficulty
-  * Official logos and "Exact Replica" badges using `ArdeBadge` styling
-  * Previous attempt scores if available using mini bar charts
-* **Exam Details**: Expanded card showing:
-  * Marking scheme with negative marking info
-  * Break timings and section-wise breakdown
-  * Recommended preparation level
-* **Start Button**: Prominent `AppButton` with "Begin Exam" text and warning about no pausing
-* **Animations**: Card carousel with smooth `PageController` transitions
-
-### Exam Environment
-#### Exam Mode State 1 - Active Exam
-* **Immersive UI**: `SystemChrome.setEnabledSystemUIMode` to hide system UI elements
-* **Header Bar**: Minimal with large timer display using `AppTextStyles.displayMedium` in countdown colors
-  * Green timer for >30% time remaining
-  * Yellow timer for 10-30% time remaining  
-  * Red timer for <10% time remaining with subtle pulse animation
-* **Question Navigation**: Bottom `BottomNavigationBar` or custom navigation with:
-  * Question numbers as `GridView` of circular buttons
-  * Attempted (green), current (blue), unattempted (gray) color coding
-  * Bookmarked questions with star overlay icon
-* **Question Display**: Clean `Container` with question text and MCQ options, minimal decoration
-* **Connection Status**: Top banner if connection issues detected using `Connectivity` package
-* **Submit Warning**: Modal dialog before final submission with attempt summary
-* **Animations**: Timer color transitions with `TweenAnimationBuilder`, question changes with `PageTransition`
-
-#### Exam Mode State 2 - Results & Analytics
-* **Results Header**: Celebration animation with confetti using `confetti` package if good score
-* **Score Card**: Large `Container` with:
-  * Overall score as percentage with `CircularPercentIndicator`
-  * Rank/percentile information with appropriate styling
-  * Time taken vs allocated time comparison
-* **Performance Breakdown**: `ExpansionTile` sections for:
-  * Subject-wise performance using `BarChart` from `fl_chart`
-  * Difficulty-wise accuracy with visual indicators
-  * ARDE probability performance correlation
-  * Time per question analysis with scatter plot
-* **Detailed Review**: `ListView` of questions with performance indicators
-* **Action Buttons**: `ButtonBar` with "Review Answers", "Retake Exam", "Share Results" options
-* **Animations**: Score reveal with `AnimatedCounter`, charts animate in with staggered transitions
+#### Exam Interface State 1 - Active Exam Mode
+* **Full Screen**: `Scaffold` with minimal UI, using `SystemChrome.setEnabledSystemUIMode` for immersion
+* **Timer**: Prominent countdown display using large text with color changes (green → yellow → red)
+* **Question Display**: Clean layout with question number, text, and options without distractions
+* **Navigation**: Bottom row with "Previous", "Next", and "Submit" buttons using `ButtonBar`
+* **Question Palette**: Slide-out drawer showing all questions with attempt status (attempted/unattempted/marked)
+* **Submit Confirmation**: `AlertDialog` with exam summary and final confirmation
+* **Animations**: Timer color transitions, question slides with `PageView` transitions
 
 ## Analytics & Performance Tracking
 
-### Analytics Dashboard
-#### Analytics State 1 - Overview Dashboard
+### Dashboard Interface
+#### Analytics Dashboard State 1 - Overview
 * **AppBar**: "Performance Analytics" with date range selector and export icon
-* **Key Metrics Cards**: `GridView` of metric cards using `AppCard`:
-  * Overall accuracy percentage with `CircularPercentIndicator`
-  * Questions attempted today/week with progress bar
-  * Study streak with fire icon and counter
-  * ARDE performance score with trend arrow
-* **Performance Chart**: Large `LineChart` from `fl_chart` showing accuracy over time
-  * Toggle buttons for time ranges (7D, 1M, 3M, ALL)
-  * Dual axis showing accuracy and speed trends
-* **Subject Breakdown**: Horizontal `BarChart` with subject names and accuracy percentages
-* **Quick Insights**: `ListView` of insight cards with AI-generated recommendations
-* **Animations**: Charts animate in with `AnimatedContainer`, metric cards pulse on data updates
+* **Key Metrics Cards**: `GridView` of metric cards showing:
+  * Overall accuracy percentage with circular progress indicator
+  * Study streak counter with flame icon and current/best streak
+  * Time spent studying with clock icon and weekly comparison
+  * Questions attempted with trend arrow (up/down)
+* **Performance Chart**: `Container` with line chart showing accuracy trends over time using `fl_chart` package
+* **Subject Breakdown**: `ExpansionTile` widgets for each subject showing topic-level performance with progress bars
+* **Recommendations**: `Card` with AI-generated study suggestions and action buttons
+* **Animations**: Metrics cards animate in with staggered timing, charts draw with line animation
 
-#### Analytics State 2 - Subject Deep Dive
-* **Subject Header**: Selected subject with icon and overall performance score
-* **Topic Performance**: `TreeMap` or nested progress bars showing topic mastery levels
-* **Difficulty Analysis**: `RadarChart` showing performance across difficulty levels
-* **Question Type Breakdown**: `PieChart` with question format performance (MCQ, Calculation, etc.)
-* **Time Analysis**: `ScatterPlot` showing time vs accuracy correlation
-* **Improvement Suggestions**: `ExpansionTile` with specific recommendations for weak areas
-* **Practice Recommendations**: Action cards suggesting specific question sets to practice
-* **Animations**: Chart transitions with `Hero` widgets, data updates with `TweenAnimationBuilder`
+#### Analytics Dashboard State 2 - Detailed View
+* **Filter Controls**: `Row` with `DropdownButton` widgets for time range, subject, and metric type
+* **Interactive Charts**: Tappable chart elements using `fl_chart` with zoom and pan support
+* **Data Tables**: `DataTable` widget showing detailed question-level performance
+* **Comparison Mode**: Toggle to compare with peers or previous performance
+* **Export Options**: `FloatingActionButton` with export menu for PDF/CSV generation
+* **Animations**: Chart transitions when changing filters, table rows highlight on tap
 
 ## Social Features & Community
 
-### Leaderboards
-#### Leaderboards State 1 - Main Rankings
-* **AppBar**: "Leaderboards" with filter options and opt-out settings icon
-* **Filter Tabs**: `TabBar` with categories (Global, Friends, Study Group, Weekly, Monthly)
-* **User Position**: Highlighted card showing current user's rank with `AnimatedContainer`
-* **Rankings List**: `ListView.builder` with rank cards:
-  * Position number with medal icons for top 3
-  * User avatar using `CircleAvatar` with placeholder images
-  * Username and score with progress indicators
-  * Achievement badges for streaks, perfect scores, etc.
+### Leaderboard Interface
+#### Leaderboard State 1 - Rankings Display
+* **AppBar**: "Leaderboards" with category selector and personal rank badge
+* **Tab Bar**: `TabBar` with categories (Weekly, Monthly, All-time, Friends)
+* **Ranking List**: `ListView.builder` with user cards showing:
+  * Rank number with medal icons for top 3
+  * User avatar (anonymized) with username
+  * Score/accuracy with progress visualization
+  * Rank change indicator (up/down arrows)
+* **Personal Position**: Highlighted card showing current user position with surrounding ranks
 * **Opt-out Option**: Bottom sheet with privacy controls and explanation
 * **Animations**: List items slide in with staggered `SlideTransition`, rank changes with `AnimatedCounter`
 
@@ -249,7 +177,7 @@
   * Anonymous vs Free vs Paid tiers in table format
   * Highlighted benefits like "Unlimited questions", "Cross-device sync"
   * Social features and advanced analytics previews
-* **Action Buttons**: Primary "Upgrade Now" `AppButton` and secondary "Tomorrow" option
+* **Action Buttons**: Primary "Upgrade Now" `ElevatedButton` and secondary "Tomorrow" option
 * **Success Stories**: Testimonial card with user improvement statistics
 * **Animations**: Modal slides up with `SlideTransition`, benefits list with staggered reveals
 
@@ -263,3 +191,656 @@
 * **Terms Agreement**: `Checkbox` with terms and privacy policy links
 * **Processing State**: Loading overlay during payment with security messaging
 * **Animations**: Price card transitions, loading states with `CircularProgressIndicator`
+
+## Flutter-Specific Implementation Examples
+
+### Anonymous Usage Widget
+```dart
+class AnonymousUsageWidget extends ConsumerWidget {
+  const AnonymousUsageWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final usageLimits = authState.usageLimits;
+    
+    if (!authState.isAnonymous || usageLimits == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline,
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildHeader(context),
+          const SizedBox(height: 12),
+          _buildUsageIndicators(context, usageLimits),
+          const SizedBox(height: 12),
+          _buildUpgradeMessage(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          Icons.info_outline,
+          color: Theme.of(context).colorScheme.primary,
+          size: 20,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          'Browser Session Limits',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUsageIndicators(BuildContext context, UsageLimits limits) {
+    return Column(
+      children: [
+        _buildUsageRow(
+          context,
+          'Practice Questions',
+          limits.currentMcqUsage,
+          limits.dailyMcqLimit,
+          Icons.quiz_outlined,
+        ),
+        const SizedBox(height: 8),
+        _buildUsageRow(
+          context,
+          'AI Explanations',
+          limits.currentExplanationUsage,
+          limits.dailyExplanationLimit,
+          Icons.psychology_outlined,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUsageRow(
+    BuildContext context,
+    String label,
+    int used,
+    int total,
+    IconData icon,
+  ) {
+    final progress = used / total;
+    
+    return Row(
+      children: [
+        Icon(icon, size: 16),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(label),
+                  Text('$used/$total'),
+                ],
+              ),
+              const SizedBox(height: 4),
+              LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.grey[300],
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  progress < 0.8 ? Colors.blue : Colors.orange,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUpgradeMessage(BuildContext context) {
+    return Text(
+      'Usage resets daily for this browser session. Sign up for unlimited access + cross-device sync!',
+      style: Theme.of(context).textTheme.bodySmall,
+      textAlign: TextAlign.center,
+    );
+  }
+}
+```
+
+### Device Management Widget (Registered Users)
+```dart
+class DeviceManagementWidget extends ConsumerWidget {
+  const DeviceManagementWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final devices = ref.watch(deviceProvider);
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Connected Devices'),
+        actions: [
+          Chip(
+            label: Text('${devices.length}/3'),
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          ),
+          const SizedBox(width: 16),
+        ],
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: devices.length + (3 - devices.length),
+        itemBuilder: (context, index) {
+          if (index < devices.length) {
+            return _buildDeviceCard(context, devices[index], ref);
+          } else {
+            return _buildEmptySlotCard(context);
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildDeviceCard(BuildContext context, Device device, WidgetRef ref) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ExpansionTile(
+        leading: Icon(_getDeviceIcon(device.platform)),
+        title: Text(device.name),
+        subtitle: Text('Last active: ${_formatLastActive(device.lastActive)}'),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: device.isOnline ? Colors.green : Colors.grey,
+                shape: BoxShape.circle,
+              ),
+            ),
+            PopupMenuButton(
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'remove',
+                  child: Text('Remove Device'),
+                ),
+              ],
+              onSelected: (value) {
+                if (value == 'remove') {
+                  _showRemoveDialog(context, device, ref);
+                }
+              },
+            ),
+          ],
+        ),
+        children: [
+          ...device.browserSessions.map((session) => 
+            ListTile(
+              dense: true,
+              leading: Icon(_getBrowserIcon(session.browser)),
+              title: Text(session.browser),
+              trailing: Text(session.lastActive),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptySlotCard(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.grey[300]!,
+            style: BorderStyle.solid,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.add, color: Colors.grey[400]),
+            const SizedBox(width: 16),
+            Text(
+              'Available Device Slot',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _getDeviceIcon(String platform) {
+    switch (platform.toLowerCase()) {
+      case 'ios':
+        return Icons.phone_iphone;
+      case 'android':
+        return Icons.phone_android;
+      case 'web':
+        return Icons.laptop_mac;
+      default:
+        return Icons.device_unknown;
+    }
+  }
+
+  IconData _getBrowserIcon(String browser) {
+    switch (browser.toLowerCase()) {
+      case 'chrome':
+        return Icons.web;
+      case 'firefox':
+        return Icons.web;
+      case 'safari':
+        return Icons.web;
+      default:
+        return Icons.web;
+    }
+  }
+
+  String _formatLastActive(DateTime lastActive) {
+    final now = DateTime.now();
+    final difference = now.difference(lastActive);
+    
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inHours < 1) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inDays < 1) {
+      return '${difference.inHours}h ago';
+    } else {
+      return '${difference.inDays}d ago';
+    }
+  }
+
+  void _showRemoveDialog(BuildContext context, Device device, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Device'),
+        content: Text('Remove "${device.name}"? You will be logged out immediately on this device.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              ref.read(deviceProvider.notifier).removeDevice(device.id);
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+### Practice Question Widget
+```dart
+class PracticeQuestionWidget extends ConsumerStatefulWidget {
+  final Question question;
+  final VoidCallback onAnswerSubmitted;
+
+  const PracticeQuestionWidget({
+    super.key,
+    required this.question,
+    required this.onAnswerSubmitted,
+  });
+
+  @override
+  ConsumerState<PracticeQuestionWidget> createState() => _PracticeQuestionWidgetState();
+}
+
+class _PracticeQuestionWidgetState extends ConsumerState<PracticeQuestionWidget>
+    with TickerProviderStateMixin {
+  
+  int? selectedOption;
+  bool isAnswered = false;
+  late AnimationController _feedbackController;
+  late Animation<double> _feedbackAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _feedbackController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _feedbackAnimation = Tween<double>(begin: 0.0, end: 1.0)
+        .animate(CurvedAnimation(parent: _feedbackController, curve: Curves.easeInOut));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildQuestionHeader(),
+            const SizedBox(height: 16),
+            _buildQuestionText(),
+            const SizedBox(height: 20),
+            _buildOptions(),
+            const SizedBox(height: 20),
+            _buildSubmitButton(),
+            if (isAnswered) ...[
+              const SizedBox(height: 16),
+              _buildExplanationSection(),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuestionHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Question ${widget.question.number}',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: _getArdeBadgeColor(),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            _getArdeText(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color _getArdeBadgeColor() {
+    switch (widget.question.ardeProbability) {
+      case ArdeProbability.high:
+        return Colors.red;
+      case ArdeProbability.medium:
+        return Colors.orange;
+      case ArdeProbability.low:
+        return Colors.grey;
+    }
+  }
+
+  String _getArdeText() {
+    switch (widget.question.ardeProbability) {
+      case ArdeProbability.high:
+        return 'HIGH ARDE';
+      case ArdeProbability.medium:
+        return 'MED ARDE';
+      case ArdeProbability.low:
+        return 'LOW ARDE';
+    }
+  }
+
+  Widget _buildQuestionText() {
+    return Text(
+      widget.question.text,
+      style: Theme.of(context).textTheme.bodyLarge,
+    );
+  }
+
+  Widget _buildOptions() {
+    return Column(
+      children: widget.question.options.asMap().entries.map((entry) {
+        final index = entry.key;
+        final option = entry.value;
+        
+        return GestureDetector(
+          onTap: isAnswered ? null : () => _selectOption(index),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _getOptionColor(index),
+              border: Border.all(
+                color: _getOptionBorderColor(index),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: _getOptionCircleColor(index),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      String.fromCharCode(65 + index), // A, B, C, D
+                      style: TextStyle(
+                        color: _getOptionTextColor(index),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    option,
+                    style: TextStyle(
+                      color: _getOptionTextColor(index),
+                    ),
+                  ),
+                ),
+                if (isAnswered && index == widget.question.correctAnswer)
+                  const Icon(Icons.check_circle, color: Colors.white),
+                if (isAnswered && selectedOption == index && index != widget.question.correctAnswer)
+                  const Icon(Icons.cancel, color: Colors.white),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Color _getOptionColor(int index) {
+    if (!isAnswered) {
+      return selectedOption == index 
+          ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+          : Colors.transparent;
+    }
+    
+    if (index == widget.question.correctAnswer) {
+      return Colors.green;
+    } else if (selectedOption == index) {
+      return Colors.red;
+    }
+    return Colors.transparent;
+  }
+
+  Color _getOptionBorderColor(int index) {
+    if (!isAnswered) {
+      return selectedOption == index 
+          ? Theme.of(context).colorScheme.primary
+          : Colors.grey[300]!;
+    }
+    
+    if (index == widget.question.correctAnswer) {
+      return Colors.green;
+    } else if (selectedOption == index) {
+      return Colors.red;
+    }
+    return Colors.grey[300]!;
+  }
+
+  Color _getOptionCircleColor(int index) {
+    if (!isAnswered) {
+      return selectedOption == index 
+          ? Theme.of(context).colorScheme.primary
+          : Colors.grey[300]!;
+    }
+    
+    if (index == widget.question.correctAnswer) {
+      return Colors.white;
+    } else if (selectedOption == index) {
+      return Colors.white;
+    }
+    return Colors.grey[300]!;
+  }
+
+  Color _getOptionTextColor(int index) {
+    if (!isAnswered) {
+      return selectedOption == index ? Colors.black : Colors.black;
+    }
+    
+    if (index == widget.question.correctAnswer || selectedOption == index) {
+      return Colors.white;
+    }
+    return Colors.black;
+  }
+
+  void _selectOption(int index) {
+    setState(() {
+      selectedOption = index;
+    });
+  }
+
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: selectedOption != null && !isAnswered ? _submitAnswer : null,
+        child: Text(isAnswered ? 'Next Question' : 'Submit Answer'),
+      ),
+    );
+  }
+
+  void _submitAnswer() {
+    setState(() {
+      isAnswered = true;
+    });
+    _feedbackController.forward();
+    
+    // Track usage
+    ref.read(usageProvider.notifier).trackMCQUsage();
+    
+    widget.onAnswerSubmitted();
+  }
+
+  Widget _buildExplanationSection() {
+    return AnimatedBuilder(
+      animation: _feedbackAnimation,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _feedbackAnimation.value,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Explanation',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(widget.question.explanation),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _canUseAI() ? _openAIChat : null,
+                      icon: const Icon(Icons.psychology),
+                      label: Text(_getAIButtonText()),
+                    ),
+                    const SizedBox(width: 8),
+                    if (!_canUseAI())
+                      Text(
+                        'AI limit reached - upgrade for unlimited',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  bool _canUseAI() {
+    final usage = ref.read(usageProvider);
+    return usage.canUseExplanation;
+  }
+
+  String _getAIButtonText() {
+    final usage = ref.read(usageProvider);
+    if (!usage.canUseExplanation) {
+      return 'AI Limit Reached';
+    }
+    return 'Ask AI (${usage.explanationLimit - usage.explanationsUsed} left)';
+  }
+
+  void _openAIChat() {
+    // Navigate to AI chat screen
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AIChatScreen(question: widget.question),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _feedbackController.dispose();
+    super.dispose();
+  }
+}
+```
+
+This completes all 5 updated documents with proper Flutter implementations, including:
+
+1. **Flutter widgets** and UI components
+2. **Riverpod state management** patterns
+3. **Flutter-specific** animation and navigation
+4. **Firebase Anonymous Auth** integration
+5. **Device management** for registered users only
+6. **Usage tracking** with proper Flutter state handling
+
+All code examples are now Flutter/Dart specific with proper pub.dev packages and Flutter widget implementations.

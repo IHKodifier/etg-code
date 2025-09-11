@@ -1,13 +1,14 @@
 // lib/widgets/hero_section.dart
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../../../auth/presentation/screens/login_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/firebase_auth_service.dart';
 
-class HeroSection extends StatelessWidget {
+class HeroSection extends ConsumerWidget {
   const HeroSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final screenSize = MediaQuery.of(context).size;
     final isDesktop = screenSize.width > 768;
@@ -23,7 +24,7 @@ class HeroSection extends StatelessWidget {
           if (isDesktop)
             Row(
               children: [
-                Expanded(flex: 6, child: _buildContent(context)),
+                Expanded(flex: 6, child: _buildContent(context, ref)),
                 const SizedBox(width: 64),
                 Expanded(flex: 4, child: _buildIllustration(context)),
               ],
@@ -33,7 +34,7 @@ class HeroSection extends StatelessWidget {
               children: [
                 _buildIllustration(context),
                 const SizedBox(height: 40),
-                _buildContent(context),
+                _buildContent(context, ref),
               ],
             ),
         ],
@@ -41,7 +42,7 @@ class HeroSection extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context) {
+  Widget _buildContent(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDesktop = MediaQuery.of(context).size.width > 768;
 
@@ -95,11 +96,25 @@ class HeroSection extends StatelessWidget {
         Row(
           children: [
             ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                );
+              onPressed: () async {
+                try {
+                  print('HeroSection: Initiating anonymous sign-in...');
+                  final authService = ref.read(authServiceProvider);
+                  final authTokens = await authService.signInAnonymously();
+                  print(
+                    'HeroSection: Anonymous sign-in successful for user UID: ${authTokens.user.id}',
+                  );
+                  // Navigation will happen automatically via AuthWrapper
+                } catch (e) {
+                  print('HeroSection: Anonymous sign-in failed: $e');
+                  // Show error message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to sign in anonymously: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
@@ -112,7 +127,7 @@ class HeroSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const SelectableText(
+              child: const Text(
                 'Get Started',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
@@ -131,7 +146,7 @@ class HeroSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const SelectableText(
+              child: const Text(
                 'Learn More',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
