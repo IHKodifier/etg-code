@@ -6,6 +6,56 @@ yarn-debug.log*
 yarn-error.log*
 firebase-debug.log*
 firebase-debug.*.log*
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Flutter
+.dart_tool/
+.packages
+.pub-cache/
+pubspec.lock
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+.android/
+.ios/
+*.jks
+*.p12
+*.p8
+*.pem
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Additional Flutter/Android/iOS ignores
+.vscode/
+outputs/
+*.iml
+.metadata
+android/local.properties
+ios/Flutter/ephemeral/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/flutter_lldb_helper.py
+ios/Flutter/ephemeral/flutter_lldbinit
+ios/Runner/GeneratedPluginRegistrant.h
+ios/Runner/GeneratedPluginRegistrant.m
 
 # Firebase cache
 .firebase/
@@ -16,6 +66,12 @@ firebase-debug.*.log*
 # For a team working on the same Firebase project(s), it is recommended to leave
 # it commented so all members can deploy to the same project(s) in .firebaserc.
 # .firebaserc
+
+# Firebase service account files and configs containing API keys
+entrytestguru/android/app/google-services.json
+entrytestguru/ios/Runner/GoogleService-Info.plist
+entrytestguru/lib/firebase_options.dart
+entrytestguru/lib/core/config/firebase_options.dart
 
 # Runtime data
 pids
@@ -67,3 +123,4 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+backend/.env.test
