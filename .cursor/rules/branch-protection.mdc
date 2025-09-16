@@ -1,0 +1,66 @@
+---
+description: source control(git)
+globs: 
+alwaysApply: false
+---
+# Git Branch Protection Rules for Cursor
+
+## Branch Strategy & Protection
+- Follow GitFlow branching model: main (production), develop (integration), feature/* (new features), hotfix/* (urgent fixes), release/* (release preparation)
+- NEVER commit directly to main or develop branches
+- Always create pull/merge requests for code integration
+- Feature branches must be created from develop branch
+- Hotfix branches must be created from main branch
+
+## Branch Naming Conventions
+- Feature branches: feature/JIRA-123-short-description or feature/short-description
+- Bugfix branches: bugfix/JIRA-456-bug-description or bugfix/bug-description  
+- Hotfix branches: hotfix/JIRA-789-critical-fix or hotfix/critical-fix
+- Release branches: release/v1.2.3 or release/1.2.3
+- Use lowercase with hyphens, no spaces or special characters
+
+## Pre-Commit Checks & Reminders
+- Remind to run tests before committing to any branch
+- Check if committing to protected branches aka  main/develop and suggest creating feature branch instead
+- Verify branch is up-to-date with origin before pushing
+- Warn if pushing large files (>50MB) or sensitive data
+- Suggest squashing commits before merging feature branches
+- dblock pushes unless a commit message is provided.
+
+## Commit Message Standards
+- Use conventional commits: feat:, fix:, docs:, style:, refactor:, test:, chore:
+- Include ticket number when applicable: "feat(auth): add OAuth integration [JIRA-123]"
+- Keep first line under 50 characters, detailed description after blank line
+- Use imperative mood: "Add feature" not "Added feature"
+
+## Code Review & Merge Guidelines
+- Require at least 1 reviewer for feature branch PRs
+- Require at least 2 reviewers for hotfix PRs to main
+- append "successfully merged" to the branch name after successfull merge. 
+- Do not delete feature branches after successful merge, just do the append text to the branch name as explained above.
+- Use merge commits for feature branches, squash for small fixes
+- Update CHANGELOG.md for user-facing changes
+
+## Branch Protection Warnings
+- Block direct pushes to main branch - remind to create hotfix branch
+- Block direct pushes to develop branch - remind to create feature branch  
+- Warn when creating branches from main instead of develop (except hotfixes)
+- Alert if trying to merge feature branch directly to main (should go to develop first)
+
+## Automated Suggestions
+- Suggest creating feature branch when starting new work
+- Recommend branch cleanup after successful merges
+- Propose rebasing feature branches that are behind develop
+- Suggest creating release branch when develop is ready for production
+
+## Emergency Procedures
+- For critical production fixes, allow hotfix branches from main
+- Hotfix branches must be merged to both main AND develop
+- Document emergency commits with detailed explanations
+- Notify team immediately of emergency deployments
+
+## Integration Reminders
+- Sync feature branches with develop regularly (weekly minimum)
+- Run full test suite before merging to develop or main
+- Update documentation for API changes or new features
+- Tag releases in main branch with semantic versioning
