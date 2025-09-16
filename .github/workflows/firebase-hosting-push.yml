@@ -19,6 +19,13 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4
 
+      - name: Create firebase_options.dart
+        run: |
+          mkdir -p entrytestguru/lib
+          cat > entrytestguru/lib/firebase_options.dart << 'EOF'
+          ${{ secrets.FIREBASE_OPTIONS_CONTENT }}
+          EOF
+
       - name: Install Flutter and Flutter tools
         uses: subosito/flutter-action@v2
         with:
