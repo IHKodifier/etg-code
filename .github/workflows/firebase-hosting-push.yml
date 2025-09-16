@@ -25,6 +25,8 @@ jobs:
           cat > entrytestguru/lib/firebase_options.dart << 'EOF'
           ${{ secrets.FIREBASE_OPTIONS_CONTENT }}
           EOF
+          echo "firebase_options.dart created"
+          ls -la entrytestguru/lib/firebase_options.dart
 
       - name: Install Flutter and Flutter tools
         uses: subosito/flutter-action@v2
