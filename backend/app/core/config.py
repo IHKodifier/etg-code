@@ -43,6 +43,20 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
     GEMINI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
+    # Add these fields to the Settings class (around line 45-50)
+    JWT_SECRET_KEY: Optional[str] = "your-super-secret-jwt-key-here"
+    JWT_ALGORITHM: str = "HS256"
+    BIGQUERY_PROJECT_ID: Optional[str] = "entrytestguru-analytics"
+
+    # Payment settings
+    PADDLE_VENDOR_ID: Optional[str] = None
+    PADDLE_PUBLIC_KEY: Optional[str] = None
+    PADDLE_WEBHOOK_SECRET: Optional[str] = None
+
+    # External services
+    SENTRY_DSN: Optional[str] = None
+    GOOGLE_ANALYTICS_MEASUREMENT_ID: Optional[str] = None
+
     
     # Rate limiting
     RATE_LIMIT_REQUESTS: int = 100
