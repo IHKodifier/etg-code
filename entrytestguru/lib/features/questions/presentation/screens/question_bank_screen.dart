@@ -13,7 +13,7 @@ class QuestionBankScreen extends ConsumerStatefulWidget {
 }
 
 class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
   late List<Widget> _tabs;
   late List<Widget> _tabViews;

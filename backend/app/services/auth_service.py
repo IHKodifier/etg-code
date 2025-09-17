@@ -303,82 +303,69 @@ class AuthService:
     ) -> Dict[str, Any]:
         """Authenticate user with Google ID token"""
         try:
-            # Verify Google ID token
+            # Verify Google ID token and get custom claims
             decoded_token = firebase_auth.verify_id_token(id_token)
             google_uid = decoded_token['uid']
             email = decoded_token.get('email')
             name = decoded_token.get('name')
             picture = decoded_token.get('picture')
-            
+
             if not email:
                 raise AuthenticationError("Email not provided by Google")
-            
-            # Check if user already exists
+
+            # Check if user already exists in Firestore
             existing_users = await db.query_collection(
                 "users",
                 filters=[{"field": "email", "operator": "==", "value": email}]
             )
-            
+
             if existing_users:
                 user = existing_users[0]
-                # Update last login
-                await db.update_document(
-                    "users",
-                    user["id"],
+                # Ensure custom claims are set
+                current_claims = firebase_auth.get_user(google_uid).custom_claims or {}
+                if current_claims.get('role') != user.get('role'):
+                    await self.set_custom_claims(google_uid, {
+                        'role': user.get('role', 'regularUser'),
+                        'tier': user.get('tier', 'free'),
+                        'exam_type': user.get('exam_type', 'ECAT')
+                    })
+            else:
+                # Create user document and set claims
+                user_data = await self.ensure_user_document_exists(
+                    google_uid,
+                    email,
                     {
-                        "updated_at": datetime.utcnow(),
-                        "google_uid": google_uid,
-                        "profile.picture": picture
+                        "exam_type": exam_type or "ECAT",
+                        "role": role,
+                        "tier": tier,
+                        "is_verified": True,
+                        "profile": {
+                            "name": name,
+                            "picture": picture
+                        }
                     }
                 )
-            else:
-                # Calculate trial/subscription expiry dates
-                trial_expiry = None
-                subscription_expiry = None
 
-                if tier == "anonymous":
-                    trial_expiry = datetime.utcnow() + timedelta(days=14)
-                elif tier == "pro":
-                    subscription_expiry = datetime.utcnow() + timedelta(days=365)
+                # Set custom claims
+                await self.set_custom_claims(google_uid, {
+                    'role': role,
+                    'tier': tier,
+                    'exam_type': exam_type or "ECAT"
+                })
 
-                # Create new user
-                user_dict = {
-                    "email": email,
-                    "google_uid": google_uid,
-                    "exam_type": exam_type or "ECAT",  # Default
-                    "role": role,
-                    "tier": tier,
-                    "trial_expiry": trial_expiry,
-                    "subscription_expiry": subscription_expiry,
-                    "is_active": True,
-                    "is_verified": True,  # Google accounts are verified
-                    "created_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow(),
-                    "profile": {
-                        "name": name,
-                        "picture": picture
-                    },
-                    "usage_stats": {
-                        "practice_mcqs_today": 0,
-                        "explanations_used_today": 0,
-                        "sprint_exams_used": 0,
-                        "simulated_exams_used": 0,
-                        "last_reset": datetime.utcnow().date().isoformat()
-                    }
-                }
-                
-                user_id = await db.create_document("users", user_dict)
-                user_dict["id"] = user_id
-                user = user_dict
-                
-                logger.info(f"New Google user created: {user_id}")
-            
+                user = user_data
+
+            # Update last login
+            await db.update_document("users", user["id"], {
+                "updated_at": datetime.utcnow(),
+                "profile.picture": picture
+            })
+
             # Remove sensitive data
             user.pop("password_hash", None)
-            user.pop("google_uid", None)
-            
+
             return user
-            
+
         except firebase_auth.InvalidIdTokenError:
             raise AuthenticationError("Invalid Google ID token")
         except Exception as e:
@@ -526,6 +513,104 @@ class AuthService:
 
         except Exception as e:
             logger.error(f"Failed to get usage limits: {e}")
+            raise
+    async def set_custom_claims(self, firebase_uid: str, claims: Dict[str, Any]):
+        """Set custom claims for Firebase Auth user"""
+        try:
+            firebase_auth.set_custom_user_claims(firebase_uid, claims)
+            logger.info(f"Custom claims set for user {firebase_uid}: {claims}")
+        except Exception as e:
+            logger.error(f"Failed to set custom claims: {e}")
+            raise
+
+    async def ensure_user_document_exists(self, firebase_uid: str, email: str, additional_data: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Ensure a Firestore document exists for the Firebase user"""
+        try:
+            # Check if user document exists
+            existing_user = await db.get_document("users", firebase_uid)
+
+            if existing_user:
+                # Update with any new data
+                if additional_data:
+                    await db.update_document("users", firebase_uid, {
+                        **additional_data,
+                        "updated_at": datetime.utcnow()
+                    })
+                    existing_user.update(additional_data)
+                return existing_user
+
+            # Create new user document
+            user_data = {
+                "id": firebase_uid,
+                "email": email,
+                "exam_type": additional_data.get("exam_type", "ECAT") if additional_data else "ECAT",
+                "role": additional_data.get("role", "regularUser") if additional_data else "regularUser",
+                "tier": additional_data.get("tier", "free") if additional_data else "free",
+                "is_active": True,
+                "is_verified": additional_data.get("is_verified", False) if additional_data else False,
+                "is_anonymous": False,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+                "profile": additional_data.get("profile", {}) if additional_data else {},
+                "usage_stats": {
+                    "practice_mcqs_today": 0,
+                    "explanations_used_today": 0,
+                    "sprint_exams_used": 0,
+                    "simulated_exams_used": 0,
+                    "last_reset": datetime.utcnow().date().isoformat()
+                }
+            }
+
+            await db.create_document("users", user_data, document_id=firebase_uid)
+            logger.info(f"Created Firestore document for user: {email}")
+            return user_data
+
+        except Exception as e:
+            logger.error(f"Failed to ensure user document exists: {e}")
+            raise
+
+    async def set_admin_role_for_user(self, email: str) -> str:
+        """Set admin role for a specific user by email"""
+        try:
+            # Get Firebase user by email
+            firebase_user = firebase_auth.get_user_by_email(email)
+
+            # Set admin claims
+            claims = {
+                "role": "admin",
+                "tier": "pro",
+                "exam_type": "ECAT"
+            }
+
+            await self.set_custom_claims(firebase_user.uid, claims)
+
+            # Ensure Firestore document exists and update role
+            await self.ensure_user_document_exists(
+                firebase_user.uid,
+                email,
+                {
+                    "role": "admin",
+                    "tier": "pro",
+                    "is_verified": firebase_user.email_verified,
+                    "profile": {
+                        "displayName": firebase_user.display_name,
+                        "photoURL": firebase_user.photo_url,
+                    }
+                }
+            )
+
+            # Update Firestore document
+            await db.update_document("users", firebase_user.uid, {
+                "role": "admin",
+                "tier": "pro",
+                "updated_at": datetime.utcnow()
+            })
+
+            logger.info(f"Set admin role for user: {email}")
+            return firebase_user.uid
+
+        except Exception as e:
+            logger.error(f"Failed to set admin role for user {email}: {e}")
             raise
 
 # Global auth service instance

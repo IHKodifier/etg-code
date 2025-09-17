@@ -274,3 +274,55 @@ async def google_auth(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Google authentication failed"
         )
+
+@router.post("/admin/set-role")
+async def set_admin_role(
+    admin_request: Dict[str, str],
+    token: str = Depends(security)
+):
+    """Set admin role for a user (admin only)"""
+    try:
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token required"
+            )
+        
+        # Get current user
+        current_user = await auth_service.get_current_user(token.credentials)
+        
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+        
+        # Check if current user is admin
+        if current_user.get("role") != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin access required"
+            )
+        
+        email = admin_request.get("email")
+        if not email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email is required"
+            )
+        
+        # Set admin role
+        user_uid = await auth_service.set_admin_role_for_user(email)
+        
+        return {
+            "success": True,
+            "message": f"Admin role set for user {email}",
+            "user_uid": user_uid
+        }
+        
+    except Exception as e:
+        logger.error(f"Set admin role failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to set admin role: {str(e)}"
+        )

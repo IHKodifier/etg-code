@@ -4,16 +4,10 @@ import '../../data/models/question_option.dart';
 import '../../data/models/question_enums.dart';
 import '../states/add_question_state.dart';
 
-/// Provider for the QuestionApiService
-final questionApiServiceProvider = Provider<QuestionApiService>((ref) {
-  // TODO: Get from dependency injection
-  throw UnimplementedError('QuestionApiService provider not implemented');
-});
-
 /// StateNotifierProvider for managing add question state
 final addQuestionNotifierProvider =
     StateNotifierProvider<AddQuestionNotifier, AddQuestionState>((ref) {
-      final apiService = ref.watch(questionApiServiceProvider);
+      final apiService = ref.watch(QuestionApiService.provider);
       return AddQuestionNotifier(apiService);
     });
 
