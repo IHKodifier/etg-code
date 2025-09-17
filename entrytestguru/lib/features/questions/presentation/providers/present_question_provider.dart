@@ -4,25 +4,20 @@ import '../../data/models/question.dart';
 import '../../data/models/question_filter.dart';
 import '../../data/models/question_attempt.dart';
 import '../states/present_question_state.dart';
-
-/// Provider for the QuestionApiService
-final questionApiServiceProvider = Provider<QuestionApiService>((ref) {
-  // TODO: Get from dependency injection
-  throw UnimplementedError('QuestionApiService provider not implemented');
-});
+import '../../../../../core/services/firestore_service.dart';
 
 /// StateNotifierProvider for managing present question state
 final presentQuestionNotifierProvider =
     StateNotifierProvider<PresentQuestionNotifier, PresentQuestionState>((ref) {
-      final apiService = ref.watch(questionApiServiceProvider);
-      return PresentQuestionNotifier(apiService);
+      final firestoreService = ref.watch(firestoreServiceProvider);
+      return PresentQuestionNotifier(firestoreService);
     });
 
 /// StateNotifier for managing question presentation operations
 class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
-  final QuestionApiService _apiService;
+  final FirestoreService _firestoreService;
 
-  PresentQuestionNotifier(this._apiService)
+  PresentQuestionNotifier(this._firestoreService)
     : super(const PresentQuestionState());
 
   /// Load questions based on filter
@@ -34,8 +29,59 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
     );
 
     try {
-      final questions = await _apiService.getFilteredQuestions(filter);
-      state = state.copyWithQuestionsLoaded(questions);
+      // Get all questions from Firestore
+      final snapshot = await _firestoreService.getCollection('questions');
+
+      // Convert Firestore documents to Question objects
+      final questions = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return Question.fromJson(data);
+      }).toList();
+
+      // Apply filters if specified
+      List<Question> filteredQuestions = questions;
+
+      if (filter.examCategories != null && filter.examCategories!.isNotEmpty) {
+        filteredQuestions = filteredQuestions
+            .where((q) => filter.examCategories!.contains(q.examCategory))
+            .toList();
+      }
+
+      if (filter.subjects != null && filter.subjects!.isNotEmpty) {
+        filteredQuestions = filteredQuestions
+            .where((q) => filter.subjects!.contains(q.subject))
+            .toList();
+      }
+
+      if (filter.topics != null && filter.topics!.isNotEmpty) {
+        filteredQuestions = filteredQuestions
+            .where((q) => filter.topics!.contains(q.topic))
+            .toList();
+      }
+
+      if (filter.difficulties != null && filter.difficulties!.isNotEmpty) {
+        filteredQuestions = filteredQuestions
+            .where((q) => filter.difficulties!.contains(q.difficulty))
+            .toList();
+      }
+
+      if (filter.tags != null && filter.tags!.isNotEmpty) {
+        filteredQuestions = filteredQuestions
+            .where((q) => q.tags.any((tag) => filter.tags!.contains(tag)))
+            .toList();
+      }
+
+      if (filter.searchQuery != null && filter.searchQuery!.isNotEmpty) {
+        final query = filter.searchQuery!.toLowerCase();
+        filteredQuestions = filteredQuestions
+            .where((q) => q.searchableText.contains(query))
+            .toList();
+      }
+
+      // Sort by creation date (newest first)
+      filteredQuestions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      state = state.copyWithQuestionsLoaded(filteredQuestions);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -70,7 +116,9 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
         timestamp: startTime,
       );
 
-      await _apiService.recordAttempt(attempt);
+      // TODO: Implement attempt recording in Firestore
+      // For now, just log the attempt
+      print('Question attempt recorded: ${attempt.questionId}');
 
       state = state.copyWith(lastAttempt: attempt);
     } catch (e) {
@@ -118,7 +166,13 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
     if (state.currentQuestion == null) return null;
 
     try {
-      return await _apiService.getQuestionStats(state.currentQuestion!.id);
+      // TODO: Implement question stats from Firestore
+      // For now, return basic stats from the question object
+      return {
+        'totalAttempts': state.currentQuestion!.globalStats.totalAttempts,
+        'totalCorrect': state.currentQuestion!.globalStats.totalCorrect,
+        'accuracy': state.currentQuestion!.globalStats.globalAccuracy,
+      };
     } catch (e) {
       state = state.copyWith(
         errorMessage: 'Failed to load question stats: ${e.toString()}',

@@ -3,6 +3,7 @@ import '../../data/models/question.dart';
 import '../../data/models/question_attempt.dart';
 import '../../data/models/question_filter.dart';
 import '../../data/models/question_enums.dart';
+import '../../data/models/question_option.dart';
 
 part 'present_question_state.freezed.dart';
 
@@ -140,9 +141,16 @@ class PresentQuestionState with _$PresentQuestionState {
       );
     }
 
+    // Shuffle options for each question to maintain vigilance
+    final shuffledQuestions = questions.map((question) {
+      final shuffledOptions = List<QuestionOption>.from(question.options)
+        ..shuffle(); // Randomize option order
+      return question.copyWith(options: shuffledOptions);
+    }).toList();
+
     return copyWith(
-      questionQueue: questions,
-      currentQuestion: questions.first,
+      questionQueue: shuffledQuestions,
+      currentQuestion: shuffledQuestions.first,
       currentQuestionIndex: 0,
       selectedAnswers: [],
       showExplanation: false,

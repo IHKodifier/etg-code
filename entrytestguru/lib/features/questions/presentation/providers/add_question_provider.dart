@@ -3,19 +3,25 @@ import '../../data/services/question_api_service.dart';
 import '../../data/models/question_option.dart';
 import '../../data/models/question_enums.dart';
 import '../states/add_question_state.dart';
+import '../../../../core/services/firestore_service.dart';
+import '../../../../core/services/firebase_auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// StateNotifierProvider for managing add question state
 final addQuestionNotifierProvider =
     StateNotifierProvider<AddQuestionNotifier, AddQuestionState>((ref) {
-      final apiService = ref.watch(QuestionApiService.provider);
-      return AddQuestionNotifier(apiService);
+      final firestoreService = ref.watch(firestoreServiceProvider);
+      final authService = ref.watch(authServiceProvider);
+      return AddQuestionNotifier(firestoreService, authService);
     });
 
 /// StateNotifier for managing add question operations
 class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
-  final QuestionApiService _apiService;
+  final FirestoreService _firestoreService;
+  final FirebaseAuthService _authService;
 
-  AddQuestionNotifier(this._apiService) : super(const AddQuestionState());
+  AddQuestionNotifier(this._firestoreService, this._authService)
+    : super(const AddQuestionState());
 
   /// Update question text
   void updateQuestionText(String text) {
@@ -158,11 +164,73 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
         throw Exception('Failed to create question object');
       }
 
-      // TODO: Implement actual API call to save question
-      // await _apiService.createQuestion(question);
+      // Get current user for createdBy field
+      final currentUser = _authService.currentUser;
+      if (currentUser == null) {
+        throw Exception('User must be logged in to create questions');
+      }
 
-      // For now, simulate API call
-      await Future.delayed(const Duration(seconds: 1));
+      // Create question data for Firestore
+      final questionData = {
+        'id': question.id,
+        'questionId': question.questionId,
+        'examCategory': question.examCategory,
+        'subject': question.subject,
+        'topic': question.topic,
+        'subTopic': question.subTopic,
+        'questionText': question.questionText,
+        'questionImageUrl': question.questionImageUrl,
+        'questionLatex': question.questionLatex,
+        'options': question.options
+            .map(
+              (option) => {
+                'id': option.id,
+                'text': option.text,
+                'imageUrl': option.imageUrl,
+                'latex': option.latex,
+              },
+            )
+            .toList(),
+        'correctAnswer': question.correctAnswer,
+        'questionType': question.questionType.name,
+        'explanationText': question.explanationText,
+        'explanationVideoUrl': question.explanationVideoUrl,
+        'explanationSteps': question.explanationSteps,
+        'references': question.references,
+        'ardeProbability': question.ardeProbability.name,
+        'ardeFrequency': question.ardeFrequency,
+        'ardeAppearanceYears': question.ardeAppearanceYears,
+        'ardeNotes': question.ardeNotes,
+        'ardeContext': question.ardeContext,
+        'difficulty': question.difficulty.name,
+        'estimatedTimeSeconds': question.estimatedTimeSeconds,
+        'globalStats': {
+          'totalAttempts': question.globalStats.totalAttempts,
+          'totalCorrect': question.globalStats.totalCorrect,
+          'globalAccuracy': question.globalStats.globalAccuracy,
+          'averageTimeSeconds': question.globalStats.averageTimeSeconds,
+          'medianTimeSeconds': question.globalStats.medianTimeSeconds,
+          'p95TimeSeconds': question.globalStats.p95TimeSeconds,
+          'calculatedDifficulty': question.globalStats.calculatedDifficulty,
+        },
+        'tags': question.tags,
+        'createdAt': question.createdAt.toIso8601String(),
+        'updatedAt': question.updatedAt.toIso8601String(),
+        'createdBy': currentUser.id,
+        'isActive': question.isActive,
+        'version': question.version,
+        'status': question.status,
+        'approvalStatus': question.approvalStatus,
+        'submittedAt': question.submittedAt.toIso8601String(),
+        'reviewerId': question.reviewerId,
+        'reviewerName': question.reviewerName,
+        'reviewComments': question.reviewComments,
+        'reviewedAt': question.reviewedAt?.toIso8601String(),
+        'approvedAt': question.approvedAt?.toIso8601String(),
+      };
+
+      // Save to Firestore
+      await _firestoreService.addDocument('questions', questionData);
 
       state = state.copyWith(
         isLoading: false,
