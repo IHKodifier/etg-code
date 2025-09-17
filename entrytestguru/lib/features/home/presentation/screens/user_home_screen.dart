@@ -364,54 +364,264 @@ class UserHomeScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: AppButton(
-                    text: 'Practice MCQs',
-                    onPressed: () {
-                      // Navigate to MCQ practice
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: AppButton(
-                    text: 'Take Exam',
-                    onPressed: () {
-                      // Navigate to exam
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: AppButton(
-                    text: 'Review Mistakes',
-                    type: ButtonType.outline,
-                    onPressed: () {
-                      // Navigate to review
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: AppButton(
-                    text: 'View Progress',
-                    type: ButtonType.outline,
-                    onPressed: () {
-                      // Navigate to progress
-                    },
-                  ),
-                ),
-              ],
-            ),
+            _buildRoleBasedQuickActions(context, user),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRoleBasedQuickActions(BuildContext context, User user) {
+    final userRole = user.role;
+    final userTier = user.tier;
+
+    // Admin and Content Creator get different actions
+    if (userRole == 'admin' || userRole == 'contentCreator') {
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  text: 'Manage Questions',
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/questions');
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: AppButton(
+                  text: 'Practice MCQs',
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/questions');
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  text: 'Review Submissions',
+                  type: ButtonType.outline,
+                  onPressed: () {
+                    // TODO: Navigate to review dashboard
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Review dashboard coming soon!'),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: AppButton(
+                  text: 'Analytics',
+                  type: ButtonType.outline,
+                  onPressed: () {
+                    // TODO: Navigate to analytics
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Analytics dashboard coming soon!'),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    // Content Reviewer gets review-focused actions
+    if (userRole == 'contentReviewer') {
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  text: 'Review Questions',
+                  onPressed: () {
+                    // TODO: Navigate to review dashboard
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Review dashboard coming soon!'),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: AppButton(
+                  text: 'Practice MCQs',
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/questions');
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  text: 'Approved Questions',
+                  type: ButtonType.outline,
+                  onPressed: () {
+                    // TODO: Navigate to approved questions
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Approved questions view coming soon!'),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: AppButton(
+                  text: 'Pending Reviews',
+                  type: ButtonType.outline,
+                  onPressed: () {
+                    // TODO: Navigate to pending reviews
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Pending reviews view coming soon!'),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    // Regular users get standard practice actions
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                text: 'Practice MCQs',
+                onPressed: () {
+                  Navigator.pushNamed(context, '/questions');
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: AppButton(
+                text: 'Take Exam',
+                onPressed: () {
+                  // TODO: Navigate to exam
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Exam feature coming soon!')),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                text: 'Review Mistakes',
+                type: ButtonType.outline,
+                onPressed: () {
+                  // TODO: Navigate to review mistakes
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Review mistakes feature coming soon!'),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: AppButton(
+                text: 'View Progress',
+                type: ButtonType.outline,
+                onPressed: () {
+                  // TODO: Navigate to progress
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Progress view coming soon!')),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        // Show upgrade prompt for free users
+        if (userTier == 'free' || userTier == 'anonymous') ...[
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.primary200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.upgrade, color: AppColors.primary600),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Upgrade to Paid',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.primary700,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  userTier == 'anonymous'
+                      ? 'Create an account to unlock unlimited questions and premium features!'
+                      : 'Get unlimited access to all questions, advanced analytics, and priority support.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.primary600),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton(
+                    text: userTier == 'anonymous'
+                        ? 'Create Account'
+                        : 'Upgrade Now',
+                    onPressed: () {
+                      // TODO: Navigate to upgrade flow
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Upgrade flow coming soon!'),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -424,43 +634,120 @@ class UserHomeScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Your Subscription',
+              'Your Account',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
+            // Role and Tier Information
             Card(
               elevation: 2,
               child: Container(
                 padding: const EdgeInsets.all(16),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      user.tier == 'premium'
-                          ? Icons.star
-                          : Icons.workspace_premium_outlined,
-                      color: user.tier == 'premium'
-                          ? Colors.amber
-                          : AppColors.primary600,
-                      size: 32,
-                    ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
-                        Text(
-                          user.tier.capitalize(),
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                        Icon(
+                          _getTierIcon(user.tier),
+                          color: _getTierColor(user.tier),
+                          size: 32,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          user.tier == 'premium'
-                              ? 'Full access to all features'
-                              : 'Limited access to basic features',
-                          style: Theme.of(context).textTheme.bodyMedium,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${user.tier.capitalize()} Plan',
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _getTierDescription(user.tier),
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    // Role Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getRoleColor(user.role).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _getRoleColor(user.role),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        _getRoleDisplayName(user.role),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: _getRoleColor(user.role),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    // Subscription expiry for paid users
+                    if (user.tier == 'paid' &&
+                        user.subscriptionExpiry != null) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 16,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Expires: ${_formatDate(user.subscriptionExpiry!)}',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    // Trial expiry for anonymous users
+                    if (user.tier == 'anonymous' &&
+                        user.trialExpiry != null) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.timer,
+                            size: 16,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Trial expires: ${_formatDate(user.trialExpiry!)}',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -469,6 +756,79 @@ class UserHomeScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  IconData _getTierIcon(String tier) {
+    switch (tier) {
+      case 'paid':
+        return Icons.workspace_premium;
+      case 'free':
+        return Icons.star_border;
+      case 'anonymous':
+        return Icons.person_outline;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  Color _getTierColor(String tier) {
+    switch (tier) {
+      case 'paid':
+        return Colors.amber;
+      case 'free':
+        return AppColors.primary600;
+      case 'anonymous':
+        return Colors.grey;
+      default:
+        return AppColors.primary600;
+    }
+  }
+
+  String _getTierDescription(String tier) {
+    switch (tier) {
+      case 'paid':
+        return 'Unlimited access to all features and premium support';
+      case 'free':
+        return 'Basic access with daily limits (50 MCQs/day, 4 explanations/day)';
+      case 'anonymous':
+        return 'Trial access with limited features (20 MCQs/day, 2 explanations/day)';
+      default:
+        return 'Unknown tier';
+    }
+  }
+
+  Color _getRoleColor(String role) {
+    switch (role) {
+      case 'admin':
+        return Colors.red;
+      case 'contentReviewer':
+        return Colors.blue;
+      case 'contentCreator':
+        return Colors.green;
+      case 'regularUser':
+        return Colors.purple;
+      default:
+        return AppColors.primary600;
+    }
+  }
+
+  String _getRoleDisplayName(String role) {
+    switch (role) {
+      case 'admin':
+        return 'Administrator';
+      case 'contentReviewer':
+        return 'Content Reviewer';
+      case 'contentCreator':
+        return 'Content Creator';
+      case 'regularUser':
+        return 'Regular User';
+      default:
+        return 'User';
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
   }
 
   String _getGreeting() {

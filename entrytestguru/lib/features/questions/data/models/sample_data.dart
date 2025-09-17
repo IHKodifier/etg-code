@@ -93,6 +93,15 @@ class SampleData {
       isActive: true,
       version: 1,
       status: "approved",
+
+      // Approval workflow fields
+      approvalStatus: "approved",
+      reviewerId: "admin",
+      reviewerName: "Administrator",
+      reviewComments: "Approved for use in practice sessions",
+      submittedAt: DateTime(2024, 1, 15),
+      reviewedAt: DateTime(2024, 1, 16),
+      approvedAt: DateTime(2024, 1, 16),
     );
   }
 
@@ -151,6 +160,15 @@ class SampleData {
       isActive: true,
       version: 1,
       status: "approved",
+
+      // Approval workflow fields
+      approvalStatus: "approved",
+      reviewerId: "admin",
+      reviewerName: "Administrator",
+      reviewComments: "Approved for use in practice sessions",
+      submittedAt: DateTime(2024, 2, 20),
+      reviewedAt: DateTime(2024, 2, 21),
+      approvedAt: DateTime(2024, 2, 21),
     );
   }
 
@@ -207,6 +225,15 @@ class SampleData {
       isActive: true,
       version: 1,
       status: "approved",
+
+      // Approval workflow fields
+      approvalStatus: "approved",
+      reviewerId: "admin",
+      reviewerName: "Administrator",
+      reviewComments: "Approved for use in practice sessions",
+      submittedAt: DateTime(2024, 1, 10),
+      reviewedAt: DateTime(2024, 1, 11),
+      approvedAt: DateTime(2024, 1, 11),
     );
   }
 

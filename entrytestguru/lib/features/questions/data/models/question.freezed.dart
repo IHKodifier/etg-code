@@ -61,7 +61,21 @@ mixin _$Question {
   bool? get isActive => throw _privateConstructorUsedError;
   int? get version => throw _privateConstructorUsedError;
   String? get status =>
-      throw _privateConstructorUsedError; // User-specific (populated at runtime)
+      throw _privateConstructorUsedError; // Approval workflow fields
+  @JsonKey(name: 'approval_status')
+  String get approvalStatus => throw _privateConstructorUsedError;
+  @JsonKey(name: 'reviewer_id')
+  String? get reviewerId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'reviewer_name')
+  String? get reviewerName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'review_comments')
+  String? get reviewComments => throw _privateConstructorUsedError;
+  @JsonKey(name: 'submitted_at')
+  DateTime get submittedAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'reviewed_at')
+  DateTime? get reviewedAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'approved_at')
+  DateTime? get approvedAt => throw _privateConstructorUsedError; // User-specific (populated at runtime)
   bool get isBookmarked => throw _privateConstructorUsedError;
   String? get userNotes => throw _privateConstructorUsedError;
   QuestionAttempt? get lastAttempt => throw _privateConstructorUsedError;
@@ -114,6 +128,13 @@ abstract class $QuestionCopyWith<$Res> {
     bool? isActive,
     int? version,
     String? status,
+    @JsonKey(name: 'approval_status') String approvalStatus,
+    @JsonKey(name: 'reviewer_id') String? reviewerId,
+    @JsonKey(name: 'reviewer_name') String? reviewerName,
+    @JsonKey(name: 'review_comments') String? reviewComments,
+    @JsonKey(name: 'submitted_at') DateTime submittedAt,
+    @JsonKey(name: 'reviewed_at') DateTime? reviewedAt,
+    @JsonKey(name: 'approved_at') DateTime? approvedAt,
     bool isBookmarked,
     String? userNotes,
     QuestionAttempt? lastAttempt,
@@ -170,6 +191,13 @@ class _$QuestionCopyWithImpl<$Res, $Val extends Question>
     Object? isActive = freezed,
     Object? version = freezed,
     Object? status = freezed,
+    Object? approvalStatus = null,
+    Object? reviewerId = freezed,
+    Object? reviewerName = freezed,
+    Object? reviewComments = freezed,
+    Object? submittedAt = null,
+    Object? reviewedAt = freezed,
+    Object? approvedAt = freezed,
     Object? isBookmarked = null,
     Object? userNotes = freezed,
     Object? lastAttempt = freezed,
@@ -304,6 +332,34 @@ class _$QuestionCopyWithImpl<$Res, $Val extends Question>
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
                       as String?,
+            approvalStatus: null == approvalStatus
+                ? _value.approvalStatus
+                : approvalStatus // ignore: cast_nullable_to_non_nullable
+                      as String,
+            reviewerId: freezed == reviewerId
+                ? _value.reviewerId
+                : reviewerId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            reviewerName: freezed == reviewerName
+                ? _value.reviewerName
+                : reviewerName // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            reviewComments: freezed == reviewComments
+                ? _value.reviewComments
+                : reviewComments // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            submittedAt: null == submittedAt
+                ? _value.submittedAt
+                : submittedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            reviewedAt: freezed == reviewedAt
+                ? _value.reviewedAt
+                : reviewedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            approvedAt: freezed == approvedAt
+                ? _value.approvedAt
+                : approvedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
             isBookmarked: null == isBookmarked
                 ? _value.isBookmarked
                 : isBookmarked // ignore: cast_nullable_to_non_nullable
@@ -388,6 +444,13 @@ abstract class _$$QuestionImplCopyWith<$Res>
     bool? isActive,
     int? version,
     String? status,
+    @JsonKey(name: 'approval_status') String approvalStatus,
+    @JsonKey(name: 'reviewer_id') String? reviewerId,
+    @JsonKey(name: 'reviewer_name') String? reviewerName,
+    @JsonKey(name: 'review_comments') String? reviewComments,
+    @JsonKey(name: 'submitted_at') DateTime submittedAt,
+    @JsonKey(name: 'reviewed_at') DateTime? reviewedAt,
+    @JsonKey(name: 'approved_at') DateTime? approvedAt,
     bool isBookmarked,
     String? userNotes,
     QuestionAttempt? lastAttempt,
@@ -445,6 +508,13 @@ class __$$QuestionImplCopyWithImpl<$Res>
     Object? isActive = freezed,
     Object? version = freezed,
     Object? status = freezed,
+    Object? approvalStatus = null,
+    Object? reviewerId = freezed,
+    Object? reviewerName = freezed,
+    Object? reviewComments = freezed,
+    Object? submittedAt = null,
+    Object? reviewedAt = freezed,
+    Object? approvedAt = freezed,
     Object? isBookmarked = null,
     Object? userNotes = freezed,
     Object? lastAttempt = freezed,
@@ -579,6 +649,34 @@ class __$$QuestionImplCopyWithImpl<$Res>
             ? _value.status
             : status // ignore: cast_nullable_to_non_nullable
                   as String?,
+        approvalStatus: null == approvalStatus
+            ? _value.approvalStatus
+            : approvalStatus // ignore: cast_nullable_to_non_nullable
+                  as String,
+        reviewerId: freezed == reviewerId
+            ? _value.reviewerId
+            : reviewerId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        reviewerName: freezed == reviewerName
+            ? _value.reviewerName
+            : reviewerName // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        reviewComments: freezed == reviewComments
+            ? _value.reviewComments
+            : reviewComments // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        submittedAt: null == submittedAt
+            ? _value.submittedAt
+            : submittedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        reviewedAt: freezed == reviewedAt
+            ? _value.reviewedAt
+            : reviewedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        approvedAt: freezed == approvedAt
+            ? _value.approvedAt
+            : approvedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
         isBookmarked: null == isBookmarked
             ? _value.isBookmarked
             : isBookmarked // ignore: cast_nullable_to_non_nullable
@@ -632,6 +730,13 @@ class _$QuestionImpl extends _Question {
     this.isActive = true,
     this.version = 1,
     this.status,
+    @JsonKey(name: 'approval_status') this.approvalStatus = 'pending',
+    @JsonKey(name: 'reviewer_id') this.reviewerId,
+    @JsonKey(name: 'reviewer_name') this.reviewerName,
+    @JsonKey(name: 'review_comments') this.reviewComments,
+    @JsonKey(name: 'submitted_at') required this.submittedAt,
+    @JsonKey(name: 'reviewed_at') this.reviewedAt,
+    @JsonKey(name: 'approved_at') this.approvedAt,
     this.isBookmarked = false,
     this.userNotes,
     this.lastAttempt,
@@ -781,6 +886,28 @@ class _$QuestionImpl extends _Question {
   final int? version;
   @override
   final String? status;
+  // Approval workflow fields
+  @override
+  @JsonKey(name: 'approval_status')
+  final String approvalStatus;
+  @override
+  @JsonKey(name: 'reviewer_id')
+  final String? reviewerId;
+  @override
+  @JsonKey(name: 'reviewer_name')
+  final String? reviewerName;
+  @override
+  @JsonKey(name: 'review_comments')
+  final String? reviewComments;
+  @override
+  @JsonKey(name: 'submitted_at')
+  final DateTime submittedAt;
+  @override
+  @JsonKey(name: 'reviewed_at')
+  final DateTime? reviewedAt;
+  @override
+  @JsonKey(name: 'approved_at')
+  final DateTime? approvedAt;
   // User-specific (populated at runtime)
   @override
   @JsonKey()
@@ -792,7 +919,7 @@ class _$QuestionImpl extends _Question {
 
   @override
   String toString() {
-    return 'Question(id: $id, questionId: $questionId, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, questionText: $questionText, questionImageUrl: $questionImageUrl, questionLatex: $questionLatex, options: $options, correctAnswer: $correctAnswer, questionType: $questionType, explanationText: $explanationText, explanationVideoUrl: $explanationVideoUrl, explanationSteps: $explanationSteps, references: $references, ardeProbability: $ardeProbability, ardeFrequency: $ardeFrequency, ardeAppearanceYears: $ardeAppearanceYears, ardeNotes: $ardeNotes, ardeContext: $ardeContext, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, globalStats: $globalStats, tags: $tags, relatedQuestions: $relatedQuestions, createdAt: $createdAt, updatedAt: $updatedAt, createdBy: $createdBy, isActive: $isActive, version: $version, status: $status, isBookmarked: $isBookmarked, userNotes: $userNotes, lastAttempt: $lastAttempt)';
+    return 'Question(id: $id, questionId: $questionId, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, questionText: $questionText, questionImageUrl: $questionImageUrl, questionLatex: $questionLatex, options: $options, correctAnswer: $correctAnswer, questionType: $questionType, explanationText: $explanationText, explanationVideoUrl: $explanationVideoUrl, explanationSteps: $explanationSteps, references: $references, ardeProbability: $ardeProbability, ardeFrequency: $ardeFrequency, ardeAppearanceYears: $ardeAppearanceYears, ardeNotes: $ardeNotes, ardeContext: $ardeContext, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, globalStats: $globalStats, tags: $tags, relatedQuestions: $relatedQuestions, createdAt: $createdAt, updatedAt: $updatedAt, createdBy: $createdBy, isActive: $isActive, version: $version, status: $status, approvalStatus: $approvalStatus, reviewerId: $reviewerId, reviewerName: $reviewerName, reviewComments: $reviewComments, submittedAt: $submittedAt, reviewedAt: $reviewedAt, approvedAt: $approvedAt, isBookmarked: $isBookmarked, userNotes: $userNotes, lastAttempt: $lastAttempt)';
   }
 
   @override
@@ -867,6 +994,20 @@ class _$QuestionImpl extends _Question {
                 other.isActive == isActive) &&
             (identical(other.version, version) || other.version == version) &&
             (identical(other.status, status) || other.status == status) &&
+            (identical(other.approvalStatus, approvalStatus) ||
+                other.approvalStatus == approvalStatus) &&
+            (identical(other.reviewerId, reviewerId) ||
+                other.reviewerId == reviewerId) &&
+            (identical(other.reviewerName, reviewerName) ||
+                other.reviewerName == reviewerName) &&
+            (identical(other.reviewComments, reviewComments) ||
+                other.reviewComments == reviewComments) &&
+            (identical(other.submittedAt, submittedAt) ||
+                other.submittedAt == submittedAt) &&
+            (identical(other.reviewedAt, reviewedAt) ||
+                other.reviewedAt == reviewedAt) &&
+            (identical(other.approvedAt, approvedAt) ||
+                other.approvedAt == approvedAt) &&
             (identical(other.isBookmarked, isBookmarked) ||
                 other.isBookmarked == isBookmarked) &&
             (identical(other.userNotes, userNotes) ||
@@ -911,6 +1052,13 @@ class _$QuestionImpl extends _Question {
     isActive,
     version,
     status,
+    approvalStatus,
+    reviewerId,
+    reviewerName,
+    reviewComments,
+    submittedAt,
+    reviewedAt,
+    approvedAt,
     isBookmarked,
     userNotes,
     lastAttempt,
@@ -964,6 +1112,13 @@ abstract class _Question extends Question {
     final bool? isActive,
     final int? version,
     final String? status,
+    @JsonKey(name: 'approval_status') final String approvalStatus,
+    @JsonKey(name: 'reviewer_id') final String? reviewerId,
+    @JsonKey(name: 'reviewer_name') final String? reviewerName,
+    @JsonKey(name: 'review_comments') final String? reviewComments,
+    @JsonKey(name: 'submitted_at') required final DateTime submittedAt,
+    @JsonKey(name: 'reviewed_at') final DateTime? reviewedAt,
+    @JsonKey(name: 'approved_at') final DateTime? approvedAt,
     final bool isBookmarked,
     final String? userNotes,
     final QuestionAttempt? lastAttempt,
@@ -1037,7 +1192,28 @@ abstract class _Question extends Question {
   @override
   int? get version;
   @override
-  String? get status; // User-specific (populated at runtime)
+  String? get status; // Approval workflow fields
+  @override
+  @JsonKey(name: 'approval_status')
+  String get approvalStatus;
+  @override
+  @JsonKey(name: 'reviewer_id')
+  String? get reviewerId;
+  @override
+  @JsonKey(name: 'reviewer_name')
+  String? get reviewerName;
+  @override
+  @JsonKey(name: 'review_comments')
+  String? get reviewComments;
+  @override
+  @JsonKey(name: 'submitted_at')
+  DateTime get submittedAt;
+  @override
+  @JsonKey(name: 'reviewed_at')
+  DateTime? get reviewedAt;
+  @override
+  @JsonKey(name: 'approved_at')
+  DateTime? get approvedAt; // User-specific (populated at runtime)
   @override
   bool get isBookmarked;
   @override

@@ -9,7 +9,10 @@ class User with _$User {
     required String id,
     String? email,
     @JsonKey(name: 'exam_type') String? examType,
+    required String role,
     required String tier,
+    @JsonKey(name: 'trial_expiry') DateTime? trialExpiry,
+    @JsonKey(name: 'subscription_expiry') DateTime? subscriptionExpiry,
     @JsonKey(name: 'is_active') required bool isActive,
     @JsonKey(name: 'is_verified') bool? isVerified,
     @JsonKey(name: 'is_anonymous') required bool isAnonymous,
@@ -51,6 +54,8 @@ class RegisterRequest with _$RegisterRequest {
     required String email,
     required String password,
     @JsonKey(name: 'exam_type') required String examType,
+    String? role,
+    String? tier,
     @JsonKey(name: 'device_info') required Map<String, dynamic> deviceInfo,
     Map<String, dynamic>? profile,
   }) = _RegisterRequest;
@@ -65,6 +70,8 @@ class GoogleAuthRequest with _$GoogleAuthRequest {
     @JsonKey(name: 'id_token') required String idToken,
     @JsonKey(name: 'device_info') required Map<String, dynamic> deviceInfo,
     @JsonKey(name: 'exam_type') String? examType,
+    String? role,
+    String? tier,
   }) = _GoogleAuthRequest;
 
   factory GoogleAuthRequest.fromJson(Map<String, dynamic> json) =>

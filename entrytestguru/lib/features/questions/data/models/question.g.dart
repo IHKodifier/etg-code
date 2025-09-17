@@ -59,6 +59,17 @@ _$QuestionImpl _$$QuestionImplFromJson(
   isActive: json['isActive'] as bool? ?? true,
   version: (json['version'] as num?)?.toInt() ?? 1,
   status: json['status'] as String?,
+  approvalStatus: json['approval_status'] as String? ?? 'pending',
+  reviewerId: json['reviewer_id'] as String?,
+  reviewerName: json['reviewer_name'] as String?,
+  reviewComments: json['review_comments'] as String?,
+  submittedAt: DateTime.parse(json['submitted_at'] as String),
+  reviewedAt: json['reviewed_at'] == null
+      ? null
+      : DateTime.parse(json['reviewed_at'] as String),
+  approvedAt: json['approved_at'] == null
+      ? null
+      : DateTime.parse(json['approved_at'] as String),
   isBookmarked: json['isBookmarked'] as bool? ?? false,
   userNotes: json['userNotes'] as String?,
   lastAttempt: json['lastAttempt'] == null
@@ -100,6 +111,13 @@ Map<String, dynamic> _$$QuestionImplToJson(_$QuestionImpl instance) =>
       'isActive': instance.isActive,
       'version': instance.version,
       'status': instance.status,
+      'approval_status': instance.approvalStatus,
+      'reviewer_id': instance.reviewerId,
+      'reviewer_name': instance.reviewerName,
+      'review_comments': instance.reviewComments,
+      'submitted_at': instance.submittedAt.toIso8601String(),
+      'reviewed_at': instance.reviewedAt?.toIso8601String(),
+      'approved_at': instance.approvedAt?.toIso8601String(),
       'isBookmarked': instance.isBookmarked,
       'userNotes': instance.userNotes,
       'lastAttempt': instance.lastAttempt,

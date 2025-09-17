@@ -64,6 +64,15 @@ class Question with _$Question {
     @Default(1) int? version,
     String? status,
 
+    // Approval workflow fields
+    @JsonKey(name: 'approval_status') @Default('pending') String approvalStatus,
+    @JsonKey(name: 'reviewer_id') String? reviewerId,
+    @JsonKey(name: 'reviewer_name') String? reviewerName,
+    @JsonKey(name: 'review_comments') String? reviewComments,
+    @JsonKey(name: 'submitted_at') required DateTime submittedAt,
+    @JsonKey(name: 'reviewed_at') DateTime? reviewedAt,
+    @JsonKey(name: 'approved_at') DateTime? approvedAt,
+
     // User-specific (populated at runtime)
     @Default(false) bool isBookmarked,
     String? userNotes,

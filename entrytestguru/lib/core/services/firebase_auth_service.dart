@@ -68,7 +68,14 @@ class FirebaseAuthService {
       id: firebaseUser.uid,
       email: firebaseUser.email,
       examType: null, // Will be set later during onboarding
-      tier: 'free',
+      role: firebaseUser.isAnonymous
+          ? 'regularUser'
+          : 'regularUser', // Default role
+      tier: firebaseUser.isAnonymous ? 'anonymous' : 'free',
+      trialExpiry: firebaseUser.isAnonymous
+          ? DateTime.now().add(const Duration(days: 14))
+          : null,
+      subscriptionExpiry: null,
       isActive: true,
       isVerified: firebaseUser.emailVerified,
       isAnonymous: firebaseUser.isAnonymous,

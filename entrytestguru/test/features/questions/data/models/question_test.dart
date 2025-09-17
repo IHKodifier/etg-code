@@ -53,6 +53,10 @@ void main() {
         isActive: true,
         version: 1,
         status: 'approved',
+
+        // Approval workflow fields
+        approvalStatus: 'approved',
+        submittedAt: DateTime(2024, 1, 1),
       );
     });
 
@@ -186,6 +190,10 @@ void main() {
         createdBy: 'test',
         isActive: true,
         version: 1,
+
+        // Approval workflow fields
+        approvalStatus: 'pending',
+        submittedAt: DateTime.now(),
       );
 
       expect(invalidQuestion.isValid, false);
@@ -249,6 +257,15 @@ void main() {
         'isActive': true,
         'version': 1,
         'status': 'approved',
+
+        // Approval workflow fields
+        'approval_status': 'approved',
+        'reviewer_id': 'admin',
+        'reviewer_name': 'Administrator',
+        'review_comments': 'Approved for use in practice sessions',
+        'submitted_at': '2024-01-01T00:00:00.000Z',
+        'reviewed_at': '2024-01-02T00:00:00.000Z',
+        'approved_at': '2024-01-02T00:00:00.000Z',
       };
 
       final deserializedQuestion = Question.fromJson(json);

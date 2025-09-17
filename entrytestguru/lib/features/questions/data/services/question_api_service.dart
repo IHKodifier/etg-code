@@ -387,6 +387,92 @@ class QuestionApiService {
     }
   }
 
+  // Subscription Management Methods
+
+  /// Upgrades anonymous user to registered account
+  Future<Map<String, dynamic>> upgradeAnonymousToRegistered({
+    required String email,
+    required String password,
+    required String examType,
+  }) async {
+    try {
+      final data = {
+        'email': email,
+        'password': password,
+        'exam_type': examType,
+      };
+
+      final response = await _apiClient.post(
+        '$_questionsPath/subscription/upgrade-anonymous',
+        data: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to upgrade account: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw _handleDioError(e, 'upgrading anonymous account');
+    }
+  }
+
+  /// Upgrades user to pro tier
+  Future<Map<String, dynamic>> upgradeToProTier(String paymentToken) async {
+    try {
+      final data = {'payment_token': paymentToken};
+
+      final response = await _apiClient.post(
+        '$_questionsPath/subscription/upgrade-to-pro',
+        data: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to upgrade to pro: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw _handleDioError(e, 'upgrading to pro tier');
+    }
+  }
+
+  /// Gets current user's subscription status
+  Future<Map<String, dynamic>> getSubscriptionStatus() async {
+    try {
+      final response = await _apiClient.get(
+        '$_questionsPath/subscription/status',
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception(
+          'Failed to get subscription status: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      throw _handleDioError(e, 'getting subscription status');
+    }
+  }
+
+  /// Gets current user's usage limits
+  Future<Map<String, dynamic>> getUsageLimits() async {
+    try {
+      final response = await _apiClient.get(
+        '$_questionsPath/subscription/limits',
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to get usage limits: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw _handleDioError(e, 'getting usage limits');
+    }
+  }
+
   /// Handles Dio errors and converts them to user-friendly exceptions
   Exception _handleDioError(DioException error, String operation) {
     switch (error.type) {

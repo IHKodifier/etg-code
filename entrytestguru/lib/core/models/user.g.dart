@@ -10,7 +10,14 @@ _$UserImpl _$$UserImplFromJson(Map<String, dynamic> json) => _$UserImpl(
   id: json['id'] as String,
   email: json['email'] as String?,
   examType: json['exam_type'] as String?,
+  role: json['role'] as String,
   tier: json['tier'] as String,
+  trialExpiry: json['trial_expiry'] == null
+      ? null
+      : DateTime.parse(json['trial_expiry'] as String),
+  subscriptionExpiry: json['subscription_expiry'] == null
+      ? null
+      : DateTime.parse(json['subscription_expiry'] as String),
   isActive: json['is_active'] as bool,
   isVerified: json['is_verified'] as bool?,
   isAnonymous: json['is_anonymous'] as bool,
@@ -24,7 +31,10 @@ Map<String, dynamic> _$$UserImplToJson(_$UserImpl instance) =>
       'id': instance.id,
       'email': instance.email,
       'exam_type': instance.examType,
+      'role': instance.role,
       'tier': instance.tier,
+      'trial_expiry': instance.trialExpiry?.toIso8601String(),
+      'subscription_expiry': instance.subscriptionExpiry?.toIso8601String(),
       'is_active': instance.isActive,
       'is_verified': instance.isVerified,
       'is_anonymous': instance.isAnonymous,
@@ -64,6 +74,8 @@ _$RegisterRequestImpl _$$RegisterRequestImplFromJson(
   email: json['email'] as String,
   password: json['password'] as String,
   examType: json['exam_type'] as String,
+  role: json['role'] as String?,
+  tier: json['tier'] as String?,
   deviceInfo: json['device_info'] as Map<String, dynamic>,
   profile: json['profile'] as Map<String, dynamic>?,
 );
@@ -74,6 +86,8 @@ Map<String, dynamic> _$$RegisterRequestImplToJson(
   'email': instance.email,
   'password': instance.password,
   'exam_type': instance.examType,
+  'role': instance.role,
+  'tier': instance.tier,
   'device_info': instance.deviceInfo,
   'profile': instance.profile,
 };
@@ -84,6 +98,8 @@ _$GoogleAuthRequestImpl _$$GoogleAuthRequestImplFromJson(
   idToken: json['id_token'] as String,
   deviceInfo: json['device_info'] as Map<String, dynamic>,
   examType: json['exam_type'] as String?,
+  role: json['role'] as String?,
+  tier: json['tier'] as String?,
 );
 
 Map<String, dynamic> _$$GoogleAuthRequestImplToJson(
@@ -92,4 +108,6 @@ Map<String, dynamic> _$$GoogleAuthRequestImplToJson(
   'id_token': instance.idToken,
   'device_info': instance.deviceInfo,
   'exam_type': instance.examType,
+  'role': instance.role,
+  'tier': instance.tier,
 };
