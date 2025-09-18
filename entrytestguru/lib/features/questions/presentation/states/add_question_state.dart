@@ -10,6 +10,8 @@ part 'add_question_state.freezed.dart';
 class AddQuestionState with _$AddQuestionState {
   const factory AddQuestionState({
     @Default('') String questionText,
+    List<String>? questionImageUrls, // Multiple image URLs
+    List<String>? questionLatex, // Multiple LaTeX expressions
     @Default([]) List<QuestionOption> options,
     @Default([]) List<String> correctAnswers,
     @Default(QuestionType.singleChoice) QuestionType questionType,
@@ -69,6 +71,8 @@ class AddQuestionState with _$AddQuestionState {
       topic: topic,
       subTopic: subTopic,
       questionText: questionText,
+      questionImageUrls: questionImageUrls, // Multiple image URLs
+      questionLatex: questionLatex, // Multiple LaTeX expressions
       options: options,
       correctAnswer: correctAnswers,
       questionType: questionType,

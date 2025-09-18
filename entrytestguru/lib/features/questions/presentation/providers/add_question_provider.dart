@@ -28,6 +28,69 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
     state = state.copyWith(questionText: text);
   }
 
+  /// Update question image URL (legacy method for backward compatibility)
+  void updateQuestionImageUrl(String? imageUrl) {
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      addQuestionImageUrl(imageUrl);
+    }
+  }
+
+  /// Add a question LaTeX expression to the list
+  void addQuestionLatex(String latex) {
+    final currentLatex = List<String>.from(state.questionLatex ?? []);
+    // Always add the LaTeX, even if empty, to trigger UI update
+    currentLatex.add(latex);
+    state = state.copyWith(questionLatex: currentLatex);
+  }
+
+  /// Remove a question LaTeX expression from the list
+  void removeQuestionLatex(String latex) {
+    final currentLatex = List<String>.from(state.questionLatex ?? []);
+    currentLatex.remove(latex);
+    state = state.copyWith(
+      questionLatex: currentLatex.isEmpty ? null : currentLatex,
+    );
+  }
+
+  /// Update a specific question LaTeX expression in the list
+  void updateQuestionLatexAt(int index, String latex) {
+    if (latex.isNotEmpty) {
+      final currentLatex = List<String>.from(state.questionLatex ?? []);
+      if (index >= 0 && index < currentLatex.length) {
+        currentLatex[index] = latex;
+        state = state.copyWith(questionLatex: currentLatex);
+      }
+    }
+  }
+
+  /// Add a question image URL to the list
+  void addQuestionImageUrl(String imageUrl) {
+    final currentUrls = List<String>.from(state.questionImageUrls ?? []);
+    // Always add the URL, even if empty, to trigger UI update
+    currentUrls.add(imageUrl);
+    state = state.copyWith(questionImageUrls: currentUrls);
+  }
+
+  /// Remove a question image URL from the list
+  void removeQuestionImageUrl(String imageUrl) {
+    final currentUrls = List<String>.from(state.questionImageUrls ?? []);
+    currentUrls.remove(imageUrl);
+    state = state.copyWith(
+      questionImageUrls: currentUrls.isEmpty ? null : currentUrls,
+    );
+  }
+
+  /// Update a specific question image URL in the list
+  void updateQuestionImageUrlAt(int index, String imageUrl) {
+    if (imageUrl.isNotEmpty) {
+      final currentUrls = List<String>.from(state.questionImageUrls ?? []);
+      if (index >= 0 && index < currentUrls.length) {
+        currentUrls[index] = imageUrl;
+        state = state.copyWith(questionImageUrls: currentUrls);
+      }
+    }
+  }
+
   /// Add a new option
   void addOption() {
     final newOptions = List<QuestionOption>.from(state.options)
@@ -62,6 +125,20 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
   void updateOptionText(int index, String text) {
     final newOptions = List<QuestionOption>.from(state.options);
     newOptions[index] = newOptions[index].copyWith(text: text);
+    state = state.copyWith(options: newOptions);
+  }
+
+  /// Update option image URL
+  void updateOptionImageUrl(int index, String? imageUrl) {
+    final newOptions = List<QuestionOption>.from(state.options);
+    newOptions[index] = newOptions[index].copyWith(imageUrl: imageUrl);
+    state = state.copyWith(options: newOptions);
+  }
+
+  /// Update option LaTeX content
+  void updateOptionLatex(int index, String? latex) {
+    final newOptions = List<QuestionOption>.from(state.options);
+    newOptions[index] = newOptions[index].copyWith(latex: latex);
     state = state.copyWith(options: newOptions);
   }
 
@@ -179,7 +256,7 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
         'topic': question.topic,
         'subTopic': question.subTopic,
         'questionText': question.questionText,
-        'questionImageUrl': question.questionImageUrl,
+        'questionImageUrls': question.questionImageUrls,
         'questionLatex': question.questionLatex,
         'options': question.options
             .map(

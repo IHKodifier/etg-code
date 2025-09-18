@@ -18,6 +18,10 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
   final _explanationController = TextEditingController();
   final _tagController = TextEditingController();
   final List<TextEditingController> _optionControllers = [];
+  final List<TextEditingController> _optionImageControllers = [];
+  final List<TextEditingController> _optionLatexControllers = [];
+  final List<TextEditingController> _questionImageUrlControllers = [];
+  final List<TextEditingController> _questionLatexControllers = [];
 
   @override
   void initState() {
@@ -35,16 +39,34 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
     for (final controller in _optionControllers) {
       controller.dispose();
     }
+    for (final controller in _optionImageControllers) {
+      controller.dispose();
+    }
+    for (final controller in _optionLatexControllers) {
+      controller.dispose();
+    }
+    for (final controller in _questionImageUrlControllers) {
+      controller.dispose();
+    }
+    for (final controller in _questionLatexControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
   void _addOptionController() {
     _optionControllers.add(TextEditingController());
+    _optionImageControllers.add(TextEditingController());
+    _optionLatexControllers.add(TextEditingController());
   }
 
   void _removeOptionController(int index) {
     _optionControllers[index].dispose();
+    _optionImageControllers[index].dispose();
+    _optionLatexControllers[index].dispose();
     _optionControllers.removeAt(index);
+    _optionImageControllers.removeAt(index);
+    _optionLatexControllers.removeAt(index);
   }
 
   @override
@@ -72,6 +94,16 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
             children: [
               // Question Text
               _buildQuestionTextField(state, notifier),
+
+              const SizedBox(height: 24),
+
+              // Multiple Question Image URLs
+              _buildQuestionImageUrlsSection(state, notifier),
+
+              const SizedBox(height: 24),
+
+              // Multiple Question LaTeX Expressions
+              _buildQuestionLatexSection(state, notifier),
 
               const SizedBox(height: 24),
 
@@ -152,6 +184,199 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
         return null;
       },
       onChanged: notifier.updateQuestionText,
+    );
+  }
+
+  Widget _buildQuestionImageUrlsSection(
+    AddQuestionState state,
+    AddQuestionNotifier notifier,
+  ) {
+    final imageUrls = state.questionImageUrls ?? [];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Additional Question Images (Optional)',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                setState(() {
+                  final controller = TextEditingController();
+                  _questionImageUrlControllers.add(controller);
+                  notifier.addQuestionImageUrl('');
+                });
+              },
+              tooltip: 'Add Image',
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        // Display existing image URLs
+        ...List.generate(imageUrls.length, (index) {
+          // Ensure we have enough controllers
+          while (_questionImageUrlControllers.length <= index) {
+            _questionImageUrlControllers.add(TextEditingController());
+          }
+
+          final controller = _questionImageUrlControllers[index];
+          // Only set text if it's different to avoid cursor jumping
+          if (controller.text != imageUrls[index]) {
+            controller.text = imageUrls[index];
+          }
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      labelText: 'Image URL ${index + 1}',
+                      hintText: 'https://example.com/image${index + 1}.jpg',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.image),
+                    ),
+                    validator: (value) {
+                      if (value != null && value.isNotEmpty) {
+                        final uri = Uri.tryParse(value);
+                        if (uri == null || !uri.hasScheme) {
+                          return 'Please enter a valid URL';
+                        }
+                      }
+                      return null;
+                    },
+                    onChanged: (value) =>
+                        notifier.updateQuestionImageUrlAt(index, value),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.remove),
+                  onPressed: () {
+                    setState(() {
+                      notifier.removeQuestionImageUrl(imageUrls[index]);
+                      _questionImageUrlControllers[index].dispose();
+                      _questionImageUrlControllers.removeAt(index);
+                    });
+                  },
+                  tooltip: 'Remove Image',
+                ),
+              ],
+            ),
+          );
+        }),
+
+        if (imageUrls.isEmpty)
+          const Text(
+            'No additional images added yet. Click + to add images.',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildQuestionLatexSection(
+    AddQuestionState state,
+    AddQuestionNotifier notifier,
+  ) {
+    final latexExpressions = state.questionLatex ?? [];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Question LaTeX Expressions (Optional)',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                setState(() {
+                  final controller = TextEditingController();
+                  _questionLatexControllers.add(controller);
+                  notifier.addQuestionLatex('');
+                });
+              },
+              tooltip: 'Add LaTeX Expression',
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        // Display existing LaTeX expressions
+        ...List.generate(latexExpressions.length, (index) {
+          // Ensure we have enough controllers
+          while (_questionLatexControllers.length <= index) {
+            _questionLatexControllers.add(TextEditingController());
+          }
+
+          final controller = _questionLatexControllers[index];
+          // Only set text if it's different to avoid cursor jumping
+          if (controller.text != latexExpressions[index]) {
+            controller.text = latexExpressions[index];
+          }
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      labelText: 'LaTeX Expression ${index + 1}',
+                      hintText: r'\frac{a}{b} = c',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.functions),
+                    ),
+                    maxLines: 2,
+                    validator: (value) {
+                      if (value != null && value.isNotEmpty) {
+                        // Basic LaTeX validation - check for common LaTeX patterns
+                        if (!value.contains(r'\') &&
+                            !value.contains('^') &&
+                            !value.contains('_')) {
+                          return 'Please enter a valid LaTeX expression';
+                        }
+                      }
+                      return null;
+                    },
+                    onChanged: (value) =>
+                        notifier.updateQuestionLatexAt(index, value),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.remove),
+                  onPressed: () {
+                    setState(() {
+                      notifier.removeQuestionLatex(latexExpressions[index]);
+                      _questionLatexControllers[index].dispose();
+                      _questionLatexControllers.removeAt(index);
+                    });
+                  },
+                  tooltip: 'Remove LaTeX Expression',
+                ),
+              ],
+            ),
+          );
+        }),
+
+        if (latexExpressions.isEmpty)
+          const Text(
+            'No LaTeX expressions added yet. Click + to add mathematical expressions.',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+      ],
     );
   }
 
@@ -236,65 +461,119 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
     final isCorrect = state.correctAnswers.contains(option.id);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Option Label
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: isCorrect ? Colors.green : Colors.grey[300],
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  option.id,
-                  style: TextStyle(
-                    color: isCorrect ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.bold,
+            // Option Header
+            Row(
+              children: [
+                // Option Label
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: isCorrect ? Colors.green : Colors.grey[300],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      option.id,
+                      style: TextStyle(
+                        color: isCorrect ? Colors.white : Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 12),
+
+                // Correct Answer Checkbox
+                const Text('Correct Answer'),
+                Checkbox(
+                  value: isCorrect,
+                  onChanged: (_) => notifier.toggleCorrectAnswer(option.id),
+                ),
+
+                const Spacer(),
+
+                // Remove Button (only if more than 2 options)
+                if (state.options.length > 2)
+                  IconButton(
+                    icon: const Icon(Icons.remove),
+                    onPressed: () {
+                      notifier.removeOption(index);
+                      _removeOptionController(index);
+                    },
+                    tooltip: 'Remove Option',
+                  ),
+              ],
             ),
-            const SizedBox(width: 12),
+
+            const SizedBox(height: 12),
 
             // Option Text Field
-            Expanded(
-              child: TextFormField(
-                controller: _optionControllers[index],
-                decoration: InputDecoration(
-                  hintText: 'Option ${option.id} text',
-                  border: const OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Option text is required';
+            TextFormField(
+              controller: _optionControllers[index],
+              decoration: InputDecoration(
+                labelText: 'Option ${option.id} Text *',
+                hintText: 'Enter option text...',
+                border: const OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value?.isEmpty ?? true) {
+                  return 'Option text is required';
+                }
+                return null;
+              },
+              onChanged: (value) => notifier.updateOptionText(index, value),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Option Image URL Field
+            TextFormField(
+              controller: _optionImageControllers[index],
+              decoration: InputDecoration(
+                labelText: 'Option ${option.id} Image URL (Optional)',
+                hintText: 'https://example.com/option-image.jpg',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.image),
+              ),
+              validator: (value) {
+                if (value != null && value.isNotEmpty) {
+                  final uri = Uri.tryParse(value);
+                  if (uri == null || !uri.hasScheme) {
+                    return 'Please enter a valid URL';
                   }
-                  return null;
-                },
-                onChanged: (value) => notifier.updateOptionText(index, value),
+                }
+                return null;
+              },
+              onChanged: (value) => notifier.updateOptionImageUrl(
+                index,
+                value.isEmpty ? null : value,
               ),
             ),
 
-            // Correct Answer Checkbox
-            Checkbox(
-              value: isCorrect,
-              onChanged: (_) => notifier.toggleCorrectAnswer(option.id),
-            ),
+            const SizedBox(height: 12),
 
-            // Remove Button (only if more than 2 options)
-            if (state.options.length > 2)
-              IconButton(
-                icon: const Icon(Icons.remove),
-                onPressed: () {
-                  notifier.removeOption(index);
-                  _removeOptionController(index);
-                },
-                tooltip: 'Remove Option',
+            // Option LaTeX Field
+            TextFormField(
+              controller: _optionLatexControllers[index],
+              decoration: InputDecoration(
+                labelText: 'Option ${option.id} LaTeX (Optional)',
+                hintText: r'x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.functions),
               ),
+              maxLines: 2,
+              onChanged: (value) => notifier.updateOptionLatex(
+                index,
+                value.isEmpty ? null : value,
+              ),
+            ),
           ],
         ),
       ),

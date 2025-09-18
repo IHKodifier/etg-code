@@ -24,9 +24,8 @@ class Question with _$Question {
 
     // Content
     required String questionText,
-    String? questionImageUrl,
-    String? questionLatex,
-
+    List<String>? questionImageUrls, // Multiple image URLs
+    List<String>? questionLatex, // Multiple LaTeX expressions
     // Options & Answer
     required List<QuestionOption> options,
     required List<String> correctAnswer,
@@ -150,7 +149,7 @@ class Question with _$Question {
 
   /// Checks if the question has visual content
   bool get hasVisualContent {
-    return (questionImageUrl != null && questionImageUrl!.isNotEmpty) ||
+    return (questionImageUrls != null && questionImageUrls!.isNotEmpty) ||
         (questionLatex != null && questionLatex!.isNotEmpty) ||
         options.any((option) => option.hasVisualContent);
   }

@@ -18,6 +18,10 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$AddQuestionState {
   String get questionText => throw _privateConstructorUsedError;
+  List<String>? get questionImageUrls =>
+      throw _privateConstructorUsedError; // Multiple image URLs
+  List<String>? get questionLatex =>
+      throw _privateConstructorUsedError; // Multiple LaTeX expressions
   List<QuestionOption> get options => throw _privateConstructorUsedError;
   List<String> get correctAnswers => throw _privateConstructorUsedError;
   QuestionType get questionType => throw _privateConstructorUsedError;
@@ -49,6 +53,8 @@ abstract class $AddQuestionStateCopyWith<$Res> {
   @useResult
   $Res call({
     String questionText,
+    List<String>? questionImageUrls,
+    List<String>? questionLatex,
     List<QuestionOption> options,
     List<String> correctAnswers,
     QuestionType questionType,
@@ -82,6 +88,8 @@ class _$AddQuestionStateCopyWithImpl<$Res, $Val extends AddQuestionState>
   @override
   $Res call({
     Object? questionText = null,
+    Object? questionImageUrls = freezed,
+    Object? questionLatex = freezed,
     Object? options = null,
     Object? correctAnswers = null,
     Object? questionType = null,
@@ -103,6 +111,14 @@ class _$AddQuestionStateCopyWithImpl<$Res, $Val extends AddQuestionState>
                 ? _value.questionText
                 : questionText // ignore: cast_nullable_to_non_nullable
                       as String,
+            questionImageUrls: freezed == questionImageUrls
+                ? _value.questionImageUrls
+                : questionImageUrls // ignore: cast_nullable_to_non_nullable
+                      as List<String>?,
+            questionLatex: freezed == questionLatex
+                ? _value.questionLatex
+                : questionLatex // ignore: cast_nullable_to_non_nullable
+                      as List<String>?,
             options: null == options
                 ? _value.options
                 : options // ignore: cast_nullable_to_non_nullable
@@ -176,6 +192,8 @@ abstract class _$$AddQuestionStateImplCopyWith<$Res>
   @useResult
   $Res call({
     String questionText,
+    List<String>? questionImageUrls,
+    List<String>? questionLatex,
     List<QuestionOption> options,
     List<String> correctAnswers,
     QuestionType questionType,
@@ -208,6 +226,8 @@ class __$$AddQuestionStateImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? questionText = null,
+    Object? questionImageUrls = freezed,
+    Object? questionLatex = freezed,
     Object? options = null,
     Object? correctAnswers = null,
     Object? questionType = null,
@@ -229,6 +249,14 @@ class __$$AddQuestionStateImplCopyWithImpl<$Res>
             ? _value.questionText
             : questionText // ignore: cast_nullable_to_non_nullable
                   as String,
+        questionImageUrls: freezed == questionImageUrls
+            ? _value._questionImageUrls
+            : questionImageUrls // ignore: cast_nullable_to_non_nullable
+                  as List<String>?,
+        questionLatex: freezed == questionLatex
+            ? _value._questionLatex
+            : questionLatex // ignore: cast_nullable_to_non_nullable
+                  as List<String>?,
         options: null == options
             ? _value._options
             : options // ignore: cast_nullable_to_non_nullable
@@ -295,6 +323,8 @@ class __$$AddQuestionStateImplCopyWithImpl<$Res>
 class _$AddQuestionStateImpl extends _AddQuestionState {
   const _$AddQuestionStateImpl({
     this.questionText = '',
+    final List<String>? questionImageUrls,
+    final List<String>? questionLatex,
     final List<QuestionOption> options = const [],
     final List<String> correctAnswers = const [],
     this.questionType = QuestionType.singleChoice,
@@ -309,7 +339,9 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
     this.isLoading = false,
     this.errorMessage,
     this.isSuccess = false,
-  }) : _options = options,
+  }) : _questionImageUrls = questionImageUrls,
+       _questionLatex = questionLatex,
+       _options = options,
        _correctAnswers = correctAnswers,
        _tags = tags,
        super._();
@@ -317,7 +349,32 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
   @override
   @JsonKey()
   final String questionText;
+  final List<String>? _questionImageUrls;
+  @override
+  List<String>? get questionImageUrls {
+    final value = _questionImageUrls;
+    if (value == null) return null;
+    if (_questionImageUrls is EqualUnmodifiableListView)
+      return _questionImageUrls;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  // Multiple image URLs
+  final List<String>? _questionLatex;
+  // Multiple image URLs
+  @override
+  List<String>? get questionLatex {
+    final value = _questionLatex;
+    if (value == null) return null;
+    if (_questionLatex is EqualUnmodifiableListView) return _questionLatex;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  // Multiple LaTeX expressions
   final List<QuestionOption> _options;
+  // Multiple LaTeX expressions
   @override
   @JsonKey()
   List<QuestionOption> get options {
@@ -377,7 +434,7 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
 
   @override
   String toString() {
-    return 'AddQuestionState(questionText: $questionText, options: $options, correctAnswers: $correctAnswers, questionType: $questionType, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, explanationText: $explanationText, tags: $tags, isLoading: $isLoading, errorMessage: $errorMessage, isSuccess: $isSuccess)';
+    return 'AddQuestionState(questionText: $questionText, questionImageUrls: $questionImageUrls, questionLatex: $questionLatex, options: $options, correctAnswers: $correctAnswers, questionType: $questionType, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, explanationText: $explanationText, tags: $tags, isLoading: $isLoading, errorMessage: $errorMessage, isSuccess: $isSuccess)';
   }
 
   @override
@@ -387,6 +444,14 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
             other is _$AddQuestionStateImpl &&
             (identical(other.questionText, questionText) ||
                 other.questionText == questionText) &&
+            const DeepCollectionEquality().equals(
+              other._questionImageUrls,
+              _questionImageUrls,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._questionLatex,
+              _questionLatex,
+            ) &&
             const DeepCollectionEquality().equals(other._options, _options) &&
             const DeepCollectionEquality().equals(
               other._correctAnswers,
@@ -419,6 +484,8 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
   int get hashCode => Object.hash(
     runtimeType,
     questionText,
+    const DeepCollectionEquality().hash(_questionImageUrls),
+    const DeepCollectionEquality().hash(_questionLatex),
     const DeepCollectionEquality().hash(_options),
     const DeepCollectionEquality().hash(_correctAnswers),
     questionType,
@@ -450,6 +517,8 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
 abstract class _AddQuestionState extends AddQuestionState {
   const factory _AddQuestionState({
     final String questionText,
+    final List<String>? questionImageUrls,
+    final List<String>? questionLatex,
     final List<QuestionOption> options,
     final List<String> correctAnswers,
     final QuestionType questionType,
@@ -469,6 +538,10 @@ abstract class _AddQuestionState extends AddQuestionState {
 
   @override
   String get questionText;
+  @override
+  List<String>? get questionImageUrls; // Multiple image URLs
+  @override
+  List<String>? get questionLatex; // Multiple LaTeX expressions
   @override
   List<QuestionOption> get options;
   @override

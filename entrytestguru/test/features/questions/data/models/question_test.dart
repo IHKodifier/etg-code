@@ -151,7 +151,7 @@ void main() {
       expect(sampleQuestion.hasVisualContent, false);
 
       final questionWithImage = sampleQuestion.copyWith(
-        questionImageUrl: 'image.jpg',
+        questionImageUrls: ['image.jpg'],
       );
       expect(questionWithImage.hasVisualContent, true);
     });

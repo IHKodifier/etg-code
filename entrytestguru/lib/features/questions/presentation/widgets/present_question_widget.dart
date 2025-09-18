@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/models/question.dart';
 import '../../data/models/question_filter.dart';
 import '../../data/models/question_enums.dart';
 import '../states/present_question_state.dart';
@@ -160,6 +161,22 @@ class _PresentQuestionWidgetState extends ConsumerState<PresentQuestionWidget> {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
 
+            // Question Images (multiple)
+            if (state.currentQuestion!.questionImageUrls != null &&
+                state.currentQuestion!.questionImageUrls!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: _buildQuestionImages(state.currentQuestion!),
+              ),
+
+            // Question LaTeX (if available)
+            if (state.currentQuestion!.questionLatex != null &&
+                state.currentQuestion!.questionLatex!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: _buildQuestionLatex(state.currentQuestion!),
+              ),
+
             const SizedBox(height: 8),
 
             // Question metadata
@@ -277,11 +294,99 @@ class _PresentQuestionWidgetState extends ConsumerState<PresentQuestionWidget> {
 
                     const SizedBox(width: 12),
 
-                    // Option text
+                    // Option content (text, image, LaTeX)
                     Expanded(
-                      child: Text(
-                        option.displayText,
-                        style: Theme.of(context).textTheme.bodyLarge,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Option text
+                          Text(
+                            option.displayText,
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+
+                          // Option Image (if available)
+                          if (option.imageUrl != null &&
+                              option.imageUrl!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: Image.network(
+                                  option.imageUrl!,
+                                  height: 80,
+                                  width: double.infinity,
+                                  fit: BoxFit.contain,
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                        if (loadingProgress == null)
+                                          return child;
+                                        return Container(
+                                          height: 80,
+                                          width: double.infinity,
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.surfaceVariant,
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          child: const Center(
+                                            child: SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      height: 80,
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.errorContainer,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.error,
+                                        size: 24,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+
+                          // Option LaTeX (if available)
+                          if (option.latex != null && option.latex!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceVariant,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  option.latex!,
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(fontFamily: 'serif'),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
 
@@ -497,6 +602,105 @@ class _PresentQuestionWidgetState extends ConsumerState<PresentQuestionWidget> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildQuestionImages(Question question) {
+    final allImageUrls = <String>[];
+
+    // Add multiple image URLs if exist
+    if (question.questionImageUrls != null) {
+      allImageUrls.addAll(question.questionImageUrls!);
+    }
+
+    if (allImageUrls.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      children: allImageUrls.map((imageUrl) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              imageUrl,
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.contain,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceVariant,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(child: CircularProgressIndicator()),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.broken_image,
+                        color: Theme.of(context).colorScheme.error,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Failed to load image',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildQuestionLatex(Question question) {
+    final latexExpressions = question.questionLatex ?? [];
+
+    if (latexExpressions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      children: latexExpressions.map((latex) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceVariant,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              latex,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontFamily: 'serif', // Better for mathematical expressions
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 

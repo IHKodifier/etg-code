@@ -16,8 +16,12 @@ _$QuestionImpl _$$QuestionImplFromJson(
   topic: json['topic'] as String,
   subTopic: json['subTopic'] as String?,
   questionText: json['questionText'] as String,
-  questionImageUrl: json['questionImageUrl'] as String?,
-  questionLatex: json['questionLatex'] as String?,
+  questionImageUrls: (json['questionImageUrls'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  questionLatex: (json['questionLatex'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
   options: (json['options'] as List<dynamic>)
       .map((e) => QuestionOption.fromJson(e as Map<String, dynamic>))
       .toList(),
@@ -86,7 +90,7 @@ Map<String, dynamic> _$$QuestionImplToJson(_$QuestionImpl instance) =>
       'topic': instance.topic,
       'subTopic': instance.subTopic,
       'questionText': instance.questionText,
-      'questionImageUrl': instance.questionImageUrl,
+      'questionImageUrls': instance.questionImageUrls,
       'questionLatex': instance.questionLatex,
       'options': instance.options,
       'correctAnswer': instance.correctAnswer,

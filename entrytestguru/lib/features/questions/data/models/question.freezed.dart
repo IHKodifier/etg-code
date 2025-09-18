@@ -29,9 +29,11 @@ mixin _$Question {
   String get topic => throw _privateConstructorUsedError;
   String? get subTopic => throw _privateConstructorUsedError; // Content
   String get questionText => throw _privateConstructorUsedError;
-  String? get questionImageUrl => throw _privateConstructorUsedError;
-  String? get questionLatex =>
-      throw _privateConstructorUsedError; // Options & Answer
+  List<String>? get questionImageUrls =>
+      throw _privateConstructorUsedError; // Multiple image URLs
+  List<String>? get questionLatex =>
+      throw _privateConstructorUsedError; // Multiple LaTeX expressions
+  // Options & Answer
   List<QuestionOption> get options => throw _privateConstructorUsedError;
   List<String> get correctAnswer => throw _privateConstructorUsedError;
   QuestionType get questionType =>
@@ -103,8 +105,8 @@ abstract class $QuestionCopyWith<$Res> {
     String topic,
     String? subTopic,
     String questionText,
-    String? questionImageUrl,
-    String? questionLatex,
+    List<String>? questionImageUrls,
+    List<String>? questionLatex,
     List<QuestionOption> options,
     List<String> correctAnswer,
     QuestionType questionType,
@@ -166,7 +168,7 @@ class _$QuestionCopyWithImpl<$Res, $Val extends Question>
     Object? topic = null,
     Object? subTopic = freezed,
     Object? questionText = null,
-    Object? questionImageUrl = freezed,
+    Object? questionImageUrls = freezed,
     Object? questionLatex = freezed,
     Object? options = null,
     Object? correctAnswer = null,
@@ -232,14 +234,14 @@ class _$QuestionCopyWithImpl<$Res, $Val extends Question>
                 ? _value.questionText
                 : questionText // ignore: cast_nullable_to_non_nullable
                       as String,
-            questionImageUrl: freezed == questionImageUrl
-                ? _value.questionImageUrl
-                : questionImageUrl // ignore: cast_nullable_to_non_nullable
-                      as String?,
+            questionImageUrls: freezed == questionImageUrls
+                ? _value.questionImageUrls
+                : questionImageUrls // ignore: cast_nullable_to_non_nullable
+                      as List<String>?,
             questionLatex: freezed == questionLatex
                 ? _value.questionLatex
                 : questionLatex // ignore: cast_nullable_to_non_nullable
-                      as String?,
+                      as List<String>?,
             options: null == options
                 ? _value.options
                 : options // ignore: cast_nullable_to_non_nullable
@@ -419,8 +421,8 @@ abstract class _$$QuestionImplCopyWith<$Res>
     String topic,
     String? subTopic,
     String questionText,
-    String? questionImageUrl,
-    String? questionLatex,
+    List<String>? questionImageUrls,
+    List<String>? questionLatex,
     List<QuestionOption> options,
     List<String> correctAnswer,
     QuestionType questionType,
@@ -483,7 +485,7 @@ class __$$QuestionImplCopyWithImpl<$Res>
     Object? topic = null,
     Object? subTopic = freezed,
     Object? questionText = null,
-    Object? questionImageUrl = freezed,
+    Object? questionImageUrls = freezed,
     Object? questionLatex = freezed,
     Object? options = null,
     Object? correctAnswer = null,
@@ -549,14 +551,14 @@ class __$$QuestionImplCopyWithImpl<$Res>
             ? _value.questionText
             : questionText // ignore: cast_nullable_to_non_nullable
                   as String,
-        questionImageUrl: freezed == questionImageUrl
-            ? _value.questionImageUrl
-            : questionImageUrl // ignore: cast_nullable_to_non_nullable
-                  as String?,
+        questionImageUrls: freezed == questionImageUrls
+            ? _value._questionImageUrls
+            : questionImageUrls // ignore: cast_nullable_to_non_nullable
+                  as List<String>?,
         questionLatex: freezed == questionLatex
-            ? _value.questionLatex
+            ? _value._questionLatex
             : questionLatex // ignore: cast_nullable_to_non_nullable
-                  as String?,
+                  as List<String>?,
         options: null == options
             ? _value._options
             : options // ignore: cast_nullable_to_non_nullable
@@ -705,8 +707,8 @@ class _$QuestionImpl extends _Question {
     required this.topic,
     this.subTopic,
     required this.questionText,
-    this.questionImageUrl,
-    this.questionLatex,
+    final List<String>? questionImageUrls,
+    final List<String>? questionLatex,
     required final List<QuestionOption> options,
     required final List<String> correctAnswer,
     this.questionType = QuestionType.singleChoice,
@@ -740,7 +742,9 @@ class _$QuestionImpl extends _Question {
     this.isBookmarked = false,
     this.userNotes,
     this.lastAttempt,
-  }) : _options = options,
+  }) : _questionImageUrls = questionImageUrls,
+       _questionLatex = questionLatex,
+       _options = options,
        _correctAnswer = correctAnswer,
        _explanationSteps = explanationSteps,
        _references = references,
@@ -768,12 +772,33 @@ class _$QuestionImpl extends _Question {
   // Content
   @override
   final String questionText;
+  final List<String>? _questionImageUrls;
   @override
-  final String? questionImageUrl;
+  List<String>? get questionImageUrls {
+    final value = _questionImageUrls;
+    if (value == null) return null;
+    if (_questionImageUrls is EqualUnmodifiableListView)
+      return _questionImageUrls;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  // Multiple image URLs
+  final List<String>? _questionLatex;
+  // Multiple image URLs
   @override
-  final String? questionLatex;
+  List<String>? get questionLatex {
+    final value = _questionLatex;
+    if (value == null) return null;
+    if (_questionLatex is EqualUnmodifiableListView) return _questionLatex;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  // Multiple LaTeX expressions
   // Options & Answer
   final List<QuestionOption> _options;
+  // Multiple LaTeX expressions
   // Options & Answer
   @override
   List<QuestionOption> get options {
@@ -919,7 +944,7 @@ class _$QuestionImpl extends _Question {
 
   @override
   String toString() {
-    return 'Question(id: $id, questionId: $questionId, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, questionText: $questionText, questionImageUrl: $questionImageUrl, questionLatex: $questionLatex, options: $options, correctAnswer: $correctAnswer, questionType: $questionType, explanationText: $explanationText, explanationVideoUrl: $explanationVideoUrl, explanationSteps: $explanationSteps, references: $references, ardeProbability: $ardeProbability, ardeFrequency: $ardeFrequency, ardeAppearanceYears: $ardeAppearanceYears, ardeNotes: $ardeNotes, ardeContext: $ardeContext, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, globalStats: $globalStats, tags: $tags, relatedQuestions: $relatedQuestions, createdAt: $createdAt, updatedAt: $updatedAt, createdBy: $createdBy, isActive: $isActive, version: $version, status: $status, approvalStatus: $approvalStatus, reviewerId: $reviewerId, reviewerName: $reviewerName, reviewComments: $reviewComments, submittedAt: $submittedAt, reviewedAt: $reviewedAt, approvedAt: $approvedAt, isBookmarked: $isBookmarked, userNotes: $userNotes, lastAttempt: $lastAttempt)';
+    return 'Question(id: $id, questionId: $questionId, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, questionText: $questionText, questionImageUrls: $questionImageUrls, questionLatex: $questionLatex, options: $options, correctAnswer: $correctAnswer, questionType: $questionType, explanationText: $explanationText, explanationVideoUrl: $explanationVideoUrl, explanationSteps: $explanationSteps, references: $references, ardeProbability: $ardeProbability, ardeFrequency: $ardeFrequency, ardeAppearanceYears: $ardeAppearanceYears, ardeNotes: $ardeNotes, ardeContext: $ardeContext, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, globalStats: $globalStats, tags: $tags, relatedQuestions: $relatedQuestions, createdAt: $createdAt, updatedAt: $updatedAt, createdBy: $createdBy, isActive: $isActive, version: $version, status: $status, approvalStatus: $approvalStatus, reviewerId: $reviewerId, reviewerName: $reviewerName, reviewComments: $reviewComments, submittedAt: $submittedAt, reviewedAt: $reviewedAt, approvedAt: $approvedAt, isBookmarked: $isBookmarked, userNotes: $userNotes, lastAttempt: $lastAttempt)';
   }
 
   @override
@@ -938,10 +963,14 @@ class _$QuestionImpl extends _Question {
                 other.subTopic == subTopic) &&
             (identical(other.questionText, questionText) ||
                 other.questionText == questionText) &&
-            (identical(other.questionImageUrl, questionImageUrl) ||
-                other.questionImageUrl == questionImageUrl) &&
-            (identical(other.questionLatex, questionLatex) ||
-                other.questionLatex == questionLatex) &&
+            const DeepCollectionEquality().equals(
+              other._questionImageUrls,
+              _questionImageUrls,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._questionLatex,
+              _questionLatex,
+            ) &&
             const DeepCollectionEquality().equals(other._options, _options) &&
             const DeepCollectionEquality().equals(
               other._correctAnswer,
@@ -1027,8 +1056,8 @@ class _$QuestionImpl extends _Question {
     topic,
     subTopic,
     questionText,
-    questionImageUrl,
-    questionLatex,
+    const DeepCollectionEquality().hash(_questionImageUrls),
+    const DeepCollectionEquality().hash(_questionLatex),
     const DeepCollectionEquality().hash(_options),
     const DeepCollectionEquality().hash(_correctAnswer),
     questionType,
@@ -1087,8 +1116,8 @@ abstract class _Question extends Question {
     required final String topic,
     final String? subTopic,
     required final String questionText,
-    final String? questionImageUrl,
-    final String? questionLatex,
+    final List<String>? questionImageUrls,
+    final List<String>? questionLatex,
     required final List<QuestionOption> options,
     required final List<String> correctAnswer,
     final QuestionType questionType,
@@ -1144,9 +1173,10 @@ abstract class _Question extends Question {
   @override
   String get questionText;
   @override
-  String? get questionImageUrl;
+  List<String>? get questionImageUrls; // Multiple image URLs
   @override
-  String? get questionLatex; // Options & Answer
+  List<String>? get questionLatex; // Multiple LaTeX expressions
+  // Options & Answer
   @override
   List<QuestionOption> get options;
   @override
