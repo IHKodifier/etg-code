@@ -32,11 +32,23 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
       // Get all questions from Firestore
       final snapshot = await _firestoreService.getCollection('questions');
 
-      // Convert Firestore documents to Question objects
-      final questions = snapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        return Question.fromJson(data);
-      }).toList();
+      // Convert Firestore documents to Question objects with error handling
+      final questions = <Question>[];
+      for (final doc in snapshot.docs) {
+        try {
+          final data = doc.data() as Map<String, dynamic>;
+
+          // Ensure required fields have default values if null
+          final safeData = _sanitizeQuestionData(data);
+
+          final question = Question.fromJson(safeData);
+          questions.add(question);
+        } catch (e) {
+          print('Error parsing question ${doc.id}: $e');
+          // Skip invalid questions instead of crashing
+          continue;
+        }
+      }
 
       // Apply filters if specified
       List<Question> filteredQuestions = questions;
@@ -235,4 +247,141 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
 
   /// Get loading state
   bool get isLoading => state.isLoading;
+
+  /// Sanitizes question data from Firestore to ensure required fields have values
+  Map<String, dynamic> _sanitizeQuestionData(Map<String, dynamic> data) {
+    final now = DateTime.now();
+
+    return {
+      // Required identity fields with defaults
+      'id': data['id'] ?? 'unknown_${DateTime.now().millisecondsSinceEpoch}',
+      'questionId':
+          data['questionId'] ??
+          data['id'] ??
+          'unknown_${DateTime.now().millisecondsSinceEpoch}',
+      'examCategory': data['examCategory'] ?? 'General',
+      'subject': data['subject'] ?? 'General',
+      'topic': data['topic'] ?? 'General',
+
+      // Optional fields
+      'subTopic': data['subTopic'],
+
+      // Required content fields with defaults
+      'questionText': data['questionText'] ?? 'Question text not available',
+      'questionImageUrls': data['questionImageUrls'] ?? [],
+      'questionLatex': data['questionLatex'] ?? [],
+
+      // Required options and answers with defaults
+      'options': _sanitizeOptions(data['options']),
+      'correctAnswer': data['correctAnswer'] ?? ['A'],
+      'questionType': data['questionType'] ?? 'singleChoice',
+
+      // Required explanation with default
+      'explanationText': data['explanationText'] ?? 'Explanation not available',
+      'explanationVideoUrl': data['explanationVideoUrl'],
+      'explanationSteps': data['explanationSteps'] ?? [],
+      'references': data['references'] ?? [],
+
+      // Required ARDE fields with defaults
+      'ardeProbability': data['ardeProbability'] ?? 'medium',
+      'ardeFrequency': data['ardeFrequency'] ?? 0,
+      'ardeAppearanceYears': data['ardeAppearanceYears'] ?? [],
+      'ardeNotes': data['ardeNotes'],
+      'ardeContext': data['ardeContext'],
+
+      // Required difficulty and performance fields with defaults
+      'difficulty': data['difficulty'] ?? 'medium',
+      'estimatedTimeSeconds': data['estimatedTimeSeconds'] ?? 60,
+      'globalStats':
+          data['globalStats'] ??
+          {
+            'totalAttempts': 0,
+            'totalCorrect': 0,
+            'globalAccuracy': 0.0,
+            'averageTimeSeconds': 0.0,
+            'medianTimeSeconds': 0.0,
+            'p95TimeSeconds': 0.0,
+            'calculatedDifficulty': 0.5,
+          },
+
+      // Search and discovery fields
+      'tags': data['tags'] ?? [],
+      'relatedQuestions': data['relatedQuestions'] ?? [],
+
+      // Required administrative fields with defaults
+      'createdAt': data['createdAt'] ?? now.toIso8601String(),
+      'updatedAt': data['updatedAt'] ?? now.toIso8601String(),
+      'createdBy': data['createdBy'] ?? 'unknown',
+      'isActive': data['isActive'] ?? true,
+      'version': data['version'] ?? 1,
+      'status': data['status'] ?? 'draft',
+
+      // Approval workflow fields
+      'approval_status': data['approval_status'] ?? 'pending',
+      'reviewer_id': data['reviewer_id'],
+      'reviewer_name': data['reviewer_name'],
+      'review_comments': data['review_comments'],
+      'submitted_at': data['submitted_at'] ?? now.toIso8601String(),
+      'reviewed_at': data['reviewed_at'],
+      'approved_at': data['approved_at'],
+    };
+  }
+
+  /// Sanitizes options array to ensure each option has required fields
+  List<Map<String, dynamic>> _sanitizeOptions(dynamic optionsData) {
+    if (optionsData == null) {
+      return [
+        {'id': 'A', 'text': 'Option A'},
+        {'id': 'B', 'text': 'Option B'},
+      ];
+    }
+
+    if (optionsData is! List) {
+      return [
+        {'id': 'A', 'text': 'Option A'},
+        {'id': 'B', 'text': 'Option B'},
+      ];
+    }
+
+    final options = optionsData as List;
+    if (options.isEmpty) {
+      return [
+        {'id': 'A', 'text': 'Option A'},
+        {'id': 'B', 'text': 'Option B'},
+      ];
+    }
+
+    // Sanitize each option
+    final sanitizedOptions = <Map<String, dynamic>>[];
+    for (int i = 0; i < options.length; i++) {
+      final option = options[i];
+      if (option is Map<String, dynamic>) {
+        sanitizedOptions.add({
+          'id': option['id'] ?? String.fromCharCode(65 + i), // A, B, C...
+          'text': option['text'] ?? 'Option ${String.fromCharCode(65 + i)}',
+          'imageUrl': option['imageUrl'],
+          'latex': option['latex'],
+          'isCorrect': option['isCorrect'],
+        });
+      } else {
+        // If option is not a map, create a default one
+        sanitizedOptions.add({
+          'id': String.fromCharCode(65 + i),
+          'text': 'Option ${String.fromCharCode(65 + i)}',
+        });
+      }
+    }
+
+    // Ensure we have at least 2 options
+    if (sanitizedOptions.length < 2) {
+      while (sanitizedOptions.length < 2) {
+        sanitizedOptions.add({
+          'id': String.fromCharCode(65 + sanitizedOptions.length),
+          'text': 'Option ${String.fromCharCode(65 + sanitizedOptions.length)}',
+        });
+      }
+    }
+
+    return sanitizedOptions;
+  }
 }
