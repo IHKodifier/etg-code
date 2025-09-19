@@ -126,3 +126,5 @@ node_modules/
 backend/.env.test
 firebase-service-account-key.json
 set-admin.js
+.vscode/launch.json
+.vscode/launch.json

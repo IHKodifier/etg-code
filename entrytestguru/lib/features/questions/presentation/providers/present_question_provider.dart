@@ -9,15 +9,17 @@ import '../../../../../core/services/firestore_service.dart';
 /// StateNotifierProvider for managing present question state
 final presentQuestionNotifierProvider =
     StateNotifierProvider<PresentQuestionNotifier, PresentQuestionState>((ref) {
+      final questionApiService = ref.watch(QuestionApiService.provider);
       final firestoreService = ref.watch(firestoreServiceProvider);
-      return PresentQuestionNotifier(firestoreService);
+      return PresentQuestionNotifier(questionApiService, firestoreService);
     });
 
 /// StateNotifier for managing question presentation operations
 class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
+  final QuestionApiService _questionApiService;
   final FirestoreService _firestoreService;
 
-  PresentQuestionNotifier(this._firestoreService)
+  PresentQuestionNotifier(this._questionApiService, this._firestoreService)
     : super(const PresentQuestionState());
 
   /// Load questions based on filter
@@ -29,77 +31,97 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
     );
 
     try {
-      // Get all questions from Firestore
-      final snapshot = await _firestoreService.getCollection('questions');
+      // Try to use the API service to get filtered questions
+      final questions = await _questionApiService.getFilteredQuestions(filter);
 
-      // Convert Firestore documents to Question objects with error handling
-      final questions = <Question>[];
-      for (final doc in snapshot.docs) {
-        try {
-          final data = doc.data() as Map<String, dynamic>;
+      // Sort by creation date (newest first) - API might not guarantee order
+      questions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-          // Ensure required fields have default values if null
-          final safeData = _sanitizeQuestionData(data);
-
-          final question = Question.fromJson(safeData);
-          questions.add(question);
-        } catch (e) {
-          print('Error parsing question ${doc.id}: $e');
-          // Skip invalid questions instead of crashing
-          continue;
-        }
-      }
-
-      // Apply filters if specified
-      List<Question> filteredQuestions = questions;
-
-      if (filter.examCategories != null && filter.examCategories!.isNotEmpty) {
-        filteredQuestions = filteredQuestions
-            .where((q) => filter.examCategories!.contains(q.examCategory))
-            .toList();
-      }
-
-      if (filter.subjects != null && filter.subjects!.isNotEmpty) {
-        filteredQuestions = filteredQuestions
-            .where((q) => filter.subjects!.contains(q.subject))
-            .toList();
-      }
-
-      if (filter.topics != null && filter.topics!.isNotEmpty) {
-        filteredQuestions = filteredQuestions
-            .where((q) => filter.topics!.contains(q.topic))
-            .toList();
-      }
-
-      if (filter.difficulties != null && filter.difficulties!.isNotEmpty) {
-        filteredQuestions = filteredQuestions
-            .where((q) => filter.difficulties!.contains(q.difficulty))
-            .toList();
-      }
-
-      if (filter.tags != null && filter.tags!.isNotEmpty) {
-        filteredQuestions = filteredQuestions
-            .where((q) => q.tags.any((tag) => filter.tags!.contains(tag)))
-            .toList();
-      }
-
-      if (filter.searchQuery != null && filter.searchQuery!.isNotEmpty) {
-        final query = filter.searchQuery!.toLowerCase();
-        filteredQuestions = filteredQuestions
-            .where((q) => q.searchableText.contains(query))
-            .toList();
-      }
-
-      // Sort by creation date (newest first)
-      filteredQuestions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-      state = state.copyWithQuestionsLoaded(filteredQuestions);
+      state = state.copyWithQuestionsLoaded(questions);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Failed to load questions: ${e.toString()}',
-      );
+      // If API fails, fall back to Firestore with manual createdByName population
+      print('API call failed, falling back to Firestore: $e');
+
+      try {
+        await _loadQuestionsFromFirestore(filter);
+      } catch (firestoreError) {
+        print('Both API and Firestore failed: $firestoreError');
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage:
+              'Unable to load questions. Please check your connection and try again.',
+        );
+      }
     }
+  }
+
+  /// Fallback method to load questions from Firestore when API fails
+  Future<void> _loadQuestionsFromFirestore(QuestionFilter filter) async {
+    // Get all questions from Firestore
+    final snapshot = await _firestoreService.getCollection('questions');
+
+    // Convert Firestore documents to Question objects with error handling
+    final questions = <Question>[];
+    for (final doc in snapshot.docs) {
+      try {
+        final data = doc.data() as Map<String, dynamic>;
+
+        // Ensure required fields have default values if null
+        final safeData = _sanitizeQuestionData(data);
+
+        final question = Question.fromJson(safeData);
+        questions.add(question);
+      } catch (e) {
+        print('Error parsing question ${doc.id}: $e');
+        // Skip invalid questions instead of crashing
+        continue;
+      }
+    }
+
+    // Apply filters if specified
+    List<Question> filteredQuestions = questions;
+
+    if (filter.examCategories != null && filter.examCategories!.isNotEmpty) {
+      filteredQuestions = filteredQuestions
+          .where((q) => filter.examCategories!.contains(q.examCategory))
+          .toList();
+    }
+
+    if (filter.subjects != null && filter.subjects!.isNotEmpty) {
+      filteredQuestions = filteredQuestions
+          .where((q) => filter.subjects!.contains(q.subject))
+          .toList();
+    }
+
+    if (filter.topics != null && filter.topics!.isNotEmpty) {
+      filteredQuestions = filteredQuestions
+          .where((q) => filter.topics!.contains(q.topic))
+          .toList();
+    }
+
+    if (filter.difficulties != null && filter.difficulties!.isNotEmpty) {
+      filteredQuestions = filteredQuestions
+          .where((q) => filter.difficulties!.contains(q.difficulty))
+          .toList();
+    }
+
+    if (filter.tags != null && filter.tags!.isNotEmpty) {
+      filteredQuestions = filteredQuestions
+          .where((q) => q.tags.any((tag) => filter.tags!.contains(tag)))
+          .toList();
+    }
+
+    if (filter.searchQuery != null && filter.searchQuery!.isNotEmpty) {
+      final query = filter.searchQuery!.toLowerCase();
+      filteredQuestions = filteredQuestions
+          .where((q) => q.searchableText.contains(query))
+          .toList();
+    }
+
+    // Sort by creation date (newest first)
+    filteredQuestions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    state = state.copyWithQuestionsLoaded(filteredQuestions);
   }
 
   /// Select/deselect an answer
@@ -252,51 +274,107 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
   Map<String, dynamic> _sanitizeQuestionData(Map<String, dynamic> data) {
     final now = DateTime.now();
 
+    // Helper functions for type safety
+    String _safeString(dynamic value, String defaultValue) {
+      if (value == null) return defaultValue;
+      if (value is String) return value;
+      return value.toString();
+    }
+
+    String? _safeOptionalString(dynamic value) {
+      if (value == null) return null;
+      if (value is String) return value;
+      return value.toString();
+    }
+
+    int _safeInt(dynamic value, int defaultValue) {
+      if (value == null) return defaultValue;
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    }
+
+    double _safeDouble(dynamic value, double defaultValue) {
+      if (value == null) return defaultValue;
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    }
+
+    String? _safeDateTimeString(dynamic value) {
+      if (value == null) return null;
+      if (value is DateTime) return value.toIso8601String();
+      if (value is String) return value;
+      return null;
+    }
+
     return {
       // Required identity fields with defaults
-      'id': data['id'] ?? 'unknown_${DateTime.now().millisecondsSinceEpoch}',
-      'questionId':
-          data['questionId'] ??
-          data['id'] ??
-          'unknown_${DateTime.now().millisecondsSinceEpoch}',
-      'examCategory': data['examCategory'] ?? 'General',
-      'subject': data['subject'] ?? 'General',
-      'topic': data['topic'] ?? 'General',
+      'id': _safeString(
+        data['id'],
+        'unknown_${DateTime.now().millisecondsSinceEpoch}',
+      ),
+      'questionId': _safeString(
+        data['questionId'] ?? data['id'],
+        'unknown_${DateTime.now().millisecondsSinceEpoch}',
+      ),
+      'examCategory': _safeString(
+        data['examCategory'] ?? data['exam_type'],
+        'General',
+      ),
+      'subject': _safeString(data['subject'], 'General'),
+      'topic': _safeString(data['topic'], 'General'),
 
       // Optional fields
-      'subTopic': data['subTopic'],
+      'subTopic': _safeOptionalString(data['subTopic']),
 
       // Required content fields with defaults
-      'questionText': data['questionText'] ?? 'Question text not available',
+      'questionText': _safeString(
+        data['questionText'] ?? data['question_text'],
+        'Question text not available',
+      ),
       'questionImageUrls': data['questionImageUrls'] ?? [],
       'questionLatex': data['questionLatex'] ?? [],
 
       // Required options and answers with defaults
       'options': _sanitizeOptions(data['options']),
-      'correctAnswer': data['correctAnswer'] ?? ['A'],
-      'questionType': data['questionType'] ?? 'singleChoice',
+      'correctAnswer': data['correctAnswer'] ?? data['correct_answer'] ?? ['A'],
+      'questionType': _safeString(data['questionType'], 'singleChoice'),
 
       // Required explanation with default
-      'explanationText': data['explanationText'] ?? 'Explanation not available',
-      'explanationVideoUrl': data['explanationVideoUrl'],
+      'explanationText': _safeString(
+        data['explanationText'] ?? data['explanation']?['text'],
+        'Explanation not available',
+      ),
+      'explanationVideoUrl':
+          data['explanationVideoUrl'] ?? data['video_explanation_url'],
       'explanationSteps': data['explanationSteps'] ?? [],
       'references': data['references'] ?? [],
 
       // Required ARDE fields with defaults
-      'ardeProbability': data['ardeProbability'] ?? 'medium',
-      'ardeFrequency': data['ardeFrequency'] ?? 0,
+      'ardeProbability': _safeString(
+        data['ardeProbability'] ?? data['arde_probability'],
+        'medium',
+      ),
+      'ardeFrequency': _safeInt(
+        data['ardeFrequency'] ?? data['historical_frequency'],
+        0,
+      ),
       'ardeAppearanceYears': data['ardeAppearanceYears'] ?? [],
-      'ardeNotes': data['ardeNotes'],
-      'ardeContext': data['ardeContext'],
+      'ardeNotes': _safeOptionalString(data['ardeNotes']),
+      'ardeContext': data['ardeContext'] ?? data['arde_context'],
 
       // Required difficulty and performance fields with defaults
-      'difficulty': data['difficulty'] ?? 'medium',
-      'estimatedTimeSeconds': data['estimatedTimeSeconds'] ?? 60,
+      'difficulty': _safeString(data['difficulty'], 'medium'),
+      'estimatedTimeSeconds': _safeInt(data['estimatedTimeSeconds'], 60),
       'globalStats':
           data['globalStats'] ??
+          data['performance_stats'] ??
           {
-            'totalAttempts': 0,
-            'totalCorrect': 0,
+            'totalAttempts': 0.0,
+            'totalCorrect': 0.0,
             'globalAccuracy': 0.0,
             'averageTimeSeconds': 0.0,
             'medianTimeSeconds': 0.0,
@@ -309,21 +387,38 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
       'relatedQuestions': data['relatedQuestions'] ?? [],
 
       // Required administrative fields with defaults
-      'createdAt': data['createdAt'] ?? now.toIso8601String(),
-      'updatedAt': data['updatedAt'] ?? now.toIso8601String(),
-      'createdBy': data['createdBy'] ?? 'unknown',
+      'createdAt':
+          _safeDateTimeString(data['createdAt'] ?? data['created_at']) ??
+          now.toIso8601String(),
+      'updatedAt':
+          _safeDateTimeString(data['updatedAt'] ?? data['updated_at']) ??
+          now.toIso8601String(),
+      'createdBy': _safeString(
+        data['createdBy'] ?? data['created_by'],
+        'unknown',
+      ),
+      'createdByName': _safeOptionalString(data['createdByName']),
       'isActive': data['isActive'] ?? true,
-      'version': data['version'] ?? 1,
-      'status': data['status'] ?? 'draft',
+      'version': _safeInt(data['version'], 1),
+      'status': _safeString(data['status'], 'draft'),
 
       // Approval workflow fields
-      'approval_status': data['approval_status'] ?? 'pending',
-      'reviewer_id': data['reviewer_id'],
-      'reviewer_name': data['reviewer_name'],
-      'review_comments': data['review_comments'],
-      'submitted_at': data['submitted_at'] ?? now.toIso8601String(),
-      'reviewed_at': data['reviewed_at'],
-      'approved_at': data['approved_at'],
+      'approval_status': _safeString(
+        data['approval_status'] ?? data['status'],
+        'pending',
+      ),
+      'reviewer_id': data['reviewer_id'] ?? data['reviewerId'],
+      'reviewer_name': data['reviewer_name'] ?? data['reviewerName'],
+      'review_comments': data['review_comments'] ?? data['reviewComments'],
+      'submitted_at':
+          _safeDateTimeString(data['submittedAt'] ?? data['submitted_at']) ??
+          now.toIso8601String(),
+      'reviewed_at': _safeDateTimeString(
+        data['reviewedAt'] ?? data['reviewed_at'],
+      ),
+      'approved_at': _safeDateTimeString(
+        data['approvedAt'] ?? data['approved_at'],
+      ),
     };
   }
 
@@ -357,11 +452,14 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
       final option = options[i];
       if (option is Map<String, dynamic>) {
         sanitizedOptions.add({
-          'id': option['id'] ?? String.fromCharCode(65 + i), // A, B, C...
+          'id':
+              option['id'] ??
+              option['option_id'] ??
+              String.fromCharCode(65 + i), // A, B, C...
           'text': option['text'] ?? 'Option ${String.fromCharCode(65 + i)}',
           'imageUrl': option['imageUrl'],
           'latex': option['latex'],
-          'isCorrect': option['isCorrect'],
+          'isCorrect': option['isCorrect'] ?? option['is_correct'] ?? false,
         });
       } else {
         // If option is not a map, create a default one

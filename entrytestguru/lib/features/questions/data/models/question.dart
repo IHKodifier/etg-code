@@ -59,6 +59,7 @@ class Question with _$Question {
     required DateTime createdAt,
     required DateTime updatedAt,
     required String createdBy,
+    String? createdByName,
     @Default(true) bool? isActive,
     @Default(1) int? version,
     String? status,

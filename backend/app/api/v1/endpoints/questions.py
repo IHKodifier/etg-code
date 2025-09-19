@@ -105,6 +105,71 @@ async def get_current_user_dependency(token: str = Depends(security)):
     
     return user
 
+@router.get("/", response_model=List[QuestionResponse])
+async def get_filtered_questions(
+    exam_categories: Optional[str] = None,
+    subjects: Optional[str] = None,
+    topics: Optional[str] = None,
+    difficulties: Optional[str] = None,
+    arde_probabilities: Optional[str] = None,
+    search_query: Optional[str] = None,
+    tags: Optional[str] = None,
+    limit: int = Query(20, ge=1, le=100),
+    current_user = Depends(get_current_user_dependency)
+):
+    """Get filtered questions for question bank management"""
+    try:
+        # Check trial expiry for anonymous users
+        check_trial_expiry(current_user)
+
+        # Check tier limits
+        check_tier_limits(current_user, "practice")
+
+        # Parse comma-separated values
+        exam_category_list = exam_categories.split(',') if exam_categories else None
+        subject_list = subjects.split(',') if subjects else None
+        topic_list = topics.split(',') if topics else None
+        difficulty_list = difficulties.split(',') if difficulties else None
+        arde_probability_list = arde_probabilities.split(',') if arde_probabilities else None
+        tag_list = tags.split(',') if tags else None
+
+        # For now, use the first exam category if multiple are provided
+        # This is a simplified implementation - you might want to handle multiple categories differently
+        exam_type = exam_category_list[0] if exam_category_list and len(exam_category_list) > 0 else None
+
+        if not exam_type:
+            # If no exam type specified, get questions from all approved questions
+            # This is a simplified approach - you might want to create a more generic method
+            questions = await question_service.get_questions_for_practice(
+                exam_type="ECAT",  # Default fallback
+                subject=subject_list[0] if subject_list else None,
+                topic=topic_list[0] if topic_list else None,
+                difficulty=difficulty_list[0] if difficulty_list else None,
+                arde_probability=arde_probability_list[0] if arde_probability_list else None,
+                limit=limit
+            )
+        else:
+            questions = await question_service.get_questions_for_practice(
+                exam_type=exam_type,
+                subject=subject_list[0] if subject_list else None,
+                topic=topic_list[0] if topic_list else None,
+                difficulty=difficulty_list[0] if difficulty_list else None,
+                arde_probability=arde_probability_list[0] if arde_probability_list else None,
+                limit=limit
+            )
+
+        return [QuestionResponse(**q) for q in questions]
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get filtered questions: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve questions"
+        )
+
+
 @router.get("/practice", response_model=List[QuestionResponse])
 async def get_practice_questions(
     exam_type: str,

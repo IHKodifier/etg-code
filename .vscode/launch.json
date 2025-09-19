@@ -5,10 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "entrytestguru",
+            "name": "entrytestguru ( debug )",
             "cwd": "entrytestguru",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "flutterMode": "debug"
         },
         {
             "name": "entrytestguru (profile mode)",

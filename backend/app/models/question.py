@@ -69,6 +69,7 @@ class QuestionResponse(BaseModel):
     historical_frequency: int
     created_at: datetime
     performance_stats: Dict[str, Any] = {}
+    created_by_name: Optional[str] = None
 
     # Approval workflow fields
     status: str = "pending"  # pending, approved, rejected

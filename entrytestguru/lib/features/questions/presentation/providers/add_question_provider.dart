@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/question_api_service.dart';
+import '../../data/models/question.dart';
 import '../../data/models/question_option.dart';
 import '../../data/models/question_enums.dart';
 import '../states/add_question_state.dart';
@@ -21,7 +22,11 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
   final FirebaseAuthService _authService;
 
   AddQuestionNotifier(this._firestoreService, this._authService)
-    : super(const AddQuestionState());
+    : super(const AddQuestionState()) {
+    // Initialize with 2 default options
+    addOption();
+    addOption();
+  }
 
   /// Update question text
   void updateQuestionText(String text) {
@@ -223,6 +228,28 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
     state = const AddQuestionState();
   }
 
+  /// Load a question for editing
+  void loadQuestionForEditing(Question question) {
+    state = AddQuestionState(
+      questionText: question.questionText,
+      questionImageUrls: question.questionImageUrls,
+      questionLatex: question.questionLatex,
+      options: question.options,
+      correctAnswers: question.correctAnswer,
+      questionType: question.questionType,
+      examCategory: question.examCategory,
+      subject: question.subject,
+      topic: question.topic,
+      subTopic: question.subTopic,
+      difficulty: question.difficulty,
+      estimatedTimeSeconds: question.estimatedTimeSeconds,
+      explanationText: question.explanationText,
+      tags: question.tags,
+      isEditing: true,
+      editingQuestionId: question.id,
+    );
+  }
+
   /// Submit the question
   Future<void> submitQuestion() async {
     if (!state.isValid) {
@@ -241,7 +268,7 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
         throw Exception('Failed to create question object');
       }
 
-      // Get current user for createdBy field
+      // Get current user
       final currentUser = _authService.currentUser;
       if (currentUser == null) {
         throw Exception('User must be logged in to create questions');
@@ -249,8 +276,10 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
 
       // Create question data for Firestore
       final questionData = {
-        'id': question.id,
-        'questionId': question.questionId,
+        'id': state.isEditing ? state.editingQuestionId! : question.id,
+        'questionId': state.isEditing
+            ? state.editingQuestionId!
+            : question.questionId,
         'examCategory': question.examCategory,
         'subject': question.subject,
         'topic': question.topic,
@@ -291,11 +320,15 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
           'calculatedDifficulty': question.globalStats.calculatedDifficulty,
         },
         'tags': question.tags,
-        'createdAt': question.createdAt.toIso8601String(),
-        'updatedAt': question.updatedAt.toIso8601String(),
-        'createdBy': currentUser.id,
+        'createdAt': state.isEditing
+            ? question.createdAt.toIso8601String()
+            : question.createdAt.toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+        'createdBy': state.isEditing ? question.createdBy : currentUser.id,
         'isActive': question.isActive,
-        'version': question.version,
+        'version': state.isEditing
+            ? (question.version ?? 1) + 1
+            : question.version,
         'status': question.status,
         'approvalStatus': question.approvalStatus,
         'submittedAt': question.submittedAt.toIso8601String(),
@@ -306,8 +339,16 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
         'approvedAt': question.approvedAt?.toIso8601String(),
       };
 
-      // Save to Firestore
-      await _firestoreService.addDocument('questions', questionData);
+      // Save or update to Firestore
+      if (state.isEditing) {
+        await _firestoreService.updateDocument(
+          'questions',
+          state.editingQuestionId!,
+          questionData,
+        );
+      } else {
+        await _firestoreService.addDocument('questions', questionData);
+      }
 
       state = state.copyWith(
         isLoading: false,

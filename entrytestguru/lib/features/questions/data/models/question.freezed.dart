@@ -60,6 +60,7 @@ mixin _$Question {
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
   String get createdBy => throw _privateConstructorUsedError;
+  String? get createdByName => throw _privateConstructorUsedError;
   bool? get isActive => throw _privateConstructorUsedError;
   int? get version => throw _privateConstructorUsedError;
   String? get status =>
@@ -127,6 +128,7 @@ abstract class $QuestionCopyWith<$Res> {
     DateTime createdAt,
     DateTime updatedAt,
     String createdBy,
+    String? createdByName,
     bool? isActive,
     int? version,
     String? status,
@@ -190,6 +192,7 @@ class _$QuestionCopyWithImpl<$Res, $Val extends Question>
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? createdBy = null,
+    Object? createdByName = freezed,
     Object? isActive = freezed,
     Object? version = freezed,
     Object? status = freezed,
@@ -322,6 +325,10 @@ class _$QuestionCopyWithImpl<$Res, $Val extends Question>
                 ? _value.createdBy
                 : createdBy // ignore: cast_nullable_to_non_nullable
                       as String,
+            createdByName: freezed == createdByName
+                ? _value.createdByName
+                : createdByName // ignore: cast_nullable_to_non_nullable
+                      as String?,
             isActive: freezed == isActive
                 ? _value.isActive
                 : isActive // ignore: cast_nullable_to_non_nullable
@@ -443,6 +450,7 @@ abstract class _$$QuestionImplCopyWith<$Res>
     DateTime createdAt,
     DateTime updatedAt,
     String createdBy,
+    String? createdByName,
     bool? isActive,
     int? version,
     String? status,
@@ -507,6 +515,7 @@ class __$$QuestionImplCopyWithImpl<$Res>
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? createdBy = null,
+    Object? createdByName = freezed,
     Object? isActive = freezed,
     Object? version = freezed,
     Object? status = freezed,
@@ -639,6 +648,10 @@ class __$$QuestionImplCopyWithImpl<$Res>
             ? _value.createdBy
             : createdBy // ignore: cast_nullable_to_non_nullable
                   as String,
+        createdByName: freezed == createdByName
+            ? _value.createdByName
+            : createdByName // ignore: cast_nullable_to_non_nullable
+                  as String?,
         isActive: freezed == isActive
             ? _value.isActive
             : isActive // ignore: cast_nullable_to_non_nullable
@@ -729,6 +742,7 @@ class _$QuestionImpl extends _Question {
     required this.createdAt,
     required this.updatedAt,
     required this.createdBy,
+    this.createdByName,
     this.isActive = true,
     this.version = 1,
     this.status,
@@ -904,6 +918,8 @@ class _$QuestionImpl extends _Question {
   @override
   final String createdBy;
   @override
+  final String? createdByName;
+  @override
   @JsonKey()
   final bool? isActive;
   @override
@@ -944,7 +960,7 @@ class _$QuestionImpl extends _Question {
 
   @override
   String toString() {
-    return 'Question(id: $id, questionId: $questionId, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, questionText: $questionText, questionImageUrls: $questionImageUrls, questionLatex: $questionLatex, options: $options, correctAnswer: $correctAnswer, questionType: $questionType, explanationText: $explanationText, explanationVideoUrl: $explanationVideoUrl, explanationSteps: $explanationSteps, references: $references, ardeProbability: $ardeProbability, ardeFrequency: $ardeFrequency, ardeAppearanceYears: $ardeAppearanceYears, ardeNotes: $ardeNotes, ardeContext: $ardeContext, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, globalStats: $globalStats, tags: $tags, relatedQuestions: $relatedQuestions, createdAt: $createdAt, updatedAt: $updatedAt, createdBy: $createdBy, isActive: $isActive, version: $version, status: $status, approvalStatus: $approvalStatus, reviewerId: $reviewerId, reviewerName: $reviewerName, reviewComments: $reviewComments, submittedAt: $submittedAt, reviewedAt: $reviewedAt, approvedAt: $approvedAt, isBookmarked: $isBookmarked, userNotes: $userNotes, lastAttempt: $lastAttempt)';
+    return 'Question(id: $id, questionId: $questionId, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, questionText: $questionText, questionImageUrls: $questionImageUrls, questionLatex: $questionLatex, options: $options, correctAnswer: $correctAnswer, questionType: $questionType, explanationText: $explanationText, explanationVideoUrl: $explanationVideoUrl, explanationSteps: $explanationSteps, references: $references, ardeProbability: $ardeProbability, ardeFrequency: $ardeFrequency, ardeAppearanceYears: $ardeAppearanceYears, ardeNotes: $ardeNotes, ardeContext: $ardeContext, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, globalStats: $globalStats, tags: $tags, relatedQuestions: $relatedQuestions, createdAt: $createdAt, updatedAt: $updatedAt, createdBy: $createdBy, createdByName: $createdByName, isActive: $isActive, version: $version, status: $status, approvalStatus: $approvalStatus, reviewerId: $reviewerId, reviewerName: $reviewerName, reviewComments: $reviewComments, submittedAt: $submittedAt, reviewedAt: $reviewedAt, approvedAt: $approvedAt, isBookmarked: $isBookmarked, userNotes: $userNotes, lastAttempt: $lastAttempt)';
   }
 
   @override
@@ -1019,6 +1035,8 @@ class _$QuestionImpl extends _Question {
                 other.updatedAt == updatedAt) &&
             (identical(other.createdBy, createdBy) ||
                 other.createdBy == createdBy) &&
+            (identical(other.createdByName, createdByName) ||
+                other.createdByName == createdByName) &&
             (identical(other.isActive, isActive) ||
                 other.isActive == isActive) &&
             (identical(other.version, version) || other.version == version) &&
@@ -1078,6 +1096,7 @@ class _$QuestionImpl extends _Question {
     createdAt,
     updatedAt,
     createdBy,
+    createdByName,
     isActive,
     version,
     status,
@@ -1138,6 +1157,7 @@ abstract class _Question extends Question {
     required final DateTime createdAt,
     required final DateTime updatedAt,
     required final String createdBy,
+    final String? createdByName,
     final bool? isActive,
     final int? version,
     final String? status,
@@ -1217,6 +1237,8 @@ abstract class _Question extends Question {
   DateTime get updatedAt;
   @override
   String get createdBy;
+  @override
+  String? get createdByName;
   @override
   bool? get isActive;
   @override

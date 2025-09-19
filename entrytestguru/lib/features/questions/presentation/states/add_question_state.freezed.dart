@@ -36,6 +36,8 @@ mixin _$AddQuestionState {
   bool get isLoading => throw _privateConstructorUsedError;
   String? get errorMessage => throw _privateConstructorUsedError;
   bool get isSuccess => throw _privateConstructorUsedError;
+  bool get isEditing => throw _privateConstructorUsedError;
+  String? get editingQuestionId => throw _privateConstructorUsedError;
 
   /// Create a copy of AddQuestionState
   /// with the given fields replaced by the non-null parameter values.
@@ -69,6 +71,8 @@ abstract class $AddQuestionStateCopyWith<$Res> {
     bool isLoading,
     String? errorMessage,
     bool isSuccess,
+    bool isEditing,
+    String? editingQuestionId,
   });
 }
 
@@ -104,6 +108,8 @@ class _$AddQuestionStateCopyWithImpl<$Res, $Val extends AddQuestionState>
     Object? isLoading = null,
     Object? errorMessage = freezed,
     Object? isSuccess = null,
+    Object? isEditing = null,
+    Object? editingQuestionId = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -175,6 +181,14 @@ class _$AddQuestionStateCopyWithImpl<$Res, $Val extends AddQuestionState>
                 ? _value.isSuccess
                 : isSuccess // ignore: cast_nullable_to_non_nullable
                       as bool,
+            isEditing: null == isEditing
+                ? _value.isEditing
+                : isEditing // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            editingQuestionId: freezed == editingQuestionId
+                ? _value.editingQuestionId
+                : editingQuestionId // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -208,6 +222,8 @@ abstract class _$$AddQuestionStateImplCopyWith<$Res>
     bool isLoading,
     String? errorMessage,
     bool isSuccess,
+    bool isEditing,
+    String? editingQuestionId,
   });
 }
 
@@ -242,6 +258,8 @@ class __$$AddQuestionStateImplCopyWithImpl<$Res>
     Object? isLoading = null,
     Object? errorMessage = freezed,
     Object? isSuccess = null,
+    Object? isEditing = null,
+    Object? editingQuestionId = freezed,
   }) {
     return _then(
       _$AddQuestionStateImpl(
@@ -313,6 +331,14 @@ class __$$AddQuestionStateImplCopyWithImpl<$Res>
             ? _value.isSuccess
             : isSuccess // ignore: cast_nullable_to_non_nullable
                   as bool,
+        isEditing: null == isEditing
+            ? _value.isEditing
+            : isEditing // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        editingQuestionId: freezed == editingQuestionId
+            ? _value.editingQuestionId
+            : editingQuestionId // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -339,6 +365,8 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
     this.isLoading = false,
     this.errorMessage,
     this.isSuccess = false,
+    this.isEditing = false,
+    this.editingQuestionId,
   }) : _questionImageUrls = questionImageUrls,
        _questionLatex = questionLatex,
        _options = options,
@@ -431,10 +459,15 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
   @override
   @JsonKey()
   final bool isSuccess;
+  @override
+  @JsonKey()
+  final bool isEditing;
+  @override
+  final String? editingQuestionId;
 
   @override
   String toString() {
-    return 'AddQuestionState(questionText: $questionText, questionImageUrls: $questionImageUrls, questionLatex: $questionLatex, options: $options, correctAnswers: $correctAnswers, questionType: $questionType, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, explanationText: $explanationText, tags: $tags, isLoading: $isLoading, errorMessage: $errorMessage, isSuccess: $isSuccess)';
+    return 'AddQuestionState(questionText: $questionText, questionImageUrls: $questionImageUrls, questionLatex: $questionLatex, options: $options, correctAnswers: $correctAnswers, questionType: $questionType, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, explanationText: $explanationText, tags: $tags, isLoading: $isLoading, errorMessage: $errorMessage, isSuccess: $isSuccess, isEditing: $isEditing, editingQuestionId: $editingQuestionId)';
   }
 
   @override
@@ -477,11 +510,15 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
             (identical(other.errorMessage, errorMessage) ||
                 other.errorMessage == errorMessage) &&
             (identical(other.isSuccess, isSuccess) ||
-                other.isSuccess == isSuccess));
+                other.isSuccess == isSuccess) &&
+            (identical(other.isEditing, isEditing) ||
+                other.isEditing == isEditing) &&
+            (identical(other.editingQuestionId, editingQuestionId) ||
+                other.editingQuestionId == editingQuestionId));
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     questionText,
     const DeepCollectionEquality().hash(_questionImageUrls),
@@ -500,7 +537,9 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
     isLoading,
     errorMessage,
     isSuccess,
-  );
+    isEditing,
+    editingQuestionId,
+  ]);
 
   /// Create a copy of AddQuestionState
   /// with the given fields replaced by the non-null parameter values.
@@ -533,6 +572,8 @@ abstract class _AddQuestionState extends AddQuestionState {
     final bool isLoading,
     final String? errorMessage,
     final bool isSuccess,
+    final bool isEditing,
+    final String? editingQuestionId,
   }) = _$AddQuestionStateImpl;
   const _AddQuestionState._() : super._();
 
@@ -570,6 +611,10 @@ abstract class _AddQuestionState extends AddQuestionState {
   String? get errorMessage;
   @override
   bool get isSuccess;
+  @override
+  bool get isEditing;
+  @override
+  String? get editingQuestionId;
 
   /// Create a copy of AddQuestionState
   /// with the given fields replaced by the non-null parameter values.

@@ -26,6 +26,8 @@ class AddQuestionState with _$AddQuestionState {
     @Default(false) bool isLoading,
     String? errorMessage,
     @Default(false) bool isSuccess,
+    @Default(false) bool isEditing,
+    String? editingQuestionId,
   }) = _AddQuestionState;
 
   const AddQuestionState._();

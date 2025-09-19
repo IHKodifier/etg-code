@@ -6,7 +6,9 @@ import '../states/add_question_state.dart';
 import '../providers/add_question_provider.dart';
 
 class AddQuestionWidget extends ConsumerStatefulWidget {
-  const AddQuestionWidget({super.key});
+  final bool showScaffold;
+
+  const AddQuestionWidget({super.key, this.showScaffold = true});
 
   @override
   ConsumerState<AddQuestionWidget> createState() => _AddQuestionWidgetState();
@@ -26,9 +28,7 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
   @override
   void initState() {
     super.initState();
-    // Initialize with at least 2 options
-    _addOptionController();
-    _addOptionController();
+    // Controllers will be synced in build based on state
   }
 
   @override
@@ -60,6 +60,36 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
     _optionLatexControllers.add(TextEditingController());
   }
 
+  void _syncControllersWithState(AddQuestionState state) {
+    final optionCount = state.options.length;
+    while (_optionControllers.length < optionCount) {
+      _addOptionController();
+    }
+    // If somehow more controllers, but shouldn't happen
+    while (_optionControllers.length > optionCount) {
+      _optionControllers.removeLast().dispose();
+      _optionImageControllers.removeLast().dispose();
+      _optionLatexControllers.removeLast().dispose();
+    }
+
+    // Sync question image and latex controllers
+    final imageCount = state.questionImageUrls?.length ?? 0;
+    while (_questionImageUrlControllers.length < imageCount) {
+      _questionImageUrlControllers.add(TextEditingController());
+    }
+    while (_questionImageUrlControllers.length > imageCount) {
+      _questionImageUrlControllers.removeLast().dispose();
+    }
+
+    final latexCount = state.questionLatex?.length ?? 0;
+    while (_questionLatexControllers.length < latexCount) {
+      _questionLatexControllers.add(TextEditingController());
+    }
+    while (_questionLatexControllers.length > latexCount) {
+      _questionLatexControllers.removeLast().dispose();
+    }
+  }
+
   void _removeOptionController(int index) {
     _optionControllers[index].dispose();
     _optionImageControllers[index].dispose();
@@ -74,90 +104,169 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
     final state = ref.watch(addQuestionNotifierProvider);
     final notifier = ref.read(addQuestionNotifierProvider.notifier);
 
+    // Sync controllers with state to prevent index out of range errors
+    _syncControllersWithState(state);
+
+    final content = Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Question Content Card
+                _buildQuestionContentCard(state, notifier),
+
+                const SizedBox(height: 16),
+
+                // Question Type Card
+                _buildQuestionTypeCard(state, notifier),
+
+                const SizedBox(height: 16),
+
+                // Options Section
+                _buildOptionsSection(state, notifier),
+
+                const SizedBox(height: 16),
+
+                // Metadata Card
+                _buildMetadataCard(state, notifier),
+
+                const SizedBox(height: 16),
+
+                // Explanation Card
+                _buildExplanationCard(state, notifier),
+
+                const SizedBox(height: 16),
+
+                // Tags Card
+                _buildTagsCard(state, notifier),
+
+                const SizedBox(height: 16),
+
+                // Submit Card
+                _buildSubmitCard(state, notifier),
+
+                // Error Message
+                if (state.errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Text(
+                      state.errorMessage!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
+
+                // Success Message
+                if (state.isSuccess)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Text(
+                      'Question ${state.isEditing ? 'updated' : 'added'} successfully!',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (!widget.showScaffold) {
+      return content;
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Question'),
+        title: Text(state.isEditing ? 'Edit Question' : 'Add Question'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => notifier.reset(),
-            tooltip: 'Reset Form',
-          ),
+          if (!state.isEditing)
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () => notifier.reset(),
+              tooltip: 'Reset Form',
+            ),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
+      body: content,
+    );
+  }
+
+  Widget _buildQuestionContentCard(
+    AddQuestionState state,
+    AddQuestionNotifier notifier,
+  ) {
+    return Card(
+      elevation: 4.0,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Question Text
-              _buildQuestionTextField(state, notifier),
-
-              const SizedBox(height: 24),
-
-              // Multiple Question Image URLs
-              _buildQuestionImageUrlsSection(state, notifier),
-
-              const SizedBox(height: 24),
-
-              // Multiple Question LaTeX Expressions
-              _buildQuestionLatexSection(state, notifier),
-
-              const SizedBox(height: 24),
-
-              // Question Type
-              _buildQuestionTypeSelector(state, notifier),
-
-              const SizedBox(height: 24),
-
-              // Options
-              _buildOptionsSection(state, notifier),
-
-              const SizedBox(height: 24),
-
-              // Metadata
-              _buildMetadataSection(state, notifier),
-
-              const SizedBox(height: 24),
-
-              // Explanation
-              _buildExplanationField(state, notifier),
-
-              const SizedBox(height: 24),
-
-              // Tags
-              _buildTagsSection(state, notifier),
-
-              const SizedBox(height: 32),
-
-              // Submit Button
-              _buildSubmitButton(state, notifier),
-
-              // Error Message
-              if (state.errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: Text(
-                    state.errorMessage!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.question_mark,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
-                ),
-
-              // Success Message
-              if (state.isSuccess)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: Text(
-                    'Question added successfully!',
-                    style: TextStyle(
+                  const SizedBox(width: 8),
+                  Text(
+                    'Question Content',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _questionController,
+                decoration: InputDecoration(
+                  labelText: 'Question Text *',
+                  hintText: 'Enter your question here...',
+                  border: const OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
                 ),
+                maxLines: 2,
+                validator: (value) {
+                  if (value?.isEmpty ?? true) {
+                    return 'Question text is required';
+                  }
+                  return null;
+                },
+                onChanged: notifier.updateQuestionText,
+              ),
+              const SizedBox(height: 16),
+              ExpansionTile(
+                title: const Text('Additional Images (Optional)'),
+                children: [_buildQuestionImageUrlsSection(state, notifier)],
+              ),
+              ExpansionTile(
+                title: const Text('LaTeX Expressions (Optional)'),
+                children: [_buildQuestionLatexSection(state, notifier)],
+              ),
             ],
           ),
         ),
@@ -380,6 +489,71 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
     );
   }
 
+  Widget _buildQuestionTypeCard(
+    AddQuestionState state,
+    AddQuestionNotifier notifier,
+  ) {
+    return Card(
+      elevation: 4.0,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.category,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Question Type',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SegmentedButton<QuestionType>(
+                segments: const [
+                  ButtonSegment(
+                    value: QuestionType.singleChoice,
+                    label: Text('Single Choice'),
+                  ),
+                  ButtonSegment(
+                    value: QuestionType.multipleChoice,
+                    label: Text('Multiple Choice'),
+                  ),
+                ],
+                selected: {state.questionType},
+                onSelectionChanged: (selected) {
+                  if (selected.isNotEmpty) {
+                    notifier.updateQuestionType(selected.first);
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildQuestionTypeSelector(
     AddQuestionState state,
     AddQuestionNotifier notifier,
@@ -431,10 +605,7 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
             if (state.options.length < 6)
               IconButton(
                 icon: const Icon(Icons.add),
-                onPressed: () {
-                  notifier.addOption();
-                  _addOptionController();
-                },
+                onPressed: () => notifier.addOption(),
                 tooltip: 'Add Option',
               ),
           ],
@@ -503,10 +674,7 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
                 if (state.options.length > 2)
                   IconButton(
                     icon: const Icon(Icons.remove),
-                    onPressed: () {
-                      notifier.removeOption(index);
-                      _removeOptionController(index);
-                    },
+                    onPressed: () => notifier.removeOption(index),
                     tooltip: 'Remove Option',
                   ),
               ],
@@ -575,6 +743,148 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetadataCard(
+    AddQuestionState state,
+    AddQuestionNotifier notifier,
+  ) {
+    return Card(
+      elevation: 4.0,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.info,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Metadata',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12.0,
+                mainAxisSpacing: 12.0,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      labelText: 'Exam Category *',
+                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surface,
+                    ),
+                    items: ['ECAT', 'MCAT', 'MDCAT', 'Other']
+                        .map(
+                          (category) => DropdownMenuItem(
+                            value: category,
+                            child: Text(category),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) notifier.updateExamCategory(value);
+                    },
+                    validator: (value) {
+                      if (value?.isEmpty ?? true)
+                        return 'Exam category is required';
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Subject *',
+                      hintText: 'e.g., Physics',
+                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surface,
+                    ),
+                    onChanged: notifier.updateSubject,
+                    validator: (value) {
+                      if (value?.isEmpty ?? true) return 'Subject is required';
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Topic *',
+                      hintText: 'e.g., Kinematics',
+                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surface,
+                    ),
+                    onChanged: notifier.updateTopic,
+                    validator: (value) {
+                      if (value?.isEmpty ?? true) return 'Topic is required';
+                      return null;
+                    },
+                  ),
+                  DropdownButtonFormField<DifficultyLevel>(
+                    decoration: InputDecoration(
+                      labelText: 'Difficulty',
+                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surface,
+                    ),
+                    value: state.difficulty,
+                    items: DifficultyLevel.values.map((level) {
+                      return DropdownMenuItem(
+                        value: level,
+                        child: Text(level.name),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) notifier.updateDifficulty(value);
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Estimated Time (seconds)',
+                  hintText: 'e.g., 60',
+                  border: const OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                ),
+                keyboardType: TextInputType.number,
+                initialValue: state.estimatedTimeSeconds.toString(),
+                onChanged: (value) {
+                  final seconds = int.tryParse(value) ?? 60;
+                  notifier.updateEstimatedTime(seconds);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -696,6 +1006,65 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
     );
   }
 
+  Widget _buildExplanationCard(
+    AddQuestionState state,
+    AddQuestionNotifier notifier,
+  ) {
+    return Card(
+      elevation: 4.0,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.lightbulb,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Explanation',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _explanationController,
+                decoration: InputDecoration(
+                  labelText: 'Explanation (Optional)',
+                  hintText: 'Provide explanation for the correct answer...',
+                  border: const OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                ),
+                maxLines: 3,
+                onChanged: notifier.updateExplanationText,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildExplanationField(
     AddQuestionState state,
     AddQuestionNotifier notifier,
@@ -709,6 +1078,98 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
       ),
       maxLines: 3,
       onChanged: notifier.updateExplanationText,
+    );
+  }
+
+  Widget _buildTagsCard(AddQuestionState state, AddQuestionNotifier notifier) {
+    return Card(
+      elevation: 4.0,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.tag, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Tags',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Current Tags
+              if (state.tags.isNotEmpty)
+                Wrap(
+                  spacing: 8,
+                  children: state.tags.map((tag) {
+                    return Chip(
+                      label: Text(tag),
+                      onDeleted: () => notifier.removeTag(tag),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer,
+                    );
+                  }).toList(),
+                ),
+
+              // Add Tag Field
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _tagController,
+                      decoration: InputDecoration(
+                        hintText: 'Add a tag...',
+                        border: const OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Theme.of(context).colorScheme.surface,
+                      ),
+                      onSubmitted: (value) {
+                        if (value.isNotEmpty) {
+                          notifier.addTag(value);
+                          _tagController.clear();
+                        }
+                      },
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.add,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    onPressed: () {
+                      final value = _tagController.text.trim();
+                      if (value.isNotEmpty) {
+                        notifier.addTag(value);
+                        _tagController.clear();
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -765,6 +1226,51 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildSubmitCard(
+    AddQuestionState state,
+    AddQuestionNotifier notifier,
+  ) {
+    return Card(
+      elevation: 4.0,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: state.isLoading || !state.isValid
+                  ? null
+                  : () async {
+                      if (_formKey.currentState?.validate() ?? false) {
+                        await notifier.submitQuestion();
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              ),
+              child: state.isLoading
+                  ? const CircularProgressIndicator()
+                  : Text(state.isEditing ? 'Update Question' : 'Add Question'),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

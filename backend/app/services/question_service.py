@@ -101,12 +101,24 @@ class QuestionService:
                 limit=limit,
                 order_by="-created_at"
             )
-            
+
+            # Add creator names before removing sensitive info
+            for question in questions:
+                creator_id = question.get("created_by")
+                if creator_id:
+                    user = await db.get_document("users", creator_id)
+                    if user and user.get("profile"):
+                        question["created_by_name"] = user["profile"].get("name", "Unknown")
+                    else:
+                        question["created_by_name"] = "Unknown"
+                else:
+                    question["created_by_name"] = "Unknown"
+
             # Remove sensitive information for practice
             for question in questions:
                 question.pop("created_by", None)
                 question.pop("approval_status", None)
-            
+
             return questions
             
         except Exception as e:
@@ -158,11 +170,23 @@ class QuestionService:
                     limit=question_count
                 )
             
+            # Add creator names before removing sensitive info
+            for question in questions:
+                creator_id = question.get("created_by")
+                if creator_id:
+                    user = await db.get_document("users", creator_id)
+                    if user and user.get("profile"):
+                        question["created_by_name"] = user["profile"].get("name", "Unknown")
+                    else:
+                        question["created_by_name"] = "Unknown"
+                else:
+                    question["created_by_name"] = "Unknown"
+
             # Remove sensitive information
             for question in questions:
                 question.pop("created_by", None)
                 question.pop("approval_status", None)
-            
+
             return questions[:question_count]  # Ensure exact count
             
         except Exception as e:
@@ -310,6 +334,16 @@ class QuestionService:
                 limit=limit,
                 order_by="created_at"
             )
+
+            # Add creator names
+            for question in questions:
+                creator_id = question.get("created_by")
+                if creator_id:
+                    user = await db.get_document("users", creator_id)
+                    if user and user.get("profile"):
+                        question["created_by_name"] = user["profile"].get("name", "Unknown")
+                    else:
+                        question["created_by_name"] = "Unknown"
 
             return questions
 
