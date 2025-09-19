@@ -1,0 +1,406 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/models/question.dart';
+import '../../data/models/question_filter.dart';
+import '../../../../core/utils/time_utils.dart';
+import '../providers/present_question_provider.dart';
+import '../providers/add_question_provider.dart';
+import 'add_question_widget.dart';
+
+class QuestionBankListWidget extends ConsumerStatefulWidget {
+  const QuestionBankListWidget({super.key});
+
+  @override
+  ConsumerState<QuestionBankListWidget> createState() =>
+      _QuestionBankListWidgetState();
+}
+
+class _QuestionBankListWidgetState
+    extends ConsumerState<QuestionBankListWidget> {
+  @override
+  void initState() {
+    super.initState();
+    // Load questions when widget initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(presentQuestionNotifierProvider.notifier)
+          .loadQuestions(const QuestionFilter());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(presentQuestionNotifierProvider);
+
+    if (state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              state.errorMessage!,
+              style: Theme.of(context).textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                ref
+                    .read(presentQuestionNotifierProvider.notifier)
+                    .loadQuestions(const QuestionFilter());
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final questions = state.questionQueue;
+
+    if (questions.isEmpty) {
+      return const Center(child: Text('No questions available'));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      child: Column(
+        children: [
+          // Add button at the top
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: () => _showAddQuestionDialog(context),
+                icon: const Icon(Icons.add),
+                label: const Text('Add Question'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
+          ),
+
+          // Questions list
+          Expanded(
+            child: ListView.builder(
+              itemCount: questions.length,
+              itemBuilder: (context, index) {
+                final question = questions[index];
+                return _buildQuestionTile(question);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuestionTile(Question question) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            offset: Offset(4, 4),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      child: Card(
+        elevation: 0,
+        child: InkWell(
+          onTap: () => _showEditQuestionDialog(context, question),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header row with ID and time
+                Row(
+                  children: [
+                    Text(
+                      'ID: ${question.questionId}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    const Spacer(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          TimeUtils.timeAgo(question.createdAt),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          question.createdByName ?? 'Unknown User',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                                fontStyle: FontStyle.italic,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // Question text
+                Text(
+                  question.questionText,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                // const SizedBox(height: 8),
+
+                // Status and type row
+                Row(
+                  children: [
+                    // Status
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(question.approvalStatus),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        question.approvalStatus,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // Question type
+                    Text(
+                      question.questionTypeDisplay,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // Options preview
+                Wrap(
+                  spacing: 4.0,
+                  runSpacing: 4.0,
+                  children: question.options.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final option = entry.value;
+                    return Chip(
+                      label: Text(
+                        '${String.fromCharCode(65 + index)}. ${option.text}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceVariant,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      padding: EdgeInsets.zero,
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'rejected':
+        return Colors.red;
+      case 'draft':
+        return Colors.grey;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  void _showAddQuestionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        // Listen for success state to auto-dismiss
+        ref.listen(addQuestionNotifierProvider, (previous, next) {
+          if (next.isSuccess && !next.isLoading) {
+            Navigator.of(dialogContext).pop();
+          }
+        });
+
+        return Dialog(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 800,
+              maxHeight: MediaQuery.of(context).size.height * 0.9,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Dialog Header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(28),
+                      topRight: Radius.circular(28),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Add Question',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                      ),
+                    ],
+                  ),
+                ),
+                // Dialog Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: AddQuestionWidget(showScaffold: false),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).then((_) {
+      // Refresh the list after dialog closes
+      ref
+          .read(presentQuestionNotifierProvider.notifier)
+          .loadQuestions(const QuestionFilter());
+      // Reset the add question form
+      ref.read(addQuestionNotifierProvider.notifier).reset();
+    });
+  }
+
+  void _showEditQuestionDialog(BuildContext context, Question question) {
+    // Load question into the add question provider for editing
+    ref
+        .read(addQuestionNotifierProvider.notifier)
+        .loadQuestionForEditing(question);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        // Listen for success state to auto-dismiss
+        ref.listen(addQuestionNotifierProvider, (previous, next) {
+          if (next.isSuccess && !next.isLoading) {
+            Navigator.of(dialogContext).pop();
+          }
+        });
+
+        return Dialog(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 800,
+              maxHeight: MediaQuery.of(context).size.height * 0.9,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Dialog Header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(28),
+                      topRight: Radius.circular(28),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Edit Question',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                      ),
+                    ],
+                  ),
+                ),
+                // Dialog Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: AddQuestionWidget(showScaffold: false),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).then((_) {
+      // Refresh the list after dialog closes
+      ref
+          .read(presentQuestionNotifierProvider.notifier)
+          .loadQuestions(const QuestionFilter());
+      // Reset the add question form
+      ref.read(addQuestionNotifierProvider.notifier).reset();
+    });
+  }
+}

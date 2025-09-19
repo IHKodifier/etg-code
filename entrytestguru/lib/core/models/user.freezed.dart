@@ -25,7 +25,12 @@ mixin _$User {
   String? get email => throw _privateConstructorUsedError;
   @JsonKey(name: 'exam_type')
   String? get examType => throw _privateConstructorUsedError;
+  String get role => throw _privateConstructorUsedError;
   String get tier => throw _privateConstructorUsedError;
+  @JsonKey(name: 'trial_expiry')
+  DateTime? get trialExpiry => throw _privateConstructorUsedError;
+  @JsonKey(name: 'subscription_expiry')
+  DateTime? get subscriptionExpiry => throw _privateConstructorUsedError;
   @JsonKey(name: 'is_active')
   bool get isActive => throw _privateConstructorUsedError;
   @JsonKey(name: 'is_verified')
@@ -56,7 +61,10 @@ abstract class $UserCopyWith<$Res> {
     String id,
     String? email,
     @JsonKey(name: 'exam_type') String? examType,
+    String role,
     String tier,
+    @JsonKey(name: 'trial_expiry') DateTime? trialExpiry,
+    @JsonKey(name: 'subscription_expiry') DateTime? subscriptionExpiry,
     @JsonKey(name: 'is_active') bool isActive,
     @JsonKey(name: 'is_verified') bool? isVerified,
     @JsonKey(name: 'is_anonymous') bool isAnonymous,
@@ -84,7 +92,10 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
     Object? id = null,
     Object? email = freezed,
     Object? examType = freezed,
+    Object? role = null,
     Object? tier = null,
+    Object? trialExpiry = freezed,
+    Object? subscriptionExpiry = freezed,
     Object? isActive = null,
     Object? isVerified = freezed,
     Object? isAnonymous = null,
@@ -106,10 +117,22 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
                 ? _value.examType
                 : examType // ignore: cast_nullable_to_non_nullable
                       as String?,
+            role: null == role
+                ? _value.role
+                : role // ignore: cast_nullable_to_non_nullable
+                      as String,
             tier: null == tier
                 ? _value.tier
                 : tier // ignore: cast_nullable_to_non_nullable
                       as String,
+            trialExpiry: freezed == trialExpiry
+                ? _value.trialExpiry
+                : trialExpiry // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            subscriptionExpiry: freezed == subscriptionExpiry
+                ? _value.subscriptionExpiry
+                : subscriptionExpiry // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
             isActive: null == isActive
                 ? _value.isActive
                 : isActive // ignore: cast_nullable_to_non_nullable
@@ -152,7 +175,10 @@ abstract class _$$UserImplCopyWith<$Res> implements $UserCopyWith<$Res> {
     String id,
     String? email,
     @JsonKey(name: 'exam_type') String? examType,
+    String role,
     String tier,
+    @JsonKey(name: 'trial_expiry') DateTime? trialExpiry,
+    @JsonKey(name: 'subscription_expiry') DateTime? subscriptionExpiry,
     @JsonKey(name: 'is_active') bool isActive,
     @JsonKey(name: 'is_verified') bool? isVerified,
     @JsonKey(name: 'is_anonymous') bool isAnonymous,
@@ -177,7 +203,10 @@ class __$$UserImplCopyWithImpl<$Res>
     Object? id = null,
     Object? email = freezed,
     Object? examType = freezed,
+    Object? role = null,
     Object? tier = null,
+    Object? trialExpiry = freezed,
+    Object? subscriptionExpiry = freezed,
     Object? isActive = null,
     Object? isVerified = freezed,
     Object? isAnonymous = null,
@@ -199,10 +228,22 @@ class __$$UserImplCopyWithImpl<$Res>
             ? _value.examType
             : examType // ignore: cast_nullable_to_non_nullable
                   as String?,
+        role: null == role
+            ? _value.role
+            : role // ignore: cast_nullable_to_non_nullable
+                  as String,
         tier: null == tier
             ? _value.tier
             : tier // ignore: cast_nullable_to_non_nullable
                   as String,
+        trialExpiry: freezed == trialExpiry
+            ? _value.trialExpiry
+            : trialExpiry // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        subscriptionExpiry: freezed == subscriptionExpiry
+            ? _value.subscriptionExpiry
+            : subscriptionExpiry // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
         isActive: null == isActive
             ? _value.isActive
             : isActive // ignore: cast_nullable_to_non_nullable
@@ -239,7 +280,10 @@ class _$UserImpl implements _User {
     required this.id,
     this.email,
     @JsonKey(name: 'exam_type') this.examType,
+    required this.role,
     required this.tier,
+    @JsonKey(name: 'trial_expiry') this.trialExpiry,
+    @JsonKey(name: 'subscription_expiry') this.subscriptionExpiry,
     @JsonKey(name: 'is_active') required this.isActive,
     @JsonKey(name: 'is_verified') this.isVerified,
     @JsonKey(name: 'is_anonymous') required this.isAnonymous,
@@ -261,7 +305,15 @@ class _$UserImpl implements _User {
   @JsonKey(name: 'exam_type')
   final String? examType;
   @override
+  final String role;
+  @override
   final String tier;
+  @override
+  @JsonKey(name: 'trial_expiry')
+  final DateTime? trialExpiry;
+  @override
+  @JsonKey(name: 'subscription_expiry')
+  final DateTime? subscriptionExpiry;
   @override
   @JsonKey(name: 'is_active')
   final bool isActive;
@@ -293,7 +345,7 @@ class _$UserImpl implements _User {
 
   @override
   String toString() {
-    return 'User(id: $id, email: $email, examType: $examType, tier: $tier, isActive: $isActive, isVerified: $isVerified, isAnonymous: $isAnonymous, createdAt: $createdAt, profile: $profile, usageStats: $usageStats)';
+    return 'User(id: $id, email: $email, examType: $examType, role: $role, tier: $tier, trialExpiry: $trialExpiry, subscriptionExpiry: $subscriptionExpiry, isActive: $isActive, isVerified: $isVerified, isAnonymous: $isAnonymous, createdAt: $createdAt, profile: $profile, usageStats: $usageStats)';
   }
 
   @override
@@ -305,7 +357,12 @@ class _$UserImpl implements _User {
             (identical(other.email, email) || other.email == email) &&
             (identical(other.examType, examType) ||
                 other.examType == examType) &&
+            (identical(other.role, role) || other.role == role) &&
             (identical(other.tier, tier) || other.tier == tier) &&
+            (identical(other.trialExpiry, trialExpiry) ||
+                other.trialExpiry == trialExpiry) &&
+            (identical(other.subscriptionExpiry, subscriptionExpiry) ||
+                other.subscriptionExpiry == subscriptionExpiry) &&
             (identical(other.isActive, isActive) ||
                 other.isActive == isActive) &&
             (identical(other.isVerified, isVerified) ||
@@ -328,7 +385,10 @@ class _$UserImpl implements _User {
     id,
     email,
     examType,
+    role,
     tier,
+    trialExpiry,
+    subscriptionExpiry,
     isActive,
     isVerified,
     isAnonymous,
@@ -356,7 +416,10 @@ abstract class _User implements User {
     required final String id,
     final String? email,
     @JsonKey(name: 'exam_type') final String? examType,
+    required final String role,
     required final String tier,
+    @JsonKey(name: 'trial_expiry') final DateTime? trialExpiry,
+    @JsonKey(name: 'subscription_expiry') final DateTime? subscriptionExpiry,
     @JsonKey(name: 'is_active') required final bool isActive,
     @JsonKey(name: 'is_verified') final bool? isVerified,
     @JsonKey(name: 'is_anonymous') required final bool isAnonymous,
@@ -376,7 +439,15 @@ abstract class _User implements User {
   @JsonKey(name: 'exam_type')
   String? get examType;
   @override
+  String get role;
+  @override
   String get tier;
+  @override
+  @JsonKey(name: 'trial_expiry')
+  DateTime? get trialExpiry;
+  @override
+  @JsonKey(name: 'subscription_expiry')
+  DateTime? get subscriptionExpiry;
   @override
   @JsonKey(name: 'is_active')
   bool get isActive;
@@ -833,6 +904,8 @@ mixin _$RegisterRequest {
   String get password => throw _privateConstructorUsedError;
   @JsonKey(name: 'exam_type')
   String get examType => throw _privateConstructorUsedError;
+  String? get role => throw _privateConstructorUsedError;
+  String? get tier => throw _privateConstructorUsedError;
   @JsonKey(name: 'device_info')
   Map<String, dynamic> get deviceInfo => throw _privateConstructorUsedError;
   Map<String, dynamic>? get profile => throw _privateConstructorUsedError;
@@ -858,6 +931,8 @@ abstract class $RegisterRequestCopyWith<$Res> {
     String email,
     String password,
     @JsonKey(name: 'exam_type') String examType,
+    String? role,
+    String? tier,
     @JsonKey(name: 'device_info') Map<String, dynamic> deviceInfo,
     Map<String, dynamic>? profile,
   });
@@ -881,6 +956,8 @@ class _$RegisterRequestCopyWithImpl<$Res, $Val extends RegisterRequest>
     Object? email = null,
     Object? password = null,
     Object? examType = null,
+    Object? role = freezed,
+    Object? tier = freezed,
     Object? deviceInfo = null,
     Object? profile = freezed,
   }) {
@@ -898,6 +975,14 @@ class _$RegisterRequestCopyWithImpl<$Res, $Val extends RegisterRequest>
                 ? _value.examType
                 : examType // ignore: cast_nullable_to_non_nullable
                       as String,
+            role: freezed == role
+                ? _value.role
+                : role // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            tier: freezed == tier
+                ? _value.tier
+                : tier // ignore: cast_nullable_to_non_nullable
+                      as String?,
             deviceInfo: null == deviceInfo
                 ? _value.deviceInfo
                 : deviceInfo // ignore: cast_nullable_to_non_nullable
@@ -925,6 +1010,8 @@ abstract class _$$RegisterRequestImplCopyWith<$Res>
     String email,
     String password,
     @JsonKey(name: 'exam_type') String examType,
+    String? role,
+    String? tier,
     @JsonKey(name: 'device_info') Map<String, dynamic> deviceInfo,
     Map<String, dynamic>? profile,
   });
@@ -947,6 +1034,8 @@ class __$$RegisterRequestImplCopyWithImpl<$Res>
     Object? email = null,
     Object? password = null,
     Object? examType = null,
+    Object? role = freezed,
+    Object? tier = freezed,
     Object? deviceInfo = null,
     Object? profile = freezed,
   }) {
@@ -964,6 +1053,14 @@ class __$$RegisterRequestImplCopyWithImpl<$Res>
             ? _value.examType
             : examType // ignore: cast_nullable_to_non_nullable
                   as String,
+        role: freezed == role
+            ? _value.role
+            : role // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        tier: freezed == tier
+            ? _value.tier
+            : tier // ignore: cast_nullable_to_non_nullable
+                  as String?,
         deviceInfo: null == deviceInfo
             ? _value._deviceInfo
             : deviceInfo // ignore: cast_nullable_to_non_nullable
@@ -984,6 +1081,8 @@ class _$RegisterRequestImpl implements _RegisterRequest {
     required this.email,
     required this.password,
     @JsonKey(name: 'exam_type') required this.examType,
+    this.role,
+    this.tier,
     @JsonKey(name: 'device_info')
     required final Map<String, dynamic> deviceInfo,
     final Map<String, dynamic>? profile,
@@ -1000,6 +1099,10 @@ class _$RegisterRequestImpl implements _RegisterRequest {
   @override
   @JsonKey(name: 'exam_type')
   final String examType;
+  @override
+  final String? role;
+  @override
+  final String? tier;
   final Map<String, dynamic> _deviceInfo;
   @override
   @JsonKey(name: 'device_info')
@@ -1021,7 +1124,7 @@ class _$RegisterRequestImpl implements _RegisterRequest {
 
   @override
   String toString() {
-    return 'RegisterRequest(email: $email, password: $password, examType: $examType, deviceInfo: $deviceInfo, profile: $profile)';
+    return 'RegisterRequest(email: $email, password: $password, examType: $examType, role: $role, tier: $tier, deviceInfo: $deviceInfo, profile: $profile)';
   }
 
   @override
@@ -1034,6 +1137,8 @@ class _$RegisterRequestImpl implements _RegisterRequest {
                 other.password == password) &&
             (identical(other.examType, examType) ||
                 other.examType == examType) &&
+            (identical(other.role, role) || other.role == role) &&
+            (identical(other.tier, tier) || other.tier == tier) &&
             const DeepCollectionEquality().equals(
               other._deviceInfo,
               _deviceInfo,
@@ -1048,6 +1153,8 @@ class _$RegisterRequestImpl implements _RegisterRequest {
     email,
     password,
     examType,
+    role,
+    tier,
     const DeepCollectionEquality().hash(_deviceInfo),
     const DeepCollectionEquality().hash(_profile),
   );
@@ -1074,6 +1181,8 @@ abstract class _RegisterRequest implements RegisterRequest {
     required final String email,
     required final String password,
     @JsonKey(name: 'exam_type') required final String examType,
+    final String? role,
+    final String? tier,
     @JsonKey(name: 'device_info')
     required final Map<String, dynamic> deviceInfo,
     final Map<String, dynamic>? profile,
@@ -1089,6 +1198,10 @@ abstract class _RegisterRequest implements RegisterRequest {
   @override
   @JsonKey(name: 'exam_type')
   String get examType;
+  @override
+  String? get role;
+  @override
+  String? get tier;
   @override
   @JsonKey(name: 'device_info')
   Map<String, dynamic> get deviceInfo;
@@ -1115,6 +1228,8 @@ mixin _$GoogleAuthRequest {
   Map<String, dynamic> get deviceInfo => throw _privateConstructorUsedError;
   @JsonKey(name: 'exam_type')
   String? get examType => throw _privateConstructorUsedError;
+  String? get role => throw _privateConstructorUsedError;
+  String? get tier => throw _privateConstructorUsedError;
 
   /// Serializes this GoogleAuthRequest to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -1137,6 +1252,8 @@ abstract class $GoogleAuthRequestCopyWith<$Res> {
     @JsonKey(name: 'id_token') String idToken,
     @JsonKey(name: 'device_info') Map<String, dynamic> deviceInfo,
     @JsonKey(name: 'exam_type') String? examType,
+    String? role,
+    String? tier,
   });
 }
 
@@ -1158,6 +1275,8 @@ class _$GoogleAuthRequestCopyWithImpl<$Res, $Val extends GoogleAuthRequest>
     Object? idToken = null,
     Object? deviceInfo = null,
     Object? examType = freezed,
+    Object? role = freezed,
+    Object? tier = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -1172,6 +1291,14 @@ class _$GoogleAuthRequestCopyWithImpl<$Res, $Val extends GoogleAuthRequest>
             examType: freezed == examType
                 ? _value.examType
                 : examType // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            role: freezed == role
+                ? _value.role
+                : role // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            tier: freezed == tier
+                ? _value.tier
+                : tier // ignore: cast_nullable_to_non_nullable
                       as String?,
           )
           as $Val,
@@ -1192,6 +1319,8 @@ abstract class _$$GoogleAuthRequestImplCopyWith<$Res>
     @JsonKey(name: 'id_token') String idToken,
     @JsonKey(name: 'device_info') Map<String, dynamic> deviceInfo,
     @JsonKey(name: 'exam_type') String? examType,
+    String? role,
+    String? tier,
   });
 }
 
@@ -1212,6 +1341,8 @@ class __$$GoogleAuthRequestImplCopyWithImpl<$Res>
     Object? idToken = null,
     Object? deviceInfo = null,
     Object? examType = freezed,
+    Object? role = freezed,
+    Object? tier = freezed,
   }) {
     return _then(
       _$GoogleAuthRequestImpl(
@@ -1227,6 +1358,14 @@ class __$$GoogleAuthRequestImplCopyWithImpl<$Res>
             ? _value.examType
             : examType // ignore: cast_nullable_to_non_nullable
                   as String?,
+        role: freezed == role
+            ? _value.role
+            : role // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        tier: freezed == tier
+            ? _value.tier
+            : tier // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -1240,6 +1379,8 @@ class _$GoogleAuthRequestImpl implements _GoogleAuthRequest {
     @JsonKey(name: 'device_info')
     required final Map<String, dynamic> deviceInfo,
     @JsonKey(name: 'exam_type') this.examType,
+    this.role,
+    this.tier,
   }) : _deviceInfo = deviceInfo;
 
   factory _$GoogleAuthRequestImpl.fromJson(Map<String, dynamic> json) =>
@@ -1260,10 +1401,14 @@ class _$GoogleAuthRequestImpl implements _GoogleAuthRequest {
   @override
   @JsonKey(name: 'exam_type')
   final String? examType;
+  @override
+  final String? role;
+  @override
+  final String? tier;
 
   @override
   String toString() {
-    return 'GoogleAuthRequest(idToken: $idToken, deviceInfo: $deviceInfo, examType: $examType)';
+    return 'GoogleAuthRequest(idToken: $idToken, deviceInfo: $deviceInfo, examType: $examType, role: $role, tier: $tier)';
   }
 
   @override
@@ -1277,7 +1422,9 @@ class _$GoogleAuthRequestImpl implements _GoogleAuthRequest {
               _deviceInfo,
             ) &&
             (identical(other.examType, examType) ||
-                other.examType == examType));
+                other.examType == examType) &&
+            (identical(other.role, role) || other.role == role) &&
+            (identical(other.tier, tier) || other.tier == tier));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1287,6 +1434,8 @@ class _$GoogleAuthRequestImpl implements _GoogleAuthRequest {
     idToken,
     const DeepCollectionEquality().hash(_deviceInfo),
     examType,
+    role,
+    tier,
   );
 
   /// Create a copy of GoogleAuthRequest
@@ -1312,6 +1461,8 @@ abstract class _GoogleAuthRequest implements GoogleAuthRequest {
     @JsonKey(name: 'device_info')
     required final Map<String, dynamic> deviceInfo,
     @JsonKey(name: 'exam_type') final String? examType,
+    final String? role,
+    final String? tier,
   }) = _$GoogleAuthRequestImpl;
 
   factory _GoogleAuthRequest.fromJson(Map<String, dynamic> json) =
@@ -1326,6 +1477,10 @@ abstract class _GoogleAuthRequest implements GoogleAuthRequest {
   @override
   @JsonKey(name: 'exam_type')
   String? get examType;
+  @override
+  String? get role;
+  @override
+  String? get tier;
 
   /// Create a copy of GoogleAuthRequest
   /// with the given fields replaced by the non-null parameter values.

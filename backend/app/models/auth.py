@@ -1,11 +1,30 @@
 from pydantic import BaseModel, EmailStr, validator
 from typing import Optional, Dict, Any
 from datetime import datetime
+from enum import Enum
+
+
+class UserRole(str, Enum):
+    """User role enumeration"""
+    ADMIN = "admin"
+    CONTENT_REVIEWER = "contentReviewer"
+    CONTENT_CREATOR = "contentCreator"
+    REGULAR_USER = "regularUser"
+
+
+class SubscriptionTier(str, Enum):
+    """Subscription tier enumeration"""
+    ANONYMOUS = "anonymous"
+    FREE = "free"
+    PRO = "pro"
+
 
 class UserCreateRequest(BaseModel):
     email: EmailStr
     password: str
     exam_type: str
+    role: UserRole = UserRole.REGULAR_USER
+    tier: SubscriptionTier = SubscriptionTier.FREE
     device_info: Dict[str, Any] = {}
     profile: Optional[Dict[str, Any]] = None
     
@@ -22,6 +41,18 @@ class UserCreateRequest(BaseModel):
             raise ValueError(f'Exam type must be one of: {", ".join(allowed_types)}')
         return v
 
+    @validator('role')
+    def validate_role(cls, v):
+        if not isinstance(v, UserRole):
+            raise ValueError('Invalid user role')
+        return v
+
+    @validator('tier')
+    def validate_tier(cls, v):
+        if not isinstance(v, SubscriptionTier):
+            raise ValueError('Invalid subscription tier')
+        return v
+
 class UserLoginRequest(BaseModel):
     email: EmailStr
     password: str
@@ -30,7 +61,10 @@ class UserResponse(BaseModel):
     id: str
     email: Optional[str] = None
     exam_type: Optional[str] = None
-    tier: str
+    role: UserRole
+    tier: SubscriptionTier
+    trial_expiry: Optional[datetime] = None
+    subscription_expiry: Optional[datetime] = None
     is_active: bool
     is_verified: Optional[bool] = None
     created_at: datetime
@@ -56,3 +90,5 @@ class GoogleAuthRequest(BaseModel):
     id_token: str
     device_info: Dict[str, Any] = {}
     exam_type: Optional[str] = None
+    role: UserRole = UserRole.REGULAR_USER
+    tier: SubscriptionTier = SubscriptionTier.FREE

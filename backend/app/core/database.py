@@ -141,46 +141,32 @@ class FirestoreClient:
         """Initialize Firestore client"""
         try:
             # Check if we should use mock database
-            if (os.getenv('USE_MOCK_DB') == 'true' or 
-                os.getenv('TESTING') == 'true' or 
-                not settings.FIREBASE_PROJECT_ID):
-                
+            if (os.getenv('USE_MOCK_DB') == 'true' or
+                os.getenv('TESTING') == 'true'):
+
                 self._client = MockFirestoreClient()
                 logger.info("Using mock database for testing")
                 return
-            
-            # Use real Firebase
-            if settings.ENVIRONMENT == "development":
-                # Use application default credentials for development
-                self._client = firestore.Client(project=settings.FIREBASE_PROJECT_ID)
-                logger.info(f"Firestore client initialized for project: {settings.FIREBASE_PROJECT_ID}")
-            
-            else:
-                # Use service account credentials for production
-                if not all([
-                    settings.FIREBASE_PRIVATE_KEY_ID,
-                    settings.FIREBASE_PRIVATE_KEY,
-                    settings.FIREBASE_CLIENT_EMAIL
-                ]):
-                    raise ValueError("Firebase service account credentials not configured")
-                
-                credentials_dict = {
-                    "type": "service_account",
-                    "project_id": settings.FIREBASE_PROJECT_ID,
-                    "private_key_id": settings.FIREBASE_PRIVATE_KEY_ID,
-                    "private_key": settings.FIREBASE_PRIVATE_KEY.replace("\\n", "\n") if settings.FIREBASE_PRIVATE_KEY else None,
-                    "client_email": settings.FIREBASE_CLIENT_EMAIL,
-                    "client_id": settings.FIREBASE_CLIENT_ID,
-                    "auth_uri": settings.FIREBASE_AUTH_URI,
-                    "token_uri": settings.FIREBASE_TOKEN_URI,
-                    "auth_provider_x509_cert_url": settings.FIREBASE_AUTH_PROVIDER_CERT_URL,
-                    "client_x509_cert_url": settings.FIREBASE_CLIENT_CERT_URL
-                }
-                
+
+            # Try to load credentials from service account key file
+            key_file_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'firebase-service-account-key.json')
+            if os.path.exists(key_file_path):
+                with open(key_file_path, 'r') as f:
+                    credentials_dict = json.load(f)
+
                 credentials = service_account.Credentials.from_service_account_info(credentials_dict)
-                self._client = firestore.Client(credentials=credentials, project=settings.FIREBASE_PROJECT_ID)
-                logger.info(f"Firestore client initialized for project: {settings.FIREBASE_PROJECT_ID}")
-                
+                self._client = firestore.Client(credentials=credentials, project=credentials_dict['project_id'])
+                logger.info(f"Firestore client initialized for project: {credentials_dict['project_id']} using service account key")
+                return
+
+            # Fallback to environment variables
+            if not settings.FIREBASE_PROJECT_ID:
+                raise ValueError("Firebase project ID not configured")
+
+            # Use application default credentials for development
+            self._client = firestore.Client(project=settings.FIREBASE_PROJECT_ID)
+            logger.info(f"Firestore client initialized for project: {settings.FIREBASE_PROJECT_ID} using ADC")
+
         except Exception as e:
             logger.error(f"Failed to initialize Firestore client: {e}")
             # Fallback to mock client
