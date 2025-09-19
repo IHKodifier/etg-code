@@ -69,7 +69,18 @@ class QuestionResponse(BaseModel):
     historical_frequency: int
     created_at: datetime
     performance_stats: Dict[str, Any] = {}
-    
+    created_by_name: Optional[str] = None
+
+    # Approval workflow fields
+    status: str = "pending"  # pending, approved, rejected
+    created_by: str
+    reviewer_id: Optional[str] = None
+    reviewer_name: Optional[str] = None
+    review_comments: Optional[str] = None
+    submitted_at: datetime
+    reviewed_at: Optional[datetime] = None
+    approved_at: Optional[datetime] = None
+
     class Config:
         from_attributes = True
 
@@ -100,9 +111,60 @@ class QuestionFilterRequest(BaseModel):
     difficulty: Optional[str] = None
     arde_probability: Optional[str] = None
     limit: int = 20
-    
+
     @validator('limit')
     def validate_limit(cls, v):
         if v < 1 or v > 100:
             raise ValueError('Limit must be between 1 and 100')
+        return v
+
+# Approval Workflow Models
+class QuestionApprovalRequest(BaseModel):
+    question_id: str
+    action: str  # "approve" or "reject"
+    comments: Optional[str] = None
+
+    @validator('action')
+    def validate_action(cls, v):
+        allowed_actions = ['approve', 'reject']
+        if v not in allowed_actions:
+            raise ValueError(f'Action must be one of: {", ".join(allowed_actions)}')
+        return v
+
+class QuestionApprovalResponse(BaseModel):
+    question_id: str
+    status: str
+    reviewer_id: str
+    reviewer_name: str
+    reviewed_at: datetime
+    comments: Optional[str] = None
+
+class QuestionWorkflowStatus(BaseModel):
+    question_id: str
+    status: str
+    created_by: str
+    submitted_at: datetime
+    reviewer_id: Optional[str] = None
+    reviewer_name: Optional[str] = None
+    reviewed_at: Optional[datetime] = None
+    comments: Optional[str] = None
+
+class BulkApprovalRequest(BaseModel):
+    question_ids: List[str]
+    action: str
+    comments: Optional[str] = None
+
+    @validator('action')
+    def validate_action(cls, v):
+        allowed_actions = ['approve', 'reject']
+        if v not in allowed_actions:
+            raise ValueError(f'Action must be one of: {", ".join(allowed_actions)}')
+        return v
+
+    @validator('question_ids')
+    def validate_question_ids(cls, v):
+        if len(v) < 1:
+            raise ValueError('At least one question ID must be provided')
+        if len(v) > 50:
+            raise ValueError('Cannot process more than 50 questions at once')
         return v

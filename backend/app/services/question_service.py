@@ -101,12 +101,24 @@ class QuestionService:
                 limit=limit,
                 order_by="-created_at"
             )
-            
+
+            # Add creator names before removing sensitive info
+            for question in questions:
+                creator_id = question.get("created_by")
+                if creator_id:
+                    user = await db.get_document("users", creator_id)
+                    if user and user.get("profile"):
+                        question["created_by_name"] = user["profile"].get("name", "Unknown")
+                    else:
+                        question["created_by_name"] = "Unknown"
+                else:
+                    question["created_by_name"] = "Unknown"
+
             # Remove sensitive information for practice
             for question in questions:
                 question.pop("created_by", None)
                 question.pop("approval_status", None)
-            
+
             return questions
             
         except Exception as e:
@@ -158,11 +170,23 @@ class QuestionService:
                     limit=question_count
                 )
             
+            # Add creator names before removing sensitive info
+            for question in questions:
+                creator_id = question.get("created_by")
+                if creator_id:
+                    user = await db.get_document("users", creator_id)
+                    if user and user.get("profile"):
+                        question["created_by_name"] = user["profile"].get("name", "Unknown")
+                    else:
+                        question["created_by_name"] = "Unknown"
+                else:
+                    question["created_by_name"] = "Unknown"
+
             # Remove sensitive information
             for question in questions:
                 question.pop("created_by", None)
                 question.pop("approval_status", None)
-            
+
             return questions[:question_count]  # Ensure exact count
             
         except Exception as e:
@@ -271,18 +295,244 @@ class QuestionService:
                 "historical_frequency": historical_frequency,
                 "updated_at": datetime.utcnow()
             }
-            
+
             if arde_context:
                 update_data["arde_context"] = arde_context
-            
+
             await db.update_document("questions", question_id, update_data)
-            
+
             logger.info(f"ARDE data updated for question: {question_id}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to update ARDE data: {e}")
             return False
+
+    # Approval Workflow Methods
+
+    async def get_pending_questions(
+        self,
+        exam_type: Optional[str] = None,
+        subject: Optional[str] = None,
+        limit: int = 20
+    ) -> List[Dict[str, Any]]:
+        """Get questions pending approval"""
+        try:
+            filters = [
+                {"field": "is_active", "operator": "==", "value": True},
+                {"field": "approval_status", "operator": "==", "value": "pending"}
+            ]
+
+            if exam_type:
+                filters.append({"field": "exam_type", "operator": "==", "value": exam_type})
+            if subject:
+                filters.append({"field": "subject", "operator": "==", "value": subject})
+
+            questions = await db.query_collection(
+                "questions",
+                filters=filters,
+                limit=limit,
+                order_by="created_at"
+            )
+
+            # Add creator names
+            for question in questions:
+                creator_id = question.get("created_by")
+                if creator_id:
+                    user = await db.get_document("users", creator_id)
+                    if user and user.get("profile"):
+                        question["created_by_name"] = user["profile"].get("name", "Unknown")
+                    else:
+                        question["created_by_name"] = "Unknown"
+
+            return questions
+
+        except Exception as e:
+            logger.error(f"Failed to get pending questions: {e}")
+            return []
+
+    async def approve_question(
+        self,
+        question_id: str,
+        reviewer_id: str,
+        reviewer_name: str,
+        action: str,
+        comments: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Approve or reject a question"""
+        try:
+            # Get the question first
+            question = await self.get_question(question_id)
+            if not question:
+                raise NotFoundError("Question not found")
+
+            # Determine new status
+            new_status = "approved" if action == "approve" else "rejected"
+
+            # Prepare update data
+            update_data = {
+                "approval_status": new_status,
+                "reviewer_id": reviewer_id,
+                "reviewer_name": reviewer_name,
+                "reviewed_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+
+            if comments:
+                update_data["review_comments"] = comments
+
+            if action == "approve":
+                update_data["approved_at"] = datetime.utcnow()
+
+            # Update the question
+            await db.update_document("questions", question_id, update_data)
+
+            # Log the approval action
+            audit_data = {
+                "question_id": question_id,
+                "reviewer_id": reviewer_id,
+                "action": action,
+                "comments": comments,
+                "timestamp": datetime.utcnow(),
+                "question_creator": question.get("created_by")
+            }
+            await db.create_document("question_approvals", audit_data)
+
+            logger.info(f"Question {question_id} {action}d by {reviewer_name}")
+
+            return {
+                "question_id": question_id,
+                "status": new_status,
+                "reviewer_id": reviewer_id,
+                "reviewer_name": reviewer_name,
+                "reviewed_at": update_data["reviewed_at"],
+                "comments": comments
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to approve question: {e}")
+            raise
+
+    async def bulk_approve_questions(
+        self,
+        question_ids: List[str],
+        reviewer_id: str,
+        reviewer_name: str,
+        action: str,
+        comments: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Bulk approve or reject multiple questions"""
+        try:
+            results = []
+
+            for question_id in question_ids:
+                try:
+                    result = await self.approve_question(
+                        question_id=question_id,
+                        reviewer_id=reviewer_id,
+                        reviewer_name=reviewer_name,
+                        action=action,
+                        comments=comments
+                    )
+                    results.append(result)
+                except Exception as e:
+                    logger.error(f"Failed to process question {question_id}: {e}")
+                    # Continue with other questions even if one fails
+                    continue
+
+            logger.info(f"Bulk {action} completed: {len(results)}/{len(question_ids)} questions processed")
+            return results
+
+        except Exception as e:
+            logger.error(f"Failed to bulk approve questions: {e}")
+            raise
+
+    async def get_user_submissions(
+        self,
+        user_id: str,
+        status: Optional[str] = None,
+        limit: int = 20
+    ) -> List[Dict[str, Any]]:
+        """Get user's question submissions with workflow status"""
+        try:
+            filters = [
+                {"field": "created_by", "operator": "==", "value": user_id},
+                {"field": "is_active", "operator": "==", "value": True}
+            ]
+
+            if status:
+                filters.append({"field": "approval_status", "operator": "==", "value": status})
+
+            submissions = await db.query_collection(
+                "questions",
+                filters=filters,
+                limit=limit,
+                order_by="-created_at"
+            )
+
+            # Format for workflow status response
+            workflow_submissions = []
+            for submission in submissions:
+                workflow_submissions.append({
+                    "question_id": submission["id"],
+                    "status": submission.get("approval_status", "pending"),
+                    "created_by": submission["created_by"],
+                    "submitted_at": submission["created_at"],
+                    "reviewer_id": submission.get("reviewer_id"),
+                    "reviewer_name": submission.get("reviewer_name"),
+                    "reviewed_at": submission.get("reviewed_at"),
+                    "comments": submission.get("review_comments")
+                })
+
+            return workflow_submissions
+
+        except Exception as e:
+            logger.error(f"Failed to get user submissions: {e}")
+            return []
+
+    async def get_review_stats(self, reviewer_id: str) -> Dict[str, Any]:
+        """Get review statistics for a reviewer"""
+        try:
+            # Get total reviews by this reviewer
+            total_reviews = await db.query_collection(
+                "question_approvals",
+                filters=[{"field": "reviewer_id", "operator": "==", "value": reviewer_id}]
+            )
+
+            # Count approvals and rejections
+            approved_count = sum(1 for review in total_reviews if review["action"] == "approve")
+            rejected_count = sum(1 for review in total_reviews if review["action"] == "reject")
+
+            # Get pending questions count
+            pending_questions = await self.get_pending_questions(limit=1000)
+            pending_count = len(pending_questions)
+
+            # Get recent activity (last 30 days)
+            thirty_days_ago = datetime.utcnow().replace(day=datetime.utcnow().day - 30)
+            recent_reviews = [
+                review for review in total_reviews
+                if review["timestamp"] > thirty_days_ago
+            ]
+
+            return {
+                "total_reviews": len(total_reviews),
+                "approved_count": approved_count,
+                "rejected_count": rejected_count,
+                "pending_questions": pending_count,
+                "recent_activity": len(recent_reviews),
+                "approval_rate": (approved_count / len(total_reviews) * 100) if total_reviews else 0
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to get review stats: {e}")
+            return {
+                "total_reviews": 0,
+                "approved_count": 0,
+                "rejected_count": 0,
+                "pending_questions": 0,
+                "recent_activity": 0,
+                "approval_rate": 0
+            }
 
 # Global question service instance
 question_service = QuestionService()

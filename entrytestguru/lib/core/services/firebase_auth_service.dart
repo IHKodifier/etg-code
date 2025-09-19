@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,9 +45,11 @@ class FirebaseAuthService {
 
   Future<void> _initializeAuth() async {
     // Listen to Firebase auth state changes
-    _firebaseAuth.authStateChanges().listen((firebase_auth.User? firebaseUser) {
+    _firebaseAuth.authStateChanges().listen((
+      firebase_auth.User? firebaseUser,
+    ) async {
       if (firebaseUser != null) {
-        _currentUser = _convertFirebaseUserToAppUser(firebaseUser);
+        _currentUser = await _convertFirebaseUserToAppUser(firebaseUser);
         _authStateController.add(_currentUser);
       } else {
         _currentUser = null;
@@ -57,18 +60,28 @@ class FirebaseAuthService {
     // Check current user on startup
     final currentFirebaseUser = _firebaseAuth.currentUser;
     if (currentFirebaseUser != null) {
-      _currentUser = _convertFirebaseUserToAppUser(currentFirebaseUser);
+      _currentUser = await _convertFirebaseUserToAppUser(currentFirebaseUser);
       _authStateController.add(_currentUser);
     }
   }
 
   /// Convert Firebase User to our app User model
-  User _convertFirebaseUserToAppUser(firebase_auth.User firebaseUser) {
-    return User(
+  Future<User> _convertFirebaseUserToAppUser(
+    firebase_auth.User firebaseUser,
+  ) async {
+    // First get basic user info
+    User basicUser = User(
       id: firebaseUser.uid,
       email: firebaseUser.email,
       examType: null, // Will be set later during onboarding
-      tier: 'free',
+      role: firebaseUser.isAnonymous
+          ? 'regularUser'
+          : 'regularUser', // Temporary default
+      tier: firebaseUser.isAnonymous ? 'anonymous' : 'free',
+      trialExpiry: firebaseUser.isAnonymous
+          ? DateTime.now().add(const Duration(days: 14))
+          : null,
+      subscriptionExpiry: null,
       isActive: true,
       isVerified: firebaseUser.emailVerified,
       isAnonymous: firebaseUser.isAnonymous,
@@ -86,6 +99,9 @@ class FirebaseAuthService {
         'last_reset': DateTime.now().toIso8601String(),
       },
     );
+
+    // Then sync with Firestore to get the correct role and other data
+    return await _syncUserFromFirestore(firebaseUser.uid, basicUser);
   }
 
   /// Sign in anonymously
@@ -93,7 +109,7 @@ class FirebaseAuthService {
     try {
       final firebase_auth.UserCredential credential = await _firebaseAuth
           .signInAnonymously();
-      final user = _convertFirebaseUserToAppUser(credential.user!);
+      final user = await _convertFirebaseUserToAppUser(credential.user!);
 
       // Get Firebase ID token
       final idToken = await credential.user!.getIdToken();
@@ -118,7 +134,7 @@ class FirebaseAuthService {
     try {
       final firebase_auth.UserCredential credential = await _firebaseAuth
           .signInAnonymously();
-      final user = _convertFirebaseUserToAppUser(credential.user!);
+      final user = await _convertFirebaseUserToAppUser(credential.user!);
 
       // Get Firebase ID token
       final idToken = await credential.user!.getIdToken();
@@ -157,10 +173,10 @@ class FirebaseAuthService {
       // Send email verification
       await user.sendEmailVerification();
 
-      final appUser = _convertFirebaseUserToAppUser(user);
+      final appUser = await _convertFirebaseUserToAppUser(user);
 
-      // Store exam type in custom claims (this would typically be done via backend)
-      // For now, we'll handle this in Firestore or when the user first uses the app
+      // Sync user data to Firestore (creates document)
+      await _syncUserToFirestore(user, appUser, examType: examType);
 
       print('Account creation successful: ${appUser.id}');
       return appUser;
@@ -194,7 +210,7 @@ class FirebaseAuthService {
       final firebase_auth.UserCredential credential = await _firebaseAuth
           .signInWithEmailAndPassword(email: email, password: password);
 
-      final user = _convertFirebaseUserToAppUser(credential.user!);
+      final user = await _convertFirebaseUserToAppUser(credential.user!);
       final idToken = await credential.user!.getIdToken();
 
       final authTokens = AuthTokens(
@@ -254,14 +270,28 @@ class FirebaseAuthService {
       final firebase_auth.UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(credential);
 
-      final user = _convertFirebaseUserToAppUser(userCredential.user!);
+      final user = await _convertFirebaseUserToAppUser(userCredential.user!);
+
+      // First, sync user data TO Firestore (creates document if it doesn't exist)
+      await _syncUserToFirestore(
+        userCredential.user!,
+        user,
+        examType: examType,
+      );
+
+      // Then sync user data FROM Firestore (gets latest data including any updates)
+      final syncedUser = await _syncUserFromFirestore(
+        userCredential.user!.uid,
+        user,
+      );
+
       final idToken = await userCredential.user!.getIdToken();
 
       final authTokens = AuthTokens(
         accessToken: idToken ?? '',
         refreshToken: 'firebase_refresh_token',
         tokenType: 'Bearer',
-        user: user,
+        user: syncedUser,
       );
       print('Google sign in successful: ${authTokens.user.id}');
       return authTokens;
@@ -287,7 +317,7 @@ class FirebaseAuthService {
     try {
       final firebaseUser = _firebaseAuth.currentUser;
       if (firebaseUser != null) {
-        return _convertFirebaseUserToAppUser(firebaseUser);
+        return await _convertFirebaseUserToAppUser(firebaseUser);
       }
       return null;
     } catch (e) {
@@ -369,6 +399,121 @@ class FirebaseAuthService {
   }
 
   /// Get platform name
+  ///
+  ///
+  /// Sync user data to Firestore
+  Future<void> _syncUserToFirestore(
+    firebase_auth.User firebaseUser,
+    User appUser, {
+    String? examType,
+  }) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final userDoc = firestore.collection('users').doc(firebaseUser.uid);
+
+      // First, check if user document already exists and get existing data
+      final existingDoc = await userDoc.get();
+      Map<String, dynamic>? existingData;
+      if (existingDoc.exists) {
+        existingData = existingDoc.data();
+      }
+
+      final userData = {
+        'id': firebaseUser.uid,
+        'email': firebaseUser.email,
+        'exam_type':
+            examType ??
+            appUser.examType ??
+            existingData?['exam_type'] ??
+            'ECAT',
+        // PRESERVE existing role and tier if they exist, otherwise use appUser values
+        'role': existingData?['role'] ?? appUser.role,
+        'tier': existingData?['tier'] ?? appUser.tier,
+        'is_active': appUser.isActive,
+        'is_verified': firebaseUser.emailVerified,
+        'is_anonymous': firebaseUser.isAnonymous,
+        'created_at':
+            existingData?['created_at'] ?? appUser.createdAt.toIso8601String(),
+        'profile': appUser.profile,
+        'usage_stats': existingData?['usage_stats'] ?? appUser.usageStats,
+        'last_sync': DateTime.now().toIso8601String(),
+      };
+
+      await userDoc.set(userData, SetOptions(merge: true));
+      print('User data synced to Firestore: ${firebaseUser.uid}');
+    } catch (e) {
+      print('Failed to sync user to Firestore: $e');
+    }
+  }
+
+  /// Sync user data from Firestore
+  Future<User> _syncUserFromFirestore(String uid, User user) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final doc = await firestore.collection('users').doc(uid).get();
+
+      if (doc.exists) {
+        final data = doc.data()!;
+        // Update user with Firestore data
+        return User(
+          id: user.id,
+          email: user.email,
+          examType: data['exam_type'] ?? user.examType,
+          role: data['role'] ?? user.role,
+          tier: data['tier'] ?? user.tier,
+          trialExpiry: user.trialExpiry,
+          subscriptionExpiry: user.subscriptionExpiry,
+          isActive: data['is_active'] ?? user.isActive,
+          isVerified: data['is_verified'] ?? user.isVerified,
+          isAnonymous: data['is_anonymous'] ?? user.isAnonymous,
+          createdAt: user.createdAt,
+          profile: Map<String, dynamic>.from(data['profile'] ?? user.profile),
+          usageStats: Map<String, dynamic>.from(
+            data['usage_stats'] ?? user.usageStats,
+          ),
+        );
+      }
+      return user;
+    } catch (e) {
+      print('Failed to sync user from Firestore: $e');
+      return user;
+    }
+  }
+
+  /// Get user data from Firestore
+  Future<Map<String, dynamic>?> getUserDataFromFirestore(String uid) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final doc = await firestore.collection('users').doc(uid).get();
+
+      if (doc.exists) {
+        return doc.data();
+      }
+      return null;
+    } catch (e) {
+      print('Failed to get user data from Firestore: $e');
+      return null;
+    }
+  }
+
+  /// Update user data in Firestore
+  Future<void> updateUserDataInFirestore(
+    String uid,
+    Map<String, dynamic> updates,
+  ) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      await firestore.collection('users').doc(uid).update({
+        ...updates,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+      print('User data updated in Firestore: $uid');
+    } catch (e) {
+      print('Failed to update user data in Firestore: $e');
+      throw e;
+    }
+  }
+
   Future<String> getPlatformName() async {
     return await _deviceFingerprintService.getPlatformName();
   }
