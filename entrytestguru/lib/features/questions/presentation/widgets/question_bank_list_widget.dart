@@ -63,15 +63,11 @@ class _QuestionBankListWidgetState
 
     final questions = state.questionQueue;
 
-    if (questions.isEmpty) {
-      return const Center(child: Text('No questions available'));
-    }
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32.0),
       child: Column(
         children: [
-          // Add buttons at the top
+          // Add buttons at the top - always show these
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -105,44 +101,73 @@ class _QuestionBankListWidgetState
             ),
           ),
 
-          // Questions list
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: questions.length,
-                    itemBuilder: (context, index) {
-                      final question = questions[index];
-                      return _buildQuestionTile(question);
-                    },
-                  ),
+          // Questions list or empty state
+          if (questions.isEmpty)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.question_answer_outlined,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No questions available',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Start by adding your first question or uploading a bulk file',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                // Load More button
-                if (state.hasMore && !state.isLoadingMore)
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        ref
-                            .read(presentQuestionNotifierProvider.notifier)
-                            .loadQuestions(
-                              state.currentFilter ?? const QuestionFilter(),
-                              loadMore: true,
-                            );
+              ),
+            )
+          else
+            Expanded(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: questions.length,
+                      itemBuilder: (context, index) {
+                        final question = questions[index];
+                        return _buildQuestionTile(question);
                       },
-                      child: const Text('Load More'),
                     ),
                   ),
-                // Loading indicator for load more
-                if (state.isLoadingMore)
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: CircularProgressIndicator(),
-                  ),
-              ],
+                  // Load More button
+                  if (state.hasMore && !state.isLoadingMore)
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          ref
+                              .read(presentQuestionNotifierProvider.notifier)
+                              .loadQuestions(
+                                state.currentFilter ?? const QuestionFilter(),
+                                loadMore: true,
+                              );
+                        },
+                        child: const Text('Load More'),
+                      ),
+                    ),
+                  // Loading indicator for load more
+                  if (state.isLoadingMore)
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );

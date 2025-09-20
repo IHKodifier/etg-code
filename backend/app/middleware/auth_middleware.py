@@ -23,21 +23,24 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/api/v1/auth/register",
             "/api/v1/auth/anonymous",
             "/api/v1/auth/refresh",
-            # Temporarily allow bulk upload endpoints for testing
-            "/api/v1/questions/bulk-upload/validate",
-            "/api/v1/questions/bulk-upload/preview",
-            "/api/v1/questions/bulk-upload",
-            "/api/v1/questions/bulk-upload/",
         }
+
+        # Add dynamic bulk upload progress and summary routes
+        # These will be checked with startswith logic
+        self.bulk_upload_prefixes = [
+            "/api/v1/questions/bulk-upload",
+        ]
     
     async def dispatch(self, request: Request, call_next):
         logger.info(f"Auth middleware: {request.method} {request.url.path}")
 
-        # Skip ALL middleware processing for bulk upload endpoints
-        if request.url.path.startswith("/api/v1/questions/bulk-upload/"):
-            logger.info(f"Skipping ALL middleware for bulk upload route: {request.url.path}")
-            response = await call_next(request)
-            return response
+        # Skip auth for bulk upload dynamic routes (progress, summary, cancel) - check first
+        for prefix in self.bulk_upload_prefixes:
+            logger.info(f"Checking prefix '{prefix}' against path '{request.url.path}'")
+            if request.url.path.startswith(prefix):
+                logger.info(f"Skipping auth for bulk upload route: {request.url.path}")
+                response = await call_next(request)
+                return response
 
         # Skip auth for public routes
         if request.url.path in self.public_routes:

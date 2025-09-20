@@ -31,6 +31,7 @@ class BulkUploadService:
 
     def __init__(self):
         self.active_uploads = {}  # upload_id -> upload data
+        self.question_results = {}  # upload_id -> list of question results
 
     def _has_required_columns(self, df: pd.DataFrame) -> bool:
         """Check if DataFrame has required columns for bulk upload"""
@@ -244,6 +245,19 @@ class BulkUploadService:
         """Start bulk upload process"""
         upload_id = str(uuid.uuid4())
 
+        # Initialize question results
+        question_results = []
+        for i, question in enumerate(questions):
+            question_results.append({
+                'row': i + 1,
+                'question_text': question.question_text[:100] + '...' if len(question.question_text) > 100 else question.question_text,
+                'status': 'pending',  # pending, processing, success, failed
+                'question_id': None,
+                'error': None
+            })
+
+        self.question_results[upload_id] = question_results
+
         self.active_uploads[upload_id] = {
             'user_id': user_id,
             'questions': questions,
@@ -272,7 +286,14 @@ class BulkUploadService:
                 batch = questions[i:i + self.BATCH_SIZE]
 
                 for question in batch:
+                    question_index = questions.index(question)
+                    question_result = self.question_results[upload_id][question_index]
+
                     try:
+                        # Update status to processing
+                        question_result['status'] = 'processing'
+                        await self._update_progress(upload_id)
+
                         # Convert BulkUploadQuestion to QuestionCreateRequest
                         create_request = await self._convert_to_create_request(question, upload_data['user_id'])
 
@@ -282,13 +303,19 @@ class BulkUploadService:
                             created_by=upload_data['user_id']
                         )
 
+                        # Update success
+                        question_result['status'] = 'success'
+                        question_result['question_id'] = question_id
                         upload_data['successful'] += 1
                         logger.info(f"Created question {question_id} for upload {upload_id}")
 
                     except Exception as e:
+                        # Update failure
+                        question_result['status'] = 'failed'
+                        question_result['error'] = str(e)
                         upload_data['failed'] += 1
                         upload_data['errors'].append({
-                            'row': questions.index(question) + 1,
+                            'row': question_index + 1,
                             'question_text': question.question_text[:100] + '...' if len(question.question_text) > 100 else question.question_text,
                             'error': str(e)
                         })
@@ -401,6 +428,8 @@ class BulkUploadService:
         if not upload_data:
             return None
 
+        question_results = self.question_results.get(upload_id, [])
+
         return BulkUploadProgress(
             upload_id=upload_id,
             total=upload_data['total'],
@@ -408,7 +437,8 @@ class BulkUploadService:
             successful=upload_data['successful'],
             failed=upload_data['failed'],
             status=upload_data['status'],
-            errors=upload_data['errors']
+            errors=upload_data['errors'],
+            question_results=question_results
         )
 
     async def get_upload_summary(self, upload_id: str) -> Optional[BulkUploadSummary]:
@@ -429,6 +459,62 @@ class BulkUploadService:
             created_at=upload_data['start_time']
         )
 
+    async def retry_failed_questions(self, upload_id: str, row_numbers: List[int]) -> Dict[str, Any]:
+        """Retry uploading failed questions"""
+        upload_data = self.active_uploads.get(upload_id)
+        question_results = self.question_results.get(upload_id)
+
+        if not upload_data or not question_results:
+            return {"error": "Upload not found"}
+
+        if upload_data['status'] not in ['completed', 'failed']:
+            return {"error": "Upload is still in progress"}
+
+        retry_results = []
+        questions = upload_data['questions']
+
+        for row_num in row_numbers:
+            if row_num < 1 or row_num > len(question_results):
+                retry_results.append({"row": row_num, "status": "error", "error": "Invalid row number"})
+                continue
+
+            question_index = row_num - 1
+            question_result = question_results[question_index]
+            question = questions[question_index]
+
+            if question_result['status'] != 'failed':
+                retry_results.append({"row": row_num, "status": "skipped", "message": "Question was not failed"})
+                continue
+
+            try:
+                # Reset status to processing
+                question_result['status'] = 'processing'
+                question_result['error'] = None
+
+                # Convert and create question
+                create_request = await self._convert_to_create_request(question, upload_data['user_id'])
+                question_id = await question_service.create_question(
+                    question_data=create_request.dict(),
+                    created_by=upload_data['user_id']
+                )
+
+                # Update success
+                question_result['status'] = 'success'
+                question_result['question_id'] = question_id
+                upload_data['successful'] += 1
+                upload_data['failed'] -= 1
+
+                # Remove from errors
+                upload_data['errors'] = [e for e in upload_data['errors'] if e['row'] != row_num]
+
+                retry_results.append({"row": row_num, "status": "success", "question_id": question_id})
+
+            except Exception as e:
+                question_result['error'] = str(e)
+                retry_results.append({"row": row_num, "status": "failed", "error": str(e)})
+
+        return {"retry_results": retry_results}
+
     def cleanup_old_uploads(self, max_age_hours: int = 24):
         """Clean up old completed uploads"""
         cutoff_time = datetime.utcnow().timestamp() - (max_age_hours * 3600)
@@ -441,6 +527,9 @@ class BulkUploadService:
 
         for upload_id in to_remove:
             del self.active_uploads[upload_id]
+            # Also clean up question results
+            if upload_id in self.question_results:
+                del self.question_results[upload_id]
 
 # Global instance
 bulk_upload_service = BulkUploadService()

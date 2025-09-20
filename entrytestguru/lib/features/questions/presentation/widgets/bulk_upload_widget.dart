@@ -21,6 +21,7 @@ class _BulkUploadWidgetState extends ConsumerState<BulkUploadWidget> {
   Map<String, dynamic>? _previewData;
   String? _uploadId;
   Map<String, dynamic>? _uploadProgress;
+  List<Map<String, dynamic>> _questionResults = [];
   Map<String, dynamic>? _uploadSummary;
 
   @override
@@ -383,6 +384,74 @@ class _BulkUploadWidgetState extends ConsumerState<BulkUploadWidget> {
 
         const SizedBox(height: 16),
 
+        // Question results
+        if (_questionResults.isNotEmpty) ...[
+          Text(
+            'Question Status',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              border: Border.all(color: Theme.of(context).colorScheme.outline),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ListView.builder(
+              itemCount: _questionResults.length,
+              itemBuilder: (context, index) {
+                final result = _questionResults[index];
+                return ListTile(
+                  dense: true,
+                  leading: Icon(
+                    result['status'] == 'success'
+                        ? Icons.check_circle
+                        : result['status'] == 'failed'
+                        ? Icons.error
+                        : result['status'] == 'processing'
+                        ? Icons.hourglass_top
+                        : Icons.schedule,
+                    color: result['status'] == 'success'
+                        ? Colors.green
+                        : result['status'] == 'failed'
+                        ? Colors.red
+                        : result['status'] == 'processing'
+                        ? Colors.blue
+                        : Colors.grey,
+                    size: 20,
+                  ),
+                  title: Text(
+                    'Row ${result['row']}: ${result['question_text']}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: result['error'] != null
+                      ? Text(
+                          result['error'],
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: Colors.red),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        )
+                      : null,
+                  trailing:
+                      result['status'] == 'failed' && status == 'completed'
+                      ? IconButton(
+                          icon: const Icon(Icons.refresh, size: 20),
+                          onPressed: () => _retryQuestion(result['row']),
+                          tooltip: 'Retry this question',
+                        )
+                      : null,
+                );
+              },
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 16),
+
         // Status text
         Container(
           padding: const EdgeInsets.all(12),
@@ -672,6 +741,9 @@ class _BulkUploadWidgetState extends ConsumerState<BulkUploadWidget> {
 
       setState(() {
         _uploadProgress = response.data;
+        _questionResults = List<Map<String, dynamic>>.from(
+          response.data['question_results'] ?? [],
+        );
       });
 
       if (response.data['status'] == 'completed' ||
@@ -727,6 +799,53 @@ ${_uploadSummary!['errors'].map((e) => 'Row ${e['row']}: ${e['error']}').join('\
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Summary copied to clipboard')),
       );
+    }
+  }
+
+  Future<void> _retryQuestion(int rowNumber) async {
+    if (_uploadId == null) return;
+
+    try {
+      final response = await ref
+          .read(apiClientProvider)
+          .post('/questions/bulk-upload/$_uploadId/retry', data: [rowNumber]);
+
+      if (response.data['retry_results'] != null) {
+        final result = response.data['retry_results'][0];
+        if (result['status'] == 'success') {
+          // Refresh progress
+          _pollProgress();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Question at row $rowNumber retried successfully',
+                ),
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Failed to retry row $rowNumber: ${result['error']}',
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to retry question: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

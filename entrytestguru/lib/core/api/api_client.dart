@@ -30,11 +30,11 @@ class ApiClient {
   }
 
   void _setupInterceptors() {
-    // Request interceptor to add Firebase ID token
+    // Request interceptor to add backend JWT token
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await _firebaseAuthService.getIdToken();
+          final token = await getStoredToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
@@ -42,12 +42,12 @@ class ApiClient {
         },
         onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
-            // Try to refresh Firebase ID token
-            final refreshed = await _refreshFirebaseToken();
+            // Try to refresh token
+            final refreshed = await _refreshToken();
             if (refreshed) {
               // Retry the request
               final options = error.requestOptions;
-              final token = await _firebaseAuthService.getIdToken();
+              final token = await getStoredToken();
               if (token != null) {
                 options.headers['Authorization'] = 'Bearer $token';
               }
@@ -68,36 +68,56 @@ class ApiClient {
     );
   }
 
-  // Firebase token management
+  // Backend JWT token management
   Future<String?> getToken() async {
-    return await _firebaseAuthService.getIdToken();
+    return await getStoredToken();
+  }
+
+  Future<String?> getStoredToken() async {
+    return await _storage.read(key: 'access_token');
+  }
+
+  Future<String?> getStoredRefreshToken() async {
+    return await _storage.read(key: 'refresh_token');
   }
 
   Future<String?> getRefreshToken() async {
-    // Firebase handles refresh tokens automatically
-    return 'firebase_refresh_token';
+    return await getStoredRefreshToken();
   }
 
   Future<void> setTokens(String accessToken, String refreshToken) async {
-    // Firebase handles token management automatically
-    // We don't need to store tokens manually
-    print('Firebase handles token management automatically');
+    await _storage.write(key: 'access_token', value: accessToken);
+    await _storage.write(key: 'refresh_token', value: refreshToken);
   }
 
   Future<void> clearTokens() async {
-    // Sign out from Firebase to clear tokens
-    await _firebaseAuthService.signOut();
+    await _storage.delete(key: 'access_token');
+    await _storage.delete(key: 'refresh_token');
     await _storage.delete(key: 'user_data');
   }
 
-  Future<bool> _refreshFirebaseToken() async {
+  Future<bool> _refreshToken() async {
     try {
-      // Firebase automatically refreshes tokens
-      // Just check if we can get a current token
-      final token = await _firebaseAuthService.getIdToken();
-      return token != null;
+      final refreshToken = await getStoredRefreshToken();
+      if (refreshToken == null) return false;
+
+      // Call backend refresh endpoint
+      final response = await _dio.post(
+        '/auth/refresh',
+        data: {'refresh_token': refreshToken},
+        options: Options(headers: {}), // Don't add auth header for refresh
+      );
+
+      if (response.statusCode == 200) {
+        final newAccessToken = response.data['access_token'];
+        final newRefreshToken = response.data['refresh_token'];
+        await setTokens(newAccessToken, newRefreshToken);
+        return true;
+      }
+
+      return false;
     } catch (e) {
-      print('Firebase token refresh failed: $e');
+      print('Token refresh failed: $e');
       return false;
     }
   }

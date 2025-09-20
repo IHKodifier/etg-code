@@ -44,16 +44,26 @@ class QuestionCreateRequest(BaseModel):
         return v
     
     @validator('options')
-    def validate_options(cls, v):
+    def validate_options(cls, v, values):
         if len(v) < 2:
             raise ValueError('Question must have at least 2 options')
         if len(v) > 6:
             raise ValueError('Question cannot have more than 6 options')
-        
+
         correct_count = sum(1 for option in v if option.is_correct)
-        if correct_count != 1:
-            raise ValueError('Question must have exactly one correct answer')
-        
+        # Allow multiple correct answers for multi-select questions
+        # For now, we'll determine question type from the correct_answer field format
+        # If correct_answer contains commas, it's multi-select
+        correct_answer = values.get('correct_answer', '')
+        is_multi_select = ',' in correct_answer and len(correct_answer.split(',')) > 1
+
+        if is_multi_select:
+            if correct_count < 1:
+                raise ValueError('Multi-select questions must have at least one correct answer')
+        else:
+            if correct_count != 1:
+                raise ValueError('Single-select questions must have exactly one correct answer')
+
         return v
 
 class QuestionResponse(BaseModel):
@@ -242,6 +252,7 @@ class BulkUploadProgress(BaseModel):
     status: str
     errors: List[Dict[str, Any]] = []
     estimated_time_remaining: Optional[int] = None
+    question_results: List[Dict[str, Any]] = []  # Individual question status
 
 class BulkUploadSummary(BaseModel):
     upload_id: str
