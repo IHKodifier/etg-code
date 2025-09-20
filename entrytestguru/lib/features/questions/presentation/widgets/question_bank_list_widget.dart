@@ -6,6 +6,7 @@ import '../../../../core/utils/time_utils.dart';
 import '../providers/present_question_provider.dart';
 import '../providers/add_question_provider.dart';
 import 'add_question_widget.dart';
+import 'bulk_upload_widget.dart';
 
 class QuestionBankListWidget extends ConsumerStatefulWidget {
   const QuestionBankListWidget({super.key});
@@ -70,32 +71,76 @@ class _QuestionBankListWidgetState
       padding: const EdgeInsets.symmetric(horizontal: 32.0),
       child: Column(
         children: [
-          // Add button at the top
+          // Add buttons at the top
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: () => _showAddQuestionDialog(context),
-                icon: const Icon(Icons.add),
-                label: const Text('Add Question'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showAddQuestionDialog(context),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Question'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showBulkUploadDialog(context),
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text('Bulk Upload'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      foregroundColor: Theme.of(
+                        context,
+                      ).colorScheme.onSecondary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
           // Questions list
           Expanded(
-            child: ListView.builder(
-              itemCount: questions.length,
-              itemBuilder: (context, index) {
-                final question = questions[index];
-                return _buildQuestionTile(question);
-              },
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: questions.length,
+                    itemBuilder: (context, index) {
+                      final question = questions[index];
+                      return _buildQuestionTile(question);
+                    },
+                  ),
+                ),
+                // Load More button
+                if (state.hasMore && !state.isLoadingMore)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        ref
+                            .read(presentQuestionNotifierProvider.notifier)
+                            .loadQuestions(
+                              state.currentFilter ?? const QuestionFilter(),
+                              loadMore: true,
+                            );
+                      },
+                      child: const Text('Load More'),
+                    ),
+                  ),
+                // Loading indicator for load more
+                if (state.isLoadingMore)
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(),
+                  ),
+              ],
             ),
           ),
         ],
@@ -263,13 +308,6 @@ class _QuestionBankListWidgetState
     showDialog(
       context: context,
       builder: (dialogContext) {
-        // Listen for success state to auto-dismiss
-        ref.listen(addQuestionNotifierProvider, (previous, next) {
-          if (next.isSuccess && !next.isLoading) {
-            Navigator.of(dialogContext).pop();
-          }
-        });
-
         return Dialog(
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -338,13 +376,6 @@ class _QuestionBankListWidgetState
     showDialog(
       context: context,
       builder: (dialogContext) {
-        // Listen for success state to auto-dismiss
-        ref.listen(addQuestionNotifierProvider, (previous, next) {
-          if (next.isSuccess && !next.isLoading) {
-            Navigator.of(dialogContext).pop();
-          }
-        });
-
         return Dialog(
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -401,6 +432,23 @@ class _QuestionBankListWidgetState
           .loadQuestions(const QuestionFilter());
       // Reset the add question form
       ref.read(addQuestionNotifierProvider.notifier).reset();
+    });
+  }
+
+  void _showBulkUploadDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 800, maxHeight: 600),
+          child: const BulkUploadWidget(),
+        ),
+      ),
+    ).then((_) {
+      // Refresh the list after dialog closes
+      ref
+          .read(presentQuestionNotifierProvider.notifier)
+          .loadQuestions(const QuestionFilter());
     });
   }
 }

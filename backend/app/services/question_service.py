@@ -68,6 +68,84 @@ class QuestionService:
             logger.error(f"Failed to get question {question_id}: {e}")
             return None
     
+    async def get_filtered_questions(
+        self,
+        exam_categories: Optional[List[str]] = None,
+        subjects: Optional[List[str]] = None,
+        topics: Optional[List[str]] = None,
+        difficulties: Optional[List[str]] = None,
+        arde_probabilities: Optional[List[str]] = None,
+        search_query: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        limit: int = 20,
+        offset: int = 0
+    ) -> List[Dict[str, Any]]:
+        """Get filtered questions for question bank management with pagination"""
+        try:
+            filters = [
+                {"field": "is_active", "operator": "==", "value": True}
+            ]
+
+            # Add filters
+            if exam_categories and len(exam_categories) > 0:
+                filters.append({"field": "exam_type", "operator": "in", "value": exam_categories})
+            if subjects and len(subjects) > 0:
+                filters.append({"field": "subject", "operator": "in", "value": subjects})
+            if topics and len(topics) > 0:
+                filters.append({"field": "topic", "operator": "in", "value": topics})
+            if difficulties and len(difficulties) > 0:
+                filters.append({"field": "difficulty", "operator": "in", "value": difficulties})
+            if arde_probabilities and len(arde_probabilities) > 0:
+                filters.append({"field": "arde_probability", "operator": "in", "value": arde_probabilities})
+            if tags and len(tags) > 0:
+                # For tags, we need to check if any of the question's tags match
+                # This is more complex, we'll handle it in post-processing
+                pass
+
+            questions = await db.query_collection(
+                "questions",
+                filters=filters,
+                limit=limit,
+                offset=offset,
+                order_by="-created_at"
+            )
+
+            # Filter by tags if specified (post-processing)
+            if tags and len(tags) > 0:
+                questions = [
+                    q for q in questions
+                    if any(tag in q.get("tags", []) for tag in tags)
+                ]
+
+            # Filter by search query if specified
+            if search_query and search_query.strip():
+                query_lower = search_query.lower()
+                questions = [
+                    q for q in questions
+                    if query_lower in q.get("question_text", "").lower() or
+                       query_lower in q.get("subject", "").lower() or
+                       query_lower in q.get("topic", "").lower() or
+                       any(query_lower in tag for tag in q.get("tags", []))
+                ]
+
+            # Add creator names
+            for question in questions:
+                creator_id = question.get("created_by")
+                if creator_id:
+                    user = await db.get_document("users", creator_id)
+                    if user and user.get("profile"):
+                        question["created_by_name"] = user["profile"].get("name", "Unknown")
+                    else:
+                        question["created_by_name"] = "Unknown"
+                else:
+                    question["created_by_name"] = "Unknown"
+
+            return questions
+
+        except Exception as e:
+            logger.error(f"Failed to get filtered questions: {e}")
+            return []
+
     async def get_questions_for_practice(
         self,
         exam_type: str,

@@ -168,3 +168,86 @@ class BulkApprovalRequest(BaseModel):
         if len(v) > 50:
             raise ValueError('Cannot process more than 50 questions at once')
         return v
+
+# Bulk Upload Models
+class BulkUploadQuestion(BaseModel):
+    question_text: str
+    question_type: str
+    exam_category: Optional[str] = None
+    subject: Optional[str] = None
+    topic: Optional[str] = None
+    sub_topic: Optional[str] = None
+    option_a: Optional[str] = None
+    option_b: Optional[str] = None
+    option_c: Optional[str] = None
+    option_d: Optional[str] = None
+    option_e: Optional[str] = None
+    option_f: Optional[str] = None
+    correct_answers: str  # Comma-separated option IDs
+    explanation_text: Optional[str] = None
+    difficulty: Optional[str] = None
+    tags: Optional[str] = None  # Comma-separated tags
+    estimated_time_seconds: Optional[int] = None
+    arde_probability: Optional[str] = None
+    question_image_urls: Optional[str] = None  # Comma-separated URLs
+    explanation_video_url: Optional[str] = None
+
+    @validator('question_type')
+    def validate_question_type(cls, v):
+        allowed_types = ['MCQ - Single-select', 'MCQ - Multi-select']
+        if v not in allowed_types:
+            raise ValueError(f'Question type must be one of: {", ".join(allowed_types)}')
+        return v
+
+    @validator('difficulty')
+    def validate_difficulty(cls, v):
+        if v is None:
+            return v
+        allowed_difficulties = ['Easy', 'Medium', 'Hard']
+        if v not in allowed_difficulties:
+            raise ValueError(f'Difficulty must be one of: {", ".join(allowed_difficulties)}')
+        return v
+
+    @validator('arde_probability')
+    def validate_arde_probability(cls, v):
+        if v is None:
+            return v
+        # Allow decimal values between 0 and 1
+        try:
+            float_val = float(v)
+            if not (0.0 <= float_val <= 1.0):
+                raise ValueError('ARDE probability must be between 0.0 and 1.0')
+            return v
+        except ValueError:
+            raise ValueError('ARDE probability must be a decimal number between 0.0 and 1.0')
+
+class BulkUploadRequest(BaseModel):
+    questions: List[BulkUploadQuestion]
+
+class BulkUploadResponse(BaseModel):
+    upload_id: str
+    total_questions: int
+    status: str  # 'processing', 'completed', 'failed'
+    processed: int = 0
+    successful: int = 0
+    failed: int = 0
+    errors: List[Dict[str, Any]] = []
+
+class BulkUploadProgress(BaseModel):
+    upload_id: str
+    total: int
+    processed: int
+    successful: int
+    failed: int
+    status: str
+    errors: List[Dict[str, Any]] = []
+    estimated_time_remaining: Optional[int] = None
+
+class BulkUploadSummary(BaseModel):
+    upload_id: str
+    total_questions: int
+    successful: int
+    failed: int
+    errors: List[Dict[str, Any]]
+    processing_time_seconds: float
+    created_at: datetime

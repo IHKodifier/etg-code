@@ -17,10 +17,12 @@ class PresentQuestionState with _$PresentQuestionState {
     @Default(false) bool isCorrect,
     QuestionAttempt? lastAttempt,
     @Default(false) bool isLoading,
+    @Default(false) bool isLoadingMore,
     String? errorMessage,
     QuestionFilter? currentFilter,
     @Default(0) int currentQuestionIndex,
     @Default([]) List<Question> questionQueue,
+    @Default(true) bool hasMore,
   }) = _PresentQuestionState;
 
   const PresentQuestionState._();
@@ -131,13 +133,18 @@ class PresentQuestionState with _$PresentQuestionState {
     return copyWith(selectedAnswers: newSelectedAnswers);
   }
 
-  PresentQuestionState copyWithQuestionsLoaded(List<Question> questions) {
+  PresentQuestionState copyWithQuestionsLoaded(
+    List<Question> questions, {
+    bool hasMore = true,
+  }) {
     if (questions.isEmpty) {
       return copyWith(
         questionQueue: [],
         currentQuestion: null,
         currentQuestionIndex: 0,
         isLoading: false,
+        isLoadingMore: false,
+        hasMore: hasMore,
       );
     }
 
@@ -158,7 +165,9 @@ class PresentQuestionState with _$PresentQuestionState {
       isCorrect: false,
       lastAttempt: null,
       isLoading: false,
+      isLoadingMore: false,
       errorMessage: null,
+      hasMore: hasMore,
     );
   }
 }

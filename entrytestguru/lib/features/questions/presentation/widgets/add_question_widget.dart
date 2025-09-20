@@ -802,7 +802,7 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.surface,
                     ),
-                    items: ['ECAT', 'MCAT', 'MDCAT', 'Other']
+                    items: ['ECAT', 'MCAT', 'CCAT', 'GMAT', 'GRE', 'SAT']
                         .map(
                           (category) => DropdownMenuItem(
                             value: category,
@@ -909,7 +909,7 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
                   labelText: 'Exam Category *',
                   border: OutlineInputBorder(),
                 ),
-                items: ['ECAT', 'MCAT', 'MDCAT', 'Other']
+                items: ['ECAT', 'MCAT', 'CCAT', 'GMAT', 'GRE', 'SAT']
                     .map(
                       (category) => DropdownMenuItem(
                         value: category,

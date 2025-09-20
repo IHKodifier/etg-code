@@ -66,6 +66,11 @@ app.add_middleware(RateLimitMiddleware)
 # Request timing middleware
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
+    # Skip timing for bulk upload endpoints to avoid interference
+    if request.url.path.startswith("/api/v1/questions/bulk-upload/"):
+        response = await call_next(request)
+        return response
+
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time

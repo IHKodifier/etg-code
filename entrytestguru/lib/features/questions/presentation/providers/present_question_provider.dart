@@ -14,6 +14,28 @@ final presentQuestionNotifierProvider =
       return PresentQuestionNotifier(questionApiService, firestoreService);
     });
 
+/// StreamProvider for real-time question updates
+final questionsStreamProvider = StreamProvider<List<Question>>((ref) {
+  final questionApiService = ref.watch(QuestionApiService.provider);
+  final currentFilter = ref.watch(
+    presentQuestionNotifierProvider.select((state) => state.currentFilter),
+  );
+
+  // Create a stream that periodically fetches questions
+  return Stream.periodic(const Duration(seconds: 30), (_) async {
+    try {
+      return await questionApiService.getFilteredQuestions(
+        currentFilter ?? const QuestionFilter(),
+        limit: 50, // Load more for real-time updates
+        offset: 0,
+      );
+    } catch (e) {
+      // Return empty list on error to keep stream alive
+      return <Question>[];
+    }
+  }).asyncMap((future) => future);
+});
+
 /// StateNotifier for managing question presentation operations
 class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
   final QuestionApiService _questionApiService;
@@ -22,32 +44,59 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
   PresentQuestionNotifier(this._questionApiService, this._firestoreService)
     : super(const PresentQuestionState());
 
-  /// Load questions based on filter
-  Future<void> loadQuestions(QuestionFilter filter) async {
+  /// Load questions based on filter with pagination
+  Future<void> loadQuestions(
+    QuestionFilter filter, {
+    int limit = 20,
+    bool loadMore = false,
+  }) async {
+    if (loadMore && state.isLoadingMore) return;
+
     state = state.copyWith(
-      isLoading: true,
+      isLoading: !loadMore,
+      isLoadingMore: loadMore,
       errorMessage: null,
       currentFilter: filter,
     );
 
     try {
+      final offset = loadMore ? state.questionQueue.length : 0;
+
       // Try to use the API service to get filtered questions
-      final questions = await _questionApiService.getFilteredQuestions(filter);
+      final questions = await _questionApiService.getFilteredQuestions(
+        filter,
+        limit: limit,
+        offset: offset,
+      );
 
       // Sort by creation date (newest first) - API might not guarantee order
       questions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      state = state.copyWithQuestionsLoaded(questions);
+      if (loadMore) {
+        // Append new questions to existing list
+        final updatedQuestions = List<Question>.from(state.questionQueue)
+          ..addAll(questions);
+        state = state.copyWithQuestionsLoaded(
+          updatedQuestions,
+          hasMore: questions.length == limit,
+        );
+      } else {
+        state = state.copyWithQuestionsLoaded(
+          questions,
+          hasMore: questions.length == limit,
+        );
+      }
     } catch (e) {
       // If API fails, fall back to Firestore with manual createdByName population
       print('API call failed, falling back to Firestore: $e');
 
       try {
-        await _loadQuestionsFromFirestore(filter);
+        await _loadQuestionsFromFirestore(filter, loadMore: loadMore);
       } catch (firestoreError) {
         print('Both API and Firestore failed: $firestoreError');
         state = state.copyWith(
           isLoading: false,
+          isLoadingMore: false,
           errorMessage:
               'Unable to load questions. Please check your connection and try again.',
         );
@@ -56,7 +105,10 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
   }
 
   /// Fallback method to load questions from Firestore when API fails
-  Future<void> _loadQuestionsFromFirestore(QuestionFilter filter) async {
+  Future<void> _loadQuestionsFromFirestore(
+    QuestionFilter filter, {
+    bool loadMore = false,
+  }) async {
     // Get all questions from Firestore
     final snapshot = await _firestoreService.getCollection('questions');
 

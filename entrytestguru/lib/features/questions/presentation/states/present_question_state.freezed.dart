@@ -24,10 +24,12 @@ mixin _$PresentQuestionState {
   bool get isCorrect => throw _privateConstructorUsedError;
   QuestionAttempt? get lastAttempt => throw _privateConstructorUsedError;
   bool get isLoading => throw _privateConstructorUsedError;
+  bool get isLoadingMore => throw _privateConstructorUsedError;
   String? get errorMessage => throw _privateConstructorUsedError;
   QuestionFilter? get currentFilter => throw _privateConstructorUsedError;
   int get currentQuestionIndex => throw _privateConstructorUsedError;
   List<Question> get questionQueue => throw _privateConstructorUsedError;
+  bool get hasMore => throw _privateConstructorUsedError;
 
   /// Create a copy of PresentQuestionState
   /// with the given fields replaced by the non-null parameter values.
@@ -51,10 +53,12 @@ abstract class $PresentQuestionStateCopyWith<$Res> {
     bool isCorrect,
     QuestionAttempt? lastAttempt,
     bool isLoading,
+    bool isLoadingMore,
     String? errorMessage,
     QuestionFilter? currentFilter,
     int currentQuestionIndex,
     List<Question> questionQueue,
+    bool hasMore,
   });
 
   $QuestionCopyWith<$Res>? get currentQuestion;
@@ -87,10 +91,12 @@ class _$PresentQuestionStateCopyWithImpl<
     Object? isCorrect = null,
     Object? lastAttempt = freezed,
     Object? isLoading = null,
+    Object? isLoadingMore = null,
     Object? errorMessage = freezed,
     Object? currentFilter = freezed,
     Object? currentQuestionIndex = null,
     Object? questionQueue = null,
+    Object? hasMore = null,
   }) {
     return _then(
       _value.copyWith(
@@ -122,6 +128,10 @@ class _$PresentQuestionStateCopyWithImpl<
                 ? _value.isLoading
                 : isLoading // ignore: cast_nullable_to_non_nullable
                       as bool,
+            isLoadingMore: null == isLoadingMore
+                ? _value.isLoadingMore
+                : isLoadingMore // ignore: cast_nullable_to_non_nullable
+                      as bool,
             errorMessage: freezed == errorMessage
                 ? _value.errorMessage
                 : errorMessage // ignore: cast_nullable_to_non_nullable
@@ -138,6 +148,10 @@ class _$PresentQuestionStateCopyWithImpl<
                 ? _value.questionQueue
                 : questionQueue // ignore: cast_nullable_to_non_nullable
                       as List<Question>,
+            hasMore: null == hasMore
+                ? _value.hasMore
+                : hasMore // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -203,10 +217,12 @@ abstract class _$$PresentQuestionStateImplCopyWith<$Res>
     bool isCorrect,
     QuestionAttempt? lastAttempt,
     bool isLoading,
+    bool isLoadingMore,
     String? errorMessage,
     QuestionFilter? currentFilter,
     int currentQuestionIndex,
     List<Question> questionQueue,
+    bool hasMore,
   });
 
   @override
@@ -238,10 +254,12 @@ class __$$PresentQuestionStateImplCopyWithImpl<$Res>
     Object? isCorrect = null,
     Object? lastAttempt = freezed,
     Object? isLoading = null,
+    Object? isLoadingMore = null,
     Object? errorMessage = freezed,
     Object? currentFilter = freezed,
     Object? currentQuestionIndex = null,
     Object? questionQueue = null,
+    Object? hasMore = null,
   }) {
     return _then(
       _$PresentQuestionStateImpl(
@@ -273,6 +291,10 @@ class __$$PresentQuestionStateImplCopyWithImpl<$Res>
             ? _value.isLoading
             : isLoading // ignore: cast_nullable_to_non_nullable
                   as bool,
+        isLoadingMore: null == isLoadingMore
+            ? _value.isLoadingMore
+            : isLoadingMore // ignore: cast_nullable_to_non_nullable
+                  as bool,
         errorMessage: freezed == errorMessage
             ? _value.errorMessage
             : errorMessage // ignore: cast_nullable_to_non_nullable
@@ -289,6 +311,10 @@ class __$$PresentQuestionStateImplCopyWithImpl<$Res>
             ? _value._questionQueue
             : questionQueue // ignore: cast_nullable_to_non_nullable
                   as List<Question>,
+        hasMore: null == hasMore
+            ? _value.hasMore
+            : hasMore // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -305,10 +331,12 @@ class _$PresentQuestionStateImpl extends _PresentQuestionState {
     this.isCorrect = false,
     this.lastAttempt,
     this.isLoading = false,
+    this.isLoadingMore = false,
     this.errorMessage,
     this.currentFilter,
     this.currentQuestionIndex = 0,
     final List<Question> questionQueue = const [],
+    this.hasMore = true,
   }) : _selectedAnswers = selectedAnswers,
        _questionQueue = questionQueue,
        super._();
@@ -339,6 +367,9 @@ class _$PresentQuestionStateImpl extends _PresentQuestionState {
   @JsonKey()
   final bool isLoading;
   @override
+  @JsonKey()
+  final bool isLoadingMore;
+  @override
   final String? errorMessage;
   @override
   final QuestionFilter? currentFilter;
@@ -355,8 +386,12 @@ class _$PresentQuestionStateImpl extends _PresentQuestionState {
   }
 
   @override
+  @JsonKey()
+  final bool hasMore;
+
+  @override
   String toString() {
-    return 'PresentQuestionState(currentQuestion: $currentQuestion, selectedAnswers: $selectedAnswers, showExplanation: $showExplanation, isAnswered: $isAnswered, isCorrect: $isCorrect, lastAttempt: $lastAttempt, isLoading: $isLoading, errorMessage: $errorMessage, currentFilter: $currentFilter, currentQuestionIndex: $currentQuestionIndex, questionQueue: $questionQueue)';
+    return 'PresentQuestionState(currentQuestion: $currentQuestion, selectedAnswers: $selectedAnswers, showExplanation: $showExplanation, isAnswered: $isAnswered, isCorrect: $isCorrect, lastAttempt: $lastAttempt, isLoading: $isLoading, isLoadingMore: $isLoadingMore, errorMessage: $errorMessage, currentFilter: $currentFilter, currentQuestionIndex: $currentQuestionIndex, questionQueue: $questionQueue, hasMore: $hasMore)';
   }
 
   @override
@@ -380,6 +415,8 @@ class _$PresentQuestionStateImpl extends _PresentQuestionState {
                 other.lastAttempt == lastAttempt) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
+            (identical(other.isLoadingMore, isLoadingMore) ||
+                other.isLoadingMore == isLoadingMore) &&
             (identical(other.errorMessage, errorMessage) ||
                 other.errorMessage == errorMessage) &&
             (identical(other.currentFilter, currentFilter) ||
@@ -389,7 +426,8 @@ class _$PresentQuestionStateImpl extends _PresentQuestionState {
             const DeepCollectionEquality().equals(
               other._questionQueue,
               _questionQueue,
-            ));
+            ) &&
+            (identical(other.hasMore, hasMore) || other.hasMore == hasMore));
   }
 
   @override
@@ -402,10 +440,12 @@ class _$PresentQuestionStateImpl extends _PresentQuestionState {
     isCorrect,
     lastAttempt,
     isLoading,
+    isLoadingMore,
     errorMessage,
     currentFilter,
     currentQuestionIndex,
     const DeepCollectionEquality().hash(_questionQueue),
+    hasMore,
   );
 
   /// Create a copy of PresentQuestionState
@@ -430,10 +470,12 @@ abstract class _PresentQuestionState extends PresentQuestionState {
     final bool isCorrect,
     final QuestionAttempt? lastAttempt,
     final bool isLoading,
+    final bool isLoadingMore,
     final String? errorMessage,
     final QuestionFilter? currentFilter,
     final int currentQuestionIndex,
     final List<Question> questionQueue,
+    final bool hasMore,
   }) = _$PresentQuestionStateImpl;
   const _PresentQuestionState._() : super._();
 
@@ -452,6 +494,8 @@ abstract class _PresentQuestionState extends PresentQuestionState {
   @override
   bool get isLoading;
   @override
+  bool get isLoadingMore;
+  @override
   String? get errorMessage;
   @override
   QuestionFilter? get currentFilter;
@@ -459,6 +503,8 @@ abstract class _PresentQuestionState extends PresentQuestionState {
   int get currentQuestionIndex;
   @override
   List<Question> get questionQueue;
+  @override
+  bool get hasMore;
 
   /// Create a copy of PresentQuestionState
   /// with the given fields replaced by the non-null parameter values.

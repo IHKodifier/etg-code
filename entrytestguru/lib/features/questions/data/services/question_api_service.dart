@@ -22,13 +22,21 @@ class QuestionApiService {
     return QuestionApiService(apiClient);
   });
 
-  /// Fetches questions based on filter criteria
+  /// Fetches questions based on filter criteria with pagination
   /// Converts QuestionFilter to API parameters
-  Future<List<Question>> getFilteredQuestions(QuestionFilter filter) async {
+  Future<List<Question>> getFilteredQuestions(
+    QuestionFilter filter, {
+    int limit = 20,
+    int offset = 0,
+  }) async {
     try {
+      final queryParams = filter.toApiMap();
+      queryParams['limit'] = limit;
+      queryParams['offset'] = offset;
+
       final response = await _apiClient.get(
         _questionsPath,
-        queryParameters: filter.toApiMap(),
+        queryParameters: queryParams,
       );
 
       if (response.statusCode == 200) {

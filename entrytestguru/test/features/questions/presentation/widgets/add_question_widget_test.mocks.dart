@@ -40,10 +40,16 @@ class MockQuestionApiService extends _i1.Mock
 
   @override
   _i3.Future<List<_i4.Question>> getFilteredQuestions(
-    _i5.QuestionFilter? filter,
-  ) =>
+    _i5.QuestionFilter? filter, {
+    int? limit = 20,
+    int? offset = 0,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#getFilteredQuestions, [filter]),
+            Invocation.method(
+              #getFilteredQuestions,
+              [filter],
+              {#limit: limit, #offset: offset},
+            ),
             returnValue: _i3.Future<List<_i4.Question>>.value(<_i4.Question>[]),
           )
           as _i3.Future<List<_i4.Question>>);
