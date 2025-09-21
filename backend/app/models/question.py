@@ -10,7 +10,7 @@ class QuestionOption(BaseModel):
 class QuestionCreateRequest(BaseModel):
     question_text: str
     options: List[QuestionOption]
-    correct_answer: str
+    correct_answer: List[str]
     exam_type: str
     subject: str
     topic: str
@@ -53,9 +53,9 @@ class QuestionCreateRequest(BaseModel):
         correct_count = sum(1 for option in v if option.is_correct)
         # Allow multiple correct answers for multi-select questions
         # For now, we'll determine question type from the correct_answer field format
-        # If correct_answer contains commas, it's multi-select
-        correct_answer = values.get('correct_answer', '')
-        is_multi_select = ',' in correct_answer and len(correct_answer.split(',')) > 1
+        # If correct_answer has multiple items, it's multi-select
+        correct_answer = values.get('correct_answer', [])
+        is_multi_select = len(correct_answer) > 1
 
         if is_multi_select:
             if correct_count < 1:
@@ -70,7 +70,7 @@ class QuestionResponse(BaseModel):
     id: str
     question_text: str
     options: List[QuestionOption]
-    correct_answer: str
+    correct_answer: List[str]
     exam_type: str
     subject: str
     topic: str

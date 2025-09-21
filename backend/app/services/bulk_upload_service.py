@@ -393,8 +393,8 @@ class BulkUploadService:
             except ValueError:
                 internal_arde_probability = 'medium'
 
-        # All questions are MCQ types
-        correct_answer = question.correct_answers
+        # All questions are MCQ types - convert correct_answers string to list
+        correct_answer = [ans.strip() for ans in question.correct_answers.split(',')]
 
         return QuestionCreateRequest(
             question_text=question.question_text,

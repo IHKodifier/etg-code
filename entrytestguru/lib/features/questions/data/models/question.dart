@@ -10,6 +10,7 @@ part 'question.g.dart';
 /// Main Question model representing a complete question with all its data
 /// Compatible with backend Python Question model for seamless API integration
 @freezed
+@JsonSerializable()
 class Question with _$Question {
   const Question._();
 
@@ -80,8 +81,25 @@ class Question with _$Question {
   }) = _Question;
 
   /// Creates Question from JSON
-  factory Question.fromJson(Map<String, dynamic> json) =>
-      _$QuestionFromJson(json);
+  factory Question.fromJson(Map<String, dynamic> json) {
+    // Handle backward compatibility for correctAnswer field
+    if (json['correctAnswer'] is String) {
+      // Convert string to list for backward compatibility
+      json = Map<String, dynamic>.from(json);
+      json['correctAnswer'] = [json['correctAnswer'] as String];
+    }
+
+    // Handle null values for boolean fields that have defaults
+    json = Map<String, dynamic>.from(json);
+    if (json['isBookmarked'] == null) {
+      json['isBookmarked'] = false;
+    }
+
+    return _$QuestionFromJson(json);
+  }
+
+  /// Converts Question to JSON
+  Map<String, dynamic> toJson() => _$QuestionToJson(this);
 
   /// Returns the primary subject area
   String get primarySubject => subject;

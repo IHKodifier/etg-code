@@ -6,9 +6,7 @@ part of 'question.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$QuestionImpl _$$QuestionImplFromJson(
-  Map<String, dynamic> json,
-) => _$QuestionImpl(
+Question _$QuestionFromJson(Map<String, dynamic> json) => Question(
   id: json['id'] as String,
   questionId: json['questionId'] as String,
   examCategory: json['examCategory'] as String,
@@ -28,9 +26,7 @@ _$QuestionImpl _$$QuestionImplFromJson(
   correctAnswer: (json['correctAnswer'] as List<dynamic>)
       .map((e) => e as String)
       .toList(),
-  questionType:
-      $enumDecodeNullable(_$QuestionTypeEnumMap, json['questionType']) ??
-      QuestionType.singleChoice,
+  questionType: $enumDecode(_$QuestionTypeEnumMap, json['questionType']),
   explanationText: json['explanationText'] as String,
   explanationVideoUrl: json['explanationVideoUrl'] as String?,
   explanationSteps: (json['explanationSteps'] as List<dynamic>?)
@@ -40,20 +36,18 @@ _$QuestionImpl _$$QuestionImplFromJson(
       ?.map((e) => e as String)
       .toList(),
   ardeProbability: $enumDecode(_$ArdeLevelEnumMap, json['ardeProbability']),
-  ardeFrequency: (json['ardeFrequency'] as num?)?.toInt() ?? 0,
+  ardeFrequency: (json['ardeFrequency'] as num).toInt(),
   ardeAppearanceYears: (json['ardeAppearanceYears'] as List<dynamic>?)
       ?.map((e) => (e as num).toInt())
       .toList(),
   ardeNotes: json['ardeNotes'] as String?,
   ardeContext: json['ardeContext'] as String?,
   difficulty: $enumDecode(_$DifficultyLevelEnumMap, json['difficulty']),
-  estimatedTimeSeconds: (json['estimatedTimeSeconds'] as num?)?.toInt() ?? 60,
+  estimatedTimeSeconds: (json['estimatedTimeSeconds'] as num).toInt(),
   globalStats: QuestionPerformanceStats.fromJson(
     json['globalStats'] as Map<String, dynamic>,
   ),
-  tags:
-      (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-      const [],
+  tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
   relatedQuestions: (json['relatedQuestions'] as List<dynamic>?)
       ?.map((e) => e as String)
       .toList(),
@@ -61,10 +55,10 @@ _$QuestionImpl _$$QuestionImplFromJson(
   updatedAt: DateTime.parse(json['updatedAt'] as String),
   createdBy: json['createdBy'] as String,
   createdByName: json['createdByName'] as String?,
-  isActive: json['isActive'] as bool? ?? true,
-  version: (json['version'] as num?)?.toInt() ?? 1,
+  isActive: json['isActive'] as bool?,
+  version: (json['version'] as num?)?.toInt(),
   status: json['status'] as String?,
-  approvalStatus: json['approval_status'] as String? ?? 'pending',
+  approvalStatus: json['approval_status'] as String,
   reviewerId: json['reviewer_id'] as String?,
   reviewerName: json['reviewer_name'] as String?,
   reviewComments: json['review_comments'] as String?,
@@ -75,59 +69,58 @@ _$QuestionImpl _$$QuestionImplFromJson(
   approvedAt: json['approved_at'] == null
       ? null
       : DateTime.parse(json['approved_at'] as String),
-  isBookmarked: json['isBookmarked'] as bool? ?? false,
+  isBookmarked: json['isBookmarked'] as bool,
   userNotes: json['userNotes'] as String?,
   lastAttempt: json['lastAttempt'] == null
       ? null
       : QuestionAttempt.fromJson(json['lastAttempt'] as Map<String, dynamic>),
 );
 
-Map<String, dynamic> _$$QuestionImplToJson(_$QuestionImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'questionId': instance.questionId,
-      'examCategory': instance.examCategory,
-      'subject': instance.subject,
-      'topic': instance.topic,
-      'subTopic': instance.subTopic,
-      'questionText': instance.questionText,
-      'questionImageUrls': instance.questionImageUrls,
-      'questionLatex': instance.questionLatex,
-      'options': instance.options,
-      'correctAnswer': instance.correctAnswer,
-      'questionType': _$QuestionTypeEnumMap[instance.questionType]!,
-      'explanationText': instance.explanationText,
-      'explanationVideoUrl': instance.explanationVideoUrl,
-      'explanationSteps': instance.explanationSteps,
-      'references': instance.references,
-      'ardeProbability': _$ArdeLevelEnumMap[instance.ardeProbability]!,
-      'ardeFrequency': instance.ardeFrequency,
-      'ardeAppearanceYears': instance.ardeAppearanceYears,
-      'ardeNotes': instance.ardeNotes,
-      'ardeContext': instance.ardeContext,
-      'difficulty': _$DifficultyLevelEnumMap[instance.difficulty]!,
-      'estimatedTimeSeconds': instance.estimatedTimeSeconds,
-      'globalStats': instance.globalStats,
-      'tags': instance.tags,
-      'relatedQuestions': instance.relatedQuestions,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
-      'createdBy': instance.createdBy,
-      'createdByName': instance.createdByName,
-      'isActive': instance.isActive,
-      'version': instance.version,
-      'status': instance.status,
-      'approval_status': instance.approvalStatus,
-      'reviewer_id': instance.reviewerId,
-      'reviewer_name': instance.reviewerName,
-      'review_comments': instance.reviewComments,
-      'submitted_at': instance.submittedAt.toIso8601String(),
-      'reviewed_at': instance.reviewedAt?.toIso8601String(),
-      'approved_at': instance.approvedAt?.toIso8601String(),
-      'isBookmarked': instance.isBookmarked,
-      'userNotes': instance.userNotes,
-      'lastAttempt': instance.lastAttempt,
-    };
+Map<String, dynamic> _$QuestionToJson(Question instance) => <String, dynamic>{
+  'id': instance.id,
+  'questionId': instance.questionId,
+  'examCategory': instance.examCategory,
+  'subject': instance.subject,
+  'topic': instance.topic,
+  'subTopic': instance.subTopic,
+  'questionText': instance.questionText,
+  'questionImageUrls': instance.questionImageUrls,
+  'questionLatex': instance.questionLatex,
+  'options': instance.options,
+  'correctAnswer': instance.correctAnswer,
+  'questionType': _$QuestionTypeEnumMap[instance.questionType]!,
+  'explanationText': instance.explanationText,
+  'explanationVideoUrl': instance.explanationVideoUrl,
+  'explanationSteps': instance.explanationSteps,
+  'references': instance.references,
+  'ardeProbability': _$ArdeLevelEnumMap[instance.ardeProbability]!,
+  'ardeFrequency': instance.ardeFrequency,
+  'ardeAppearanceYears': instance.ardeAppearanceYears,
+  'ardeNotes': instance.ardeNotes,
+  'ardeContext': instance.ardeContext,
+  'difficulty': _$DifficultyLevelEnumMap[instance.difficulty]!,
+  'estimatedTimeSeconds': instance.estimatedTimeSeconds,
+  'globalStats': instance.globalStats,
+  'tags': instance.tags,
+  'relatedQuestions': instance.relatedQuestions,
+  'createdAt': instance.createdAt.toIso8601String(),
+  'updatedAt': instance.updatedAt.toIso8601String(),
+  'createdBy': instance.createdBy,
+  'createdByName': instance.createdByName,
+  'isActive': instance.isActive,
+  'version': instance.version,
+  'status': instance.status,
+  'approval_status': instance.approvalStatus,
+  'reviewer_id': instance.reviewerId,
+  'reviewer_name': instance.reviewerName,
+  'review_comments': instance.reviewComments,
+  'submitted_at': instance.submittedAt.toIso8601String(),
+  'reviewed_at': instance.reviewedAt?.toIso8601String(),
+  'approved_at': instance.approvedAt?.toIso8601String(),
+  'isBookmarked': instance.isBookmarked,
+  'userNotes': instance.userNotes,
+  'lastAttempt': instance.lastAttempt,
+};
 
 const _$QuestionTypeEnumMap = {
   QuestionType.singleChoice: 'singleChoice',

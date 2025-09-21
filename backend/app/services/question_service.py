@@ -18,9 +18,13 @@ class QuestionService:
         try:
             # Validate required fields
             required_fields = [
-                "question_text", "options", "correct_answer", 
+                "question_text", "options", "correct_answer",
                 "exam_type", "subject", "topic", "difficulty"
             ]
+
+            # Ensure correct_answer is a list
+            if isinstance(question_data.get("correct_answer"), str):
+                question_data["correct_answer"] = [question_data["correct_answer"]]
             
             for field in required_fields:
                 if field not in question_data:

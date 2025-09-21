@@ -258,6 +258,10 @@ void main() {
         'version': 1,
         'status': 'approved',
 
+        // User-specific fields
+        'isBookmarked': false,
+        'userNotes': null,
+
         // Approval workflow fields
         'approval_status': 'approved',
         'reviewer_id': 'admin',

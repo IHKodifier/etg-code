@@ -45,6 +45,22 @@ class MockApiClient extends _i1.Mock implements _i3.ApiClient {
           as _i4.Future<String?>);
 
   @override
+  _i4.Future<String?> getStoredToken() =>
+      (super.noSuchMethod(
+            Invocation.method(#getStoredToken, []),
+            returnValue: _i4.Future<String?>.value(),
+          )
+          as _i4.Future<String?>);
+
+  @override
+  _i4.Future<String?> getStoredRefreshToken() =>
+      (super.noSuchMethod(
+            Invocation.method(#getStoredRefreshToken, []),
+            returnValue: _i4.Future<String?>.value(),
+          )
+          as _i4.Future<String?>);
+
+  @override
   _i4.Future<String?> getRefreshToken() =>
       (super.noSuchMethod(
             Invocation.method(#getRefreshToken, []),

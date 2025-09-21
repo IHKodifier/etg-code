@@ -15,10 +15,6 @@ final _privateConstructorUsedError = UnsupportedError(
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
 
-Question _$QuestionFromJson(Map<String, dynamic> json) {
-  return _Question.fromJson(json);
-}
-
 /// @nodoc
 mixin _$Question {
   // Identity & Metadata
@@ -82,9 +78,6 @@ mixin _$Question {
   bool get isBookmarked => throw _privateConstructorUsedError;
   String? get userNotes => throw _privateConstructorUsedError;
   QuestionAttempt? get lastAttempt => throw _privateConstructorUsedError;
-
-  /// Serializes this Question to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
   /// Create a copy of Question
   /// with the given fields replaced by the non-null parameter values.
@@ -710,7 +703,7 @@ class __$$QuestionImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-@JsonSerializable()
+
 class _$QuestionImpl extends _Question {
   const _$QuestionImpl({
     required this.id,
@@ -766,9 +759,6 @@ class _$QuestionImpl extends _Question {
        _tags = tags,
        _relatedQuestions = relatedQuestions,
        super._();
-
-  factory _$QuestionImpl.fromJson(Map<String, dynamic> json) =>
-      _$$QuestionImplFromJson(json);
 
   // Identity & Metadata
   @override
@@ -1063,7 +1053,6 @@ class _$QuestionImpl extends _Question {
                 other.lastAttempt == lastAttempt));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hashAll([
     runtimeType,
@@ -1119,11 +1108,6 @@ class _$QuestionImpl extends _Question {
   @pragma('vm:prefer-inline')
   _$$QuestionImplCopyWith<_$QuestionImpl> get copyWith =>
       __$$QuestionImplCopyWithImpl<_$QuestionImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$QuestionImplToJson(this);
-  }
 }
 
 abstract class _Question extends Question {
@@ -1173,9 +1157,6 @@ abstract class _Question extends Question {
     final QuestionAttempt? lastAttempt,
   }) = _$QuestionImpl;
   const _Question._() : super._();
-
-  factory _Question.fromJson(Map<String, dynamic> json) =
-      _$QuestionImpl.fromJson;
 
   // Identity & Metadata
   @override
