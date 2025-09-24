@@ -19,7 +19,8 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$Question {
   // Identity & Metadata
   String get id => throw _privateConstructorUsedError;
-  String get questionId => throw _privateConstructorUsedError;
+  int get questionId =>
+      throw _privateConstructorUsedError; // Changed from String to int
   String get examCategory => throw _privateConstructorUsedError;
   String get subject => throw _privateConstructorUsedError;
   String get topic => throw _privateConstructorUsedError;
@@ -39,7 +40,8 @@ mixin _$Question {
   List<String>? get explanationSteps => throw _privateConstructorUsedError;
   List<String>? get references =>
       throw _privateConstructorUsedError; // ARDE Intelligence (Core Differentiator)
-  ArdeLevel get ardeProbability => throw _privateConstructorUsedError;
+  double get ardeProbability =>
+      throw _privateConstructorUsedError; // Changed from ArdeLevel enum to double
   int get ardeFrequency => throw _privateConstructorUsedError;
   List<int>? get ardeAppearanceYears => throw _privateConstructorUsedError;
   String? get ardeNotes => throw _privateConstructorUsedError;
@@ -47,9 +49,8 @@ mixin _$Question {
       throw _privateConstructorUsedError; // Difficulty & Performance
   DifficultyLevel get difficulty => throw _privateConstructorUsedError;
   int get estimatedTimeSeconds =>
-      throw _privateConstructorUsedError; // Global Performance Analytics
-  QuestionPerformanceStats get globalStats =>
-      throw _privateConstructorUsedError; // Search & Discovery
+      throw _privateConstructorUsedError; // Performance stats removed - now calculated from question_attempts collection
+  // Search & Discovery
   List<String> get tags => throw _privateConstructorUsedError;
   List<String>? get relatedQuestions =>
       throw _privateConstructorUsedError; // Administrative
@@ -93,7 +94,7 @@ abstract class $QuestionCopyWith<$Res> {
   @useResult
   $Res call({
     String id,
-    String questionId,
+    int questionId,
     String examCategory,
     String subject,
     String topic,
@@ -108,14 +109,13 @@ abstract class $QuestionCopyWith<$Res> {
     String? explanationVideoUrl,
     List<String>? explanationSteps,
     List<String>? references,
-    ArdeLevel ardeProbability,
+    double ardeProbability,
     int ardeFrequency,
     List<int>? ardeAppearanceYears,
     String? ardeNotes,
     String? ardeContext,
     DifficultyLevel difficulty,
     int estimatedTimeSeconds,
-    QuestionPerformanceStats globalStats,
     List<String> tags,
     List<String>? relatedQuestions,
     DateTime createdAt,
@@ -137,7 +137,6 @@ abstract class $QuestionCopyWith<$Res> {
     QuestionAttempt? lastAttempt,
   });
 
-  $QuestionPerformanceStatsCopyWith<$Res> get globalStats;
   $QuestionAttemptCopyWith<$Res>? get lastAttempt;
 }
 
@@ -179,7 +178,6 @@ class _$QuestionCopyWithImpl<$Res, $Val extends Question>
     Object? ardeContext = freezed,
     Object? difficulty = null,
     Object? estimatedTimeSeconds = null,
-    Object? globalStats = null,
     Object? tags = null,
     Object? relatedQuestions = freezed,
     Object? createdAt = null,
@@ -209,7 +207,7 @@ class _$QuestionCopyWithImpl<$Res, $Val extends Question>
             questionId: null == questionId
                 ? _value.questionId
                 : questionId // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as int,
             examCategory: null == examCategory
                 ? _value.examCategory
                 : examCategory // ignore: cast_nullable_to_non_nullable
@@ -269,7 +267,7 @@ class _$QuestionCopyWithImpl<$Res, $Val extends Question>
             ardeProbability: null == ardeProbability
                 ? _value.ardeProbability
                 : ardeProbability // ignore: cast_nullable_to_non_nullable
-                      as ArdeLevel,
+                      as double,
             ardeFrequency: null == ardeFrequency
                 ? _value.ardeFrequency
                 : ardeFrequency // ignore: cast_nullable_to_non_nullable
@@ -294,10 +292,6 @@ class _$QuestionCopyWithImpl<$Res, $Val extends Question>
                 ? _value.estimatedTimeSeconds
                 : estimatedTimeSeconds // ignore: cast_nullable_to_non_nullable
                       as int,
-            globalStats: null == globalStats
-                ? _value.globalStats
-                : globalStats // ignore: cast_nullable_to_non_nullable
-                      as QuestionPerformanceStats,
             tags: null == tags
                 ? _value.tags
                 : tags // ignore: cast_nullable_to_non_nullable
@@ -383,16 +377,6 @@ class _$QuestionCopyWithImpl<$Res, $Val extends Question>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $QuestionPerformanceStatsCopyWith<$Res> get globalStats {
-    return $QuestionPerformanceStatsCopyWith<$Res>(_value.globalStats, (value) {
-      return _then(_value.copyWith(globalStats: value) as $Val);
-    });
-  }
-
-  /// Create a copy of Question
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
   $QuestionAttemptCopyWith<$Res>? get lastAttempt {
     if (_value.lastAttempt == null) {
       return null;
@@ -415,7 +399,7 @@ abstract class _$$QuestionImplCopyWith<$Res>
   @useResult
   $Res call({
     String id,
-    String questionId,
+    int questionId,
     String examCategory,
     String subject,
     String topic,
@@ -430,14 +414,13 @@ abstract class _$$QuestionImplCopyWith<$Res>
     String? explanationVideoUrl,
     List<String>? explanationSteps,
     List<String>? references,
-    ArdeLevel ardeProbability,
+    double ardeProbability,
     int ardeFrequency,
     List<int>? ardeAppearanceYears,
     String? ardeNotes,
     String? ardeContext,
     DifficultyLevel difficulty,
     int estimatedTimeSeconds,
-    QuestionPerformanceStats globalStats,
     List<String> tags,
     List<String>? relatedQuestions,
     DateTime createdAt,
@@ -459,8 +442,6 @@ abstract class _$$QuestionImplCopyWith<$Res>
     QuestionAttempt? lastAttempt,
   });
 
-  @override
-  $QuestionPerformanceStatsCopyWith<$Res> get globalStats;
   @override
   $QuestionAttemptCopyWith<$Res>? get lastAttempt;
 }
@@ -502,7 +483,6 @@ class __$$QuestionImplCopyWithImpl<$Res>
     Object? ardeContext = freezed,
     Object? difficulty = null,
     Object? estimatedTimeSeconds = null,
-    Object? globalStats = null,
     Object? tags = null,
     Object? relatedQuestions = freezed,
     Object? createdAt = null,
@@ -532,7 +512,7 @@ class __$$QuestionImplCopyWithImpl<$Res>
         questionId: null == questionId
             ? _value.questionId
             : questionId // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as int,
         examCategory: null == examCategory
             ? _value.examCategory
             : examCategory // ignore: cast_nullable_to_non_nullable
@@ -592,7 +572,7 @@ class __$$QuestionImplCopyWithImpl<$Res>
         ardeProbability: null == ardeProbability
             ? _value.ardeProbability
             : ardeProbability // ignore: cast_nullable_to_non_nullable
-                  as ArdeLevel,
+                  as double,
         ardeFrequency: null == ardeFrequency
             ? _value.ardeFrequency
             : ardeFrequency // ignore: cast_nullable_to_non_nullable
@@ -617,10 +597,6 @@ class __$$QuestionImplCopyWithImpl<$Res>
             ? _value.estimatedTimeSeconds
             : estimatedTimeSeconds // ignore: cast_nullable_to_non_nullable
                   as int,
-        globalStats: null == globalStats
-            ? _value.globalStats
-            : globalStats // ignore: cast_nullable_to_non_nullable
-                  as QuestionPerformanceStats,
         tags: null == tags
             ? _value._tags
             : tags // ignore: cast_nullable_to_non_nullable
@@ -729,7 +705,6 @@ class _$QuestionImpl extends _Question {
     this.ardeContext,
     required this.difficulty,
     this.estimatedTimeSeconds = 60,
-    required this.globalStats,
     final List<String> tags = const [],
     final List<String>? relatedQuestions,
     required this.createdAt,
@@ -764,7 +739,8 @@ class _$QuestionImpl extends _Question {
   @override
   final String id;
   @override
-  final String questionId;
+  final int questionId;
+  // Changed from String to int
   @override
   final String examCategory;
   @override
@@ -850,7 +826,8 @@ class _$QuestionImpl extends _Question {
 
   // ARDE Intelligence (Core Differentiator)
   @override
-  final ArdeLevel ardeProbability;
+  final double ardeProbability;
+  // Changed from ArdeLevel enum to double
   @override
   @JsonKey()
   final int ardeFrequency;
@@ -875,11 +852,10 @@ class _$QuestionImpl extends _Question {
   @override
   @JsonKey()
   final int estimatedTimeSeconds;
-  // Global Performance Analytics
-  @override
-  final QuestionPerformanceStats globalStats;
+  // Performance stats removed - now calculated from question_attempts collection
   // Search & Discovery
   final List<String> _tags;
+  // Performance stats removed - now calculated from question_attempts collection
   // Search & Discovery
   @override
   @JsonKey()
@@ -950,7 +926,7 @@ class _$QuestionImpl extends _Question {
 
   @override
   String toString() {
-    return 'Question(id: $id, questionId: $questionId, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, questionText: $questionText, questionImageUrls: $questionImageUrls, questionLatex: $questionLatex, options: $options, correctAnswer: $correctAnswer, questionType: $questionType, explanationText: $explanationText, explanationVideoUrl: $explanationVideoUrl, explanationSteps: $explanationSteps, references: $references, ardeProbability: $ardeProbability, ardeFrequency: $ardeFrequency, ardeAppearanceYears: $ardeAppearanceYears, ardeNotes: $ardeNotes, ardeContext: $ardeContext, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, globalStats: $globalStats, tags: $tags, relatedQuestions: $relatedQuestions, createdAt: $createdAt, updatedAt: $updatedAt, createdBy: $createdBy, createdByName: $createdByName, isActive: $isActive, version: $version, status: $status, approvalStatus: $approvalStatus, reviewerId: $reviewerId, reviewerName: $reviewerName, reviewComments: $reviewComments, submittedAt: $submittedAt, reviewedAt: $reviewedAt, approvedAt: $approvedAt, isBookmarked: $isBookmarked, userNotes: $userNotes, lastAttempt: $lastAttempt)';
+    return 'Question(id: $id, questionId: $questionId, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, questionText: $questionText, questionImageUrls: $questionImageUrls, questionLatex: $questionLatex, options: $options, correctAnswer: $correctAnswer, questionType: $questionType, explanationText: $explanationText, explanationVideoUrl: $explanationVideoUrl, explanationSteps: $explanationSteps, references: $references, ardeProbability: $ardeProbability, ardeFrequency: $ardeFrequency, ardeAppearanceYears: $ardeAppearanceYears, ardeNotes: $ardeNotes, ardeContext: $ardeContext, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, tags: $tags, relatedQuestions: $relatedQuestions, createdAt: $createdAt, updatedAt: $updatedAt, createdBy: $createdBy, createdByName: $createdByName, isActive: $isActive, version: $version, status: $status, approvalStatus: $approvalStatus, reviewerId: $reviewerId, reviewerName: $reviewerName, reviewComments: $reviewComments, submittedAt: $submittedAt, reviewedAt: $reviewedAt, approvedAt: $approvedAt, isBookmarked: $isBookmarked, userNotes: $userNotes, lastAttempt: $lastAttempt)';
   }
 
   @override
@@ -1012,8 +988,6 @@ class _$QuestionImpl extends _Question {
                 other.difficulty == difficulty) &&
             (identical(other.estimatedTimeSeconds, estimatedTimeSeconds) ||
                 other.estimatedTimeSeconds == estimatedTimeSeconds) &&
-            (identical(other.globalStats, globalStats) ||
-                other.globalStats == globalStats) &&
             const DeepCollectionEquality().equals(other._tags, _tags) &&
             const DeepCollectionEquality().equals(
               other._relatedQuestions,
@@ -1079,7 +1053,6 @@ class _$QuestionImpl extends _Question {
     ardeContext,
     difficulty,
     estimatedTimeSeconds,
-    globalStats,
     const DeepCollectionEquality().hash(_tags),
     const DeepCollectionEquality().hash(_relatedQuestions),
     createdAt,
@@ -1113,7 +1086,7 @@ class _$QuestionImpl extends _Question {
 abstract class _Question extends Question {
   const factory _Question({
     required final String id,
-    required final String questionId,
+    required final int questionId,
     required final String examCategory,
     required final String subject,
     required final String topic,
@@ -1128,14 +1101,13 @@ abstract class _Question extends Question {
     final String? explanationVideoUrl,
     final List<String>? explanationSteps,
     final List<String>? references,
-    required final ArdeLevel ardeProbability,
+    required final double ardeProbability,
     final int ardeFrequency,
     final List<int>? ardeAppearanceYears,
     final String? ardeNotes,
     final String? ardeContext,
     required final DifficultyLevel difficulty,
     final int estimatedTimeSeconds,
-    required final QuestionPerformanceStats globalStats,
     final List<String> tags,
     final List<String>? relatedQuestions,
     required final DateTime createdAt,
@@ -1162,7 +1134,7 @@ abstract class _Question extends Question {
   @override
   String get id;
   @override
-  String get questionId;
+  int get questionId; // Changed from String to int
   @override
   String get examCategory;
   @override
@@ -1193,7 +1165,7 @@ abstract class _Question extends Question {
   @override
   List<String>? get references; // ARDE Intelligence (Core Differentiator)
   @override
-  ArdeLevel get ardeProbability;
+  double get ardeProbability; // Changed from ArdeLevel enum to double
   @override
   int get ardeFrequency;
   @override
@@ -1205,9 +1177,8 @@ abstract class _Question extends Question {
   @override
   DifficultyLevel get difficulty;
   @override
-  int get estimatedTimeSeconds; // Global Performance Analytics
-  @override
-  QuestionPerformanceStats get globalStats; // Search & Discovery
+  int get estimatedTimeSeconds; // Performance stats removed - now calculated from question_attempts collection
+  // Search & Discovery
   @override
   List<String> get tags;
   @override

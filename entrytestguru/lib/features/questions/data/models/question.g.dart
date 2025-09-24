@@ -8,7 +8,7 @@ part of 'question.dart';
 
 Question _$QuestionFromJson(Map<String, dynamic> json) => Question(
   id: json['id'] as String,
-  questionId: json['questionId'] as String,
+  questionId: (json['questionId'] as num).toInt(),
   examCategory: json['examCategory'] as String,
   subject: json['subject'] as String,
   topic: json['topic'] as String,
@@ -35,7 +35,7 @@ Question _$QuestionFromJson(Map<String, dynamic> json) => Question(
   references: (json['references'] as List<dynamic>?)
       ?.map((e) => e as String)
       .toList(),
-  ardeProbability: $enumDecode(_$ArdeLevelEnumMap, json['ardeProbability']),
+  ardeProbability: (json['ardeProbability'] as num).toDouble(),
   ardeFrequency: (json['ardeFrequency'] as num).toInt(),
   ardeAppearanceYears: (json['ardeAppearanceYears'] as List<dynamic>?)
       ?.map((e) => (e as num).toInt())
@@ -44,9 +44,6 @@ Question _$QuestionFromJson(Map<String, dynamic> json) => Question(
   ardeContext: json['ardeContext'] as String?,
   difficulty: $enumDecode(_$DifficultyLevelEnumMap, json['difficulty']),
   estimatedTimeSeconds: (json['estimatedTimeSeconds'] as num).toInt(),
-  globalStats: QuestionPerformanceStats.fromJson(
-    json['globalStats'] as Map<String, dynamic>,
-  ),
   tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
   relatedQuestions: (json['relatedQuestions'] as List<dynamic>?)
       ?.map((e) => e as String)
@@ -93,14 +90,13 @@ Map<String, dynamic> _$QuestionToJson(Question instance) => <String, dynamic>{
   'explanationVideoUrl': instance.explanationVideoUrl,
   'explanationSteps': instance.explanationSteps,
   'references': instance.references,
-  'ardeProbability': _$ArdeLevelEnumMap[instance.ardeProbability]!,
+  'ardeProbability': instance.ardeProbability,
   'ardeFrequency': instance.ardeFrequency,
   'ardeAppearanceYears': instance.ardeAppearanceYears,
   'ardeNotes': instance.ardeNotes,
   'ardeContext': instance.ardeContext,
   'difficulty': _$DifficultyLevelEnumMap[instance.difficulty]!,
   'estimatedTimeSeconds': instance.estimatedTimeSeconds,
-  'globalStats': instance.globalStats,
   'tags': instance.tags,
   'relatedQuestions': instance.relatedQuestions,
   'createdAt': instance.createdAt.toIso8601String(),
@@ -127,12 +123,6 @@ const _$QuestionTypeEnumMap = {
   QuestionType.multipleChoice: 'multipleChoice',
   QuestionType.assertionReason: 'assertionReason',
   QuestionType.numerical: 'numerical',
-};
-
-const _$ArdeLevelEnumMap = {
-  ArdeLevel.high: 'high',
-  ArdeLevel.medium: 'medium',
-  ArdeLevel.low: 'low',
 };
 
 const _$DifficultyLevelEnumMap = {

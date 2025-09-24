@@ -303,22 +303,13 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
         'explanationVideoUrl': question.explanationVideoUrl,
         'explanationSteps': question.explanationSteps,
         'references': question.references,
-        'ardeProbability': question.ardeProbability.name,
+        'ardeProbability': question.ardeProbability,
         'ardeFrequency': question.ardeFrequency,
         'ardeAppearanceYears': question.ardeAppearanceYears,
         'ardeNotes': question.ardeNotes,
         'ardeContext': question.ardeContext,
         'difficulty': question.difficulty.name,
         'estimatedTimeSeconds': question.estimatedTimeSeconds,
-        'globalStats': {
-          'totalAttempts': question.globalStats.totalAttempts,
-          'totalCorrect': question.globalStats.totalCorrect,
-          'globalAccuracy': question.globalStats.globalAccuracy,
-          'averageTimeSeconds': question.globalStats.averageTimeSeconds,
-          'medianTimeSeconds': question.globalStats.medianTimeSeconds,
-          'p95TimeSeconds': question.globalStats.p95TimeSeconds,
-          'calculatedDifficulty': question.globalStats.calculatedDifficulty,
-        },
         'tags': question.tags,
         'createdAt': state.isEditing
             ? question.createdAt.toIso8601String()

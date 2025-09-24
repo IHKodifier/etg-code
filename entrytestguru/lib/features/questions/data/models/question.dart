@@ -17,7 +17,7 @@ class Question with _$Question {
   const factory Question({
     // Identity & Metadata
     required String id,
-    required String questionId,
+    required int questionId, // Changed from String to int
     required String examCategory,
     required String subject,
     required String topic,
@@ -39,7 +39,7 @@ class Question with _$Question {
     List<String>? references,
 
     // ARDE Intelligence (Core Differentiator)
-    required ArdeLevel ardeProbability,
+    required double ardeProbability, // Changed from ArdeLevel enum to double
     @Default(0) int ardeFrequency,
     List<int>? ardeAppearanceYears,
     String? ardeNotes,
@@ -49,8 +49,7 @@ class Question with _$Question {
     required DifficultyLevel difficulty,
     @Default(60) int estimatedTimeSeconds,
 
-    // Global Performance Analytics
-    required QuestionPerformanceStats globalStats,
+    // Performance stats removed - now calculated from question_attempts collection
 
     // Search & Discovery
     @Default([]) List<String> tags,
@@ -144,25 +143,23 @@ class Question with _$Question {
 
   /// Returns the ARDE probability as a readable string
   String get ardeProbabilityDisplay {
-    switch (ardeProbability) {
-      case ArdeLevel.high:
-        return 'High Probability';
-      case ArdeLevel.medium:
-        return 'Medium Probability';
-      case ArdeLevel.low:
-        return 'Low Probability';
+    if (ardeProbability >= 0.7) {
+      return 'High Probability';
+    } else if (ardeProbability >= 0.3) {
+      return 'Medium Probability';
+    } else {
+      return 'Low Probability';
     }
   }
 
   /// Returns the ARDE probability as a percentage string
   String get ardeProbabilityPercentage {
-    switch (ardeProbability) {
-      case ArdeLevel.high:
-        return '70%+';
-      case ArdeLevel.medium:
-        return '30-70%';
-      case ArdeLevel.low:
-        return '<30%';
+    if (ardeProbability >= 0.7) {
+      return '70%+';
+    } else if (ardeProbability >= 0.3) {
+      return '30-70%';
+    } else {
+      return '<30%';
     }
   }
 
@@ -249,13 +246,11 @@ class Question with _$Question {
         topic.toLowerCase().contains(searchQuery);
   }
 
-  /// Returns the question's performance rating
+  /// Returns the question's performance rating (placeholder - will be calculated from attempts)
   String get performanceRating {
-    final accuracy = globalStats.globalAccuracy;
-    if (accuracy >= 0.8) return 'Excellent';
-    if (accuracy >= 0.6) return 'Good';
-    if (accuracy >= 0.4) return 'Average';
-    return 'Needs Review';
+    // TODO: Calculate from question_attempts collection
+    // For now, return a default rating
+    return 'Not Available';
   }
 
   /// Checks if the question has been attempted by the user
@@ -291,10 +286,8 @@ extension QuestionListExtension on List<Question> {
   /// Returns questions sorted by ARDE probability (high first)
   List<Question> get sortedByArdeProbability {
     return [...this]..sort((a, b) {
-      final ardeOrder = {'high': 3, 'medium': 2, 'low': 1};
-      final aOrder = ardeOrder[a.ardeProbability.name] ?? 0;
-      final bOrder = ardeOrder[b.ardeProbability.name] ?? 0;
-      return bOrder.compareTo(aOrder);
+      // Sort by decimal value (higher values first)
+      return b.ardeProbability.compareTo(a.ardeProbability);
     });
   }
 
@@ -305,11 +298,10 @@ extension QuestionListExtension on List<Question> {
   }
 
   /// Returns questions sorted by accuracy (lowest first - needs improvement)
+  /// TODO: Implement when performance stats are calculated from attempts
   List<Question> get sortedByAccuracy {
-    return [...this]..sort(
-      (a, b) =>
-          a.globalStats.globalAccuracy.compareTo(b.globalStats.globalAccuracy),
-    );
+    // For now, return unsorted list
+    return [...this];
   }
 
   /// Returns questions filtered by exam category
@@ -359,23 +351,17 @@ extension QuestionListExtension on List<Question> {
   }
 
   /// Returns the average accuracy across all questions
+  /// TODO: Implement when performance stats are calculated from attempts
   double get averageAccuracy {
-    if (isEmpty) return 0.0;
-    final totalAccuracy = fold<double>(
-      0.0,
-      (sum, question) => sum + question.globalStats.globalAccuracy,
-    );
-    return totalAccuracy / length;
+    // For now, return 0.0
+    return 0.0;
   }
 
   /// Returns the average difficulty across all questions
+  /// TODO: Implement when performance stats are calculated from attempts
   double get averageDifficulty {
-    if (isEmpty) return 0.0;
-    final totalDifficulty = fold<double>(
-      0.0,
-      (sum, question) => sum + question.globalStats.calculatedDifficulty,
-    );
-    return totalDifficulty / length;
+    // For now, return 0.0
+    return 0.0;
   }
 
   /// Groups questions by subject
@@ -388,10 +374,12 @@ extension QuestionListExtension on List<Question> {
   }
 
   /// Groups questions by ARDE probability
-  Map<ArdeLevel, List<Question>> get groupedByArdeProbability {
-    final grouped = <ArdeLevel, List<Question>>{};
+  Map<String, List<Question>> get groupedByArdeProbability {
+    final grouped = <String, List<Question>>{};
     for (final question in this) {
-      grouped.putIfAbsent(question.ardeProbability, () => []).add(question);
+      final category =
+          question.ardeProbabilityDisplay; // Use the display string
+      grouped.putIfAbsent(category, () => []).add(question);
     }
     return grouped;
   }

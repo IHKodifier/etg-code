@@ -30,7 +30,7 @@ void main() {
 
       sampleQuestion = Question(
         id: 'TEST_001',
-        questionId: 'TEST_001',
+        questionId: 1,
         examCategory: 'ECAT',
         subject: 'Physics',
         topic: 'Kinematics',
@@ -41,11 +41,10 @@ void main() {
         questionType: QuestionType.singleChoice,
         explanationText:
             'The acceleration due to gravity on Earth is approximately 9.8 m/s².',
-        ardeProbability: ArdeLevel.high,
+        ardeProbability: 0.8,
         ardeFrequency: 5,
         difficulty: DifficultyLevel.medium,
         estimatedTimeSeconds: 60,
-        globalStats: sampleStats,
         tags: ['physics', 'gravity', 'kinematics'],
         createdAt: DateTime(2024, 1, 1),
         updatedAt: DateTime(2024, 1, 1),
@@ -172,7 +171,7 @@ void main() {
     test('should handle invalid question structure', () {
       final invalidQuestion = Question(
         id: 'INVALID',
-        questionId: 'INVALID',
+        questionId: 999,
         examCategory: 'TEST',
         subject: 'Test',
         topic: 'Test',
@@ -181,10 +180,9 @@ void main() {
         correctAnswer: [], // No correct answers
         questionType: QuestionType.singleChoice,
         explanationText: 'Test explanation',
-        ardeProbability: ArdeLevel.medium,
+        ardeProbability: 0.5,
         difficulty: DifficultyLevel.easy,
         estimatedTimeSeconds: 30,
-        globalStats: sampleStats,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         createdBy: 'test',
@@ -221,7 +219,7 @@ void main() {
       // Create proper JSON structure for deserialization
       final json = {
         'id': 'TEST_001',
-        'questionId': 'TEST_001',
+        'questionId': 1,
         'examCategory': 'ECAT',
         'subject': 'Physics',
         'topic': 'Kinematics',
@@ -237,19 +235,10 @@ void main() {
         'questionType': 'singleChoice',
         'explanationText':
             'The acceleration due to gravity on Earth is approximately 9.8 m/s².',
-        'ardeProbability': 'high',
+        'ardeProbability': 0.8,
         'ardeFrequency': 5,
         'difficulty': 'medium',
         'estimatedTimeSeconds': 60,
-        'globalStats': {
-          'totalAttempts': 100,
-          'totalCorrect': 75,
-          'globalAccuracy': 0.75,
-          'averageTimeSeconds': 45.0,
-          'medianTimeSeconds': 42.0,
-          'p95TimeSeconds': 120.0,
-          'calculatedDifficulty': 0.6,
-        },
         'tags': ['physics', 'gravity', 'kinematics'],
         'createdAt': '2024-01-01T00:00:00.000Z',
         'updatedAt': '2024-01-01T00:00:00.000Z',

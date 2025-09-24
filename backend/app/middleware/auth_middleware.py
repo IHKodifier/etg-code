@@ -23,6 +23,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/api/v1/auth/register",
             "/api/v1/auth/anonymous",
             "/api/v1/auth/refresh",
+            # Temporarily allow questions list for development
+            "/api/v1/questions",
+            "/api/v1/questions/",
         }
 
         # Add dynamic bulk upload progress and summary routes

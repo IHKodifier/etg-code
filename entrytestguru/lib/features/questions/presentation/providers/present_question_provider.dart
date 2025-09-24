@@ -253,12 +253,8 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
 
     try {
       // TODO: Implement question stats from Firestore
-      // For now, return basic stats from the question object
-      return {
-        'totalAttempts': state.currentQuestion!.globalStats.totalAttempts,
-        'totalCorrect': state.currentQuestion!.globalStats.totalCorrect,
-        'accuracy': state.currentQuestion!.globalStats.globalAccuracy,
-      };
+      // For now, return placeholder stats since globalStats was removed
+      return {'totalAttempts': 0, 'totalCorrect': 0, 'accuracy': 0.0};
     } catch (e) {
       state = state.copyWith(
         errorMessage: 'Failed to load question stats: ${e.toString()}',

@@ -624,11 +624,18 @@ async def validate_bulk_upload_file(
 @router.post("/bulk-upload/preview")
 async def preview_bulk_upload(
     file: bytes = File(...),
-    filename: str = Form(...)
+    filename: str = Form(...),
+    current_user = Depends(get_current_user_dependency)
 ):
     """Parse and preview questions from bulk upload file"""
     try:
-        # Authentication bypassed at middleware level for testing
+        # Check user permissions - allow admin and contentCreator roles
+        check_user_permissions(
+            current_user,
+            required_roles=["admin", "contentCreator"],
+            required_tiers=["free", "pro"]
+        )
+
         # Parse file
         questions = await bulk_upload_service.parse_file(file, filename)
 
@@ -641,6 +648,7 @@ async def preview_bulk_upload(
             "errors": errors,
             "sample_questions": [
                 {
+                    "question_id": q.question_id,
                     "question_text": q.question_text,
                     "question_type": q.question_type,
                     "options_count": sum(1 for opt in [q.option_a, q.option_b, q.option_c, q.option_d, q.option_e, q.option_f] if opt)
@@ -649,6 +657,8 @@ async def preview_bulk_upload(
             ]
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to preview bulk upload: {e}")
         raise HTTPException(
@@ -660,13 +670,17 @@ async def preview_bulk_upload(
 @router.post("/bulk-upload", response_model=BulkUploadResponse)
 async def start_bulk_upload(
     file: bytes = File(...),
-    filename: str = Form(...)
+    filename: str = Form(...),
+    current_user = Depends(get_current_user_dependency)
 ):
     """Start bulk upload process"""
     try:
-        # Authentication bypassed at middleware level for testing
-        # Use a dummy user ID for testing
-        dummy_user_id = "test_admin_user"
+        # Check user permissions - allow admin and contentCreator roles
+        check_user_permissions(
+            current_user,
+            required_roles=["admin", "contentCreator"],
+            required_tiers=["free", "pro"]
+        )
 
         # Parse and validate file
         questions = await bulk_upload_service.parse_file(file, filename)
@@ -685,8 +699,10 @@ async def start_bulk_upload(
                 detail="No valid questions found in file"
             )
 
-        # Start bulk upload
-        upload_id = await bulk_upload_service.start_bulk_upload(valid_questions, dummy_user_id)
+        # Start bulk upload with authenticated user ID
+        logger.info(f"Starting bulk upload for {len(valid_questions)} questions")
+        upload_id = await bulk_upload_service.start_bulk_upload(valid_questions, current_user["id"])
+        logger.info(f"Bulk upload started with ID: {upload_id}")
 
         return BulkUploadResponse(
             upload_id=upload_id,
@@ -710,11 +726,18 @@ async def start_bulk_upload(
 
 @router.get("/bulk-upload/{upload_id}/progress", response_model=BulkUploadProgress)
 async def get_bulk_upload_progress(
-    upload_id: str
+    upload_id: str,
+    current_user = Depends(get_current_user_dependency)
 ):
     """Get progress of bulk upload"""
     try:
-        # Authentication bypassed at middleware level for testing
+        # Check user permissions - allow admin and contentCreator roles
+        check_user_permissions(
+            current_user,
+            required_roles=["admin", "contentCreator"],
+            required_tiers=["free", "pro"]
+        )
+
         progress = await bulk_upload_service.get_upload_progress(upload_id)
 
         if not progress:
@@ -737,11 +760,18 @@ async def get_bulk_upload_progress(
 
 @router.get("/bulk-upload/{upload_id}/summary", response_model=BulkUploadSummary)
 async def get_bulk_upload_summary(
-    upload_id: str
+    upload_id: str,
+    current_user = Depends(get_current_user_dependency)
 ):
     """Get summary of completed bulk upload"""
     try:
-        # Authentication bypassed at middleware level for testing
+        # Check user permissions - allow admin and contentCreator roles
+        check_user_permissions(
+            current_user,
+            required_roles=["admin", "contentCreator"],
+            required_tiers=["free", "pro"]
+        )
+
         summary = await bulk_upload_service.get_upload_summary(upload_id)
 
         if not summary:
@@ -765,14 +795,23 @@ async def get_bulk_upload_summary(
 @router.post("/bulk-upload/{upload_id}/retry")
 async def retry_failed_questions(
     upload_id: str,
-    row_numbers: List[int]
+    row_numbers: List[int],
+    current_user = Depends(get_current_user_dependency)
 ):
     """Retry uploading failed questions"""
     try:
-        # Authentication bypassed at middleware level for testing
+        # Check user permissions - allow admin and contentCreator roles
+        check_user_permissions(
+            current_user,
+            required_roles=["admin", "contentCreator"],
+            required_tiers=["free", "pro"]
+        )
+
         result = await bulk_upload_service.retry_failed_questions(upload_id, row_numbers)
         return result
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to retry questions: {e}")
         raise HTTPException(
@@ -782,11 +821,18 @@ async def retry_failed_questions(
 
 @router.delete("/bulk-upload/{upload_id}")
 async def cancel_bulk_upload(
-    upload_id: str
+    upload_id: str,
+    current_user = Depends(get_current_user_dependency)
 ):
     """Cancel ongoing bulk upload"""
     try:
-        # Authentication bypassed at middleware level for testing
+        # Check user permissions - allow admin and contentCreator roles
+        check_user_permissions(
+            current_user,
+            required_roles=["admin", "contentCreator"],
+            required_tiers=["free", "pro"]
+        )
+
         upload_data = bulk_upload_service.active_uploads.get(upload_id)
 
         if not upload_data:

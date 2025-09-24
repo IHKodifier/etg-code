@@ -67,7 +67,7 @@ class AddQuestionState with _$AddQuestionState {
 
     return Question(
       id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-      questionId: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+      questionId: DateTime.now().millisecondsSinceEpoch,
       examCategory: examCategory,
       subject: subject,
       topic: topic,
@@ -79,18 +79,9 @@ class AddQuestionState with _$AddQuestionState {
       correctAnswer: correctAnswers,
       questionType: questionType,
       explanationText: explanationText ?? '',
-      ardeProbability: ArdeLevel.medium, // Default for new questions
+      ardeProbability: 0.5, // Default for new questions
       difficulty: difficulty,
       estimatedTimeSeconds: estimatedTimeSeconds,
-      globalStats: const QuestionPerformanceStats(
-        totalAttempts: 0,
-        totalCorrect: 0,
-        globalAccuracy: 0.0,
-        averageTimeSeconds: 0.0,
-        medianTimeSeconds: 0.0,
-        p95TimeSeconds: 0.0,
-        calculatedDifficulty: 0.5,
-      ),
       tags: tags,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),

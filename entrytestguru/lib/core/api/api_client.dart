@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 import '../services/firebase_auth_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
@@ -10,7 +11,16 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 });
 
 class ApiClient {
-  static const String baseUrl = 'http://localhost:8000/api/v1';
+  // Use different URLs for web vs mobile/desktop
+  static String get baseUrl {
+    // Web browsers can't connect to localhost, so use 127.0.0.1 for web
+    // Backend runs on port 8080 to avoid conflict with Flutter web app on 8080
+    if (kIsWeb) {
+      return 'http://127.0.0.1:8080/api/v1';
+    }
+    return 'http://localhost:8080/api/v1';
+  }
+
   static const _storage = FlutterSecureStorage();
 
   late final Dio _dio;

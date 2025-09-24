@@ -35,7 +35,7 @@ class BulkUploadService:
 
     def _has_required_columns(self, df: pd.DataFrame) -> bool:
         """Check if DataFrame has required columns for bulk upload"""
-        required_columns = ['questionText', 'questionType', 'correctAnswers']
+        required_columns = ['questionId', 'questionText', 'questionType', 'correctAnswers']
         return all(col in df.columns for col in required_columns)
 
     async def validate_file(self, file_content: bytes, filename: str) -> Tuple[bool, str]:
@@ -154,7 +154,17 @@ class BulkUploadService:
             questions = []
             for index, row in df.iterrows():
                 try:
+                    # Parse questionId - convert to int if provided, otherwise None for auto-generation
+                    question_id = None
+                    if pd.notna(row.get('questionId')) and str(row.get('questionId', '')).strip():
+                        try:
+                            question_id = int(float(row.get('questionId')))
+                        except (ValueError, TypeError):
+                            logger.warning(f"Invalid questionId at row {index + 1}: {row.get('questionId')}, will auto-generate")
+                            question_id = None
+
                     question = BulkUploadQuestion(
+                        question_id=question_id,
                         question_text=str(row.get('questionText', '')).strip(),
                         question_type=str(row.get('questionType', '')).strip(),
                         exam_category=str(row.get('examCategory', '')) if pd.notna(row.get('examCategory')) else None,
@@ -172,7 +182,7 @@ class BulkUploadService:
                         difficulty=str(row.get('difficulty', '')) if pd.notna(row.get('difficulty')) else None,
                         tags=str(row.get('tags', '')) if pd.notna(row.get('tags')) else None,
                         estimated_time_seconds=int(row.get('estimatedTimeSeconds', 60)) if pd.notna(row.get('estimatedTimeSeconds')) else None,
-                        arde_probability=str(row.get('ardeProbability', '')) if pd.notna(row.get('ardeProbability')) else None,
+                        arde_probability=float(row.get('ardeProbability', 0.5)) if pd.notna(row.get('ardeProbability')) else None,
                         question_image_urls=str(row.get('questionImageUrls', '')) if pd.notna(row.get('questionImageUrls')) else None,
                         explanation_video_url=str(row.get('explanationVideoUrl', '')) if pd.notna(row.get('explanationVideoUrl')) else None,
                     )
@@ -193,8 +203,10 @@ class BulkUploadService:
     async def validate_questions(self, questions: List[BulkUploadQuestion]) -> List[Dict[str, Any]]:
         """Validate parsed questions and return errors"""
         errors = []
+        logger.info(f"Validating {len(questions)} questions")
 
         for i, question in enumerate(questions):
+            logger.info(f"Validating question {i+1}: text='{question.question_text[:50]}...', correct_answers='{question.correct_answers}'")
             question_errors = []
 
             # Validate required fields
@@ -294,20 +306,40 @@ class BulkUploadService:
                         question_result['status'] = 'processing'
                         await self._update_progress(upload_id)
 
-                        # Convert BulkUploadQuestion to QuestionCreateRequest
-                        create_request = await self._convert_to_create_request(question, upload_data['user_id'])
+                        # Handle questionId assignment
+                        assigned_question_id = question.question_id
+                        if assigned_question_id is None:
+                            # Auto-generate questionId if not provided
+                            assigned_question_id = await question_service.get_next_question_id()
+                            logger.info(f"Auto-generated questionId: {assigned_question_id} for upload {upload_id}")
 
-                        # Create the question
-                        question_id = await question_service.create_question(
-                            question_data=create_request.dict(),
-                            created_by=upload_data['user_id']
-                        )
+                        # Check if question with this ID already exists
+                        existing_question = await question_service.get_question_by_question_id(assigned_question_id)
 
-                        # Update success
-                        question_result['status'] = 'success'
-                        question_result['question_id'] = question_id
-                        upload_data['successful'] += 1
-                        logger.info(f"Created question {question_id} for upload {upload_id}")
+                        if existing_question:
+                            # Update existing question
+                            question_dict = await self._convert_to_create_request(question, upload_data['user_id'], assigned_question_id)
+                            updated_question_id = await question_service.update_question(
+                                question_id=existing_question['id'],
+                                question_data=question_dict,
+                                updated_by=upload_data['user_id']
+                            )
+                            question_result['status'] = 'success'
+                            question_result['question_id'] = assigned_question_id
+                            upload_data['successful'] += 1
+                            logger.info(f"Updated existing question {assigned_question_id} (Firestore ID: {updated_question_id}) for upload {upload_id}")
+                        else:
+                            # Create new question
+                            question_dict = await self._convert_to_create_request(question, upload_data['user_id'], assigned_question_id)
+                            firestore_question_id = await question_service.create_question(
+                                question_data=question_dict,
+                                created_by=upload_data['user_id'],
+                                question_id=assigned_question_id
+                            )
+                            question_result['status'] = 'success'
+                            question_result['question_id'] = assigned_question_id
+                            upload_data['successful'] += 1
+                            logger.info(f"Created new question {assigned_question_id} (Firestore ID: {firestore_question_id}) for upload {upload_id}")
 
                     except Exception as e:
                         # Update failure
@@ -340,7 +372,7 @@ class BulkUploadService:
         # Final progress update
         await self._update_progress(upload_id)
 
-    async def _convert_to_create_request(self, question: BulkUploadQuestion, user_id: str) -> QuestionCreateRequest:
+    async def _convert_to_create_request(self, question: BulkUploadQuestion, user_id: str, question_id: Optional[int] = None) -> Dict[str, Any]:
         """Convert BulkUploadQuestion to QuestionCreateRequest"""
         options = []
 
@@ -355,13 +387,16 @@ class BulkUploadService:
         }
 
         correct_ids = [ans.strip() for ans in question.correct_answers.split(',')]
+        logger.info(f"Question {question_id}: correct_answers='{question.correct_answers}', correct_ids={correct_ids}")
 
         for option_id, option_text in option_map.items():
             if option_text:
+                is_correct = option_id in correct_ids
+                logger.info(f"Question {question_id}: option {option_id}='{option_text}' -> is_correct={is_correct}")
                 options.append(QuestionOption(
                     option_id=option_id,
                     text=option_text,
-                    is_correct=option_id in correct_ids
+                    is_correct=is_correct
                 ))
 
         # Convert question type from user format to internal format
@@ -379,24 +414,17 @@ class BulkUploadService:
         }
         internal_difficulty = difficulty_mapping.get(question.difficulty, question.difficulty) or 'medium'
 
-        # Convert arde_probability from decimal to categorical
-        internal_arde_probability = 'medium'  # default
-        if question.arde_probability:
-            try:
-                prob_value = float(question.arde_probability)
-                if prob_value >= 0.8:
-                    internal_arde_probability = 'high'
-                elif prob_value >= 0.4:
-                    internal_arde_probability = 'medium'
-                else:
-                    internal_arde_probability = 'low'
-            except ValueError:
-                internal_arde_probability = 'medium'
+        # Use arde_probability as decimal value directly (no conversion to enum)
+        arde_probability = question.arde_probability if question.arde_probability is not None else 0.5
 
         # All questions are MCQ types - convert correct_answers string to list
         correct_answer = [ans.strip() for ans in question.correct_answers.split(',')]
 
-        return QuestionCreateRequest(
+        logger.info(f"Creating QuestionCreateRequest for question {question_id}:")
+        logger.info(f"  correct_answer list: {correct_answer}")
+        logger.info(f"  options with is_correct: {[(opt.option_id, opt.is_correct) for opt in options]}")
+
+        create_request = QuestionCreateRequest(
             question_text=question.question_text,
             options=options,
             correct_answer=correct_answer,
@@ -404,13 +432,42 @@ class BulkUploadService:
             subject=question.subject or 'General',
             topic=question.topic or 'General',
             difficulty=internal_difficulty,
-            arde_probability=internal_arde_probability,
+            arde_probability=arde_probability,  # Now a float value
             historical_frequency=0,  # Will be updated based on actual data
             explanation={'text': question.explanation_text} if question.explanation_text else None,
             video_explanation_url=question.explanation_video_url,
             references=[],  # Could be parsed from tags or separate field
             arde_context=None
         )
+
+        logger.info(f"QuestionCreateRequest created successfully")
+
+        # Convert to dict manually to avoid serialization issues
+        question_dict = {
+            "question_text": create_request.question_text,
+            "options": [
+                {
+                    "option_id": opt.option_id,
+                    "text": opt.text,
+                    "is_correct": opt.is_correct
+                }
+                for opt in create_request.options
+            ],
+            "correct_answer": create_request.correct_answer,
+            "exam_type": create_request.exam_type,
+            "subject": create_request.subject,
+            "topic": create_request.topic,
+            "difficulty": create_request.difficulty,
+            "arde_probability": create_request.arde_probability,
+            "historical_frequency": create_request.historical_frequency,
+            "explanation": create_request.explanation,
+            "video_explanation_url": create_request.video_explanation_url,
+            "references": create_request.references,
+            "arde_context": create_request.arde_context
+        }
+
+        logger.info(f"Question dict created: options with is_correct = {[(opt['option_id'], opt['is_correct']) for opt in question_dict['options']]}")
+        return question_dict
 
     async def _update_progress(self, upload_id: str):
         """Update progress for upload"""
@@ -491,18 +548,39 @@ class BulkUploadService:
                 question_result['status'] = 'processing'
                 question_result['error'] = None
 
-                # Convert and create question
-                create_request = await self._convert_to_create_request(question, upload_data['user_id'])
-                question_id = await question_service.create_question(
-                    question_data=create_request.dict(),
-                    created_by=upload_data['user_id']
-                )
+                # Handle questionId assignment (should already be set from original attempt)
+                assigned_question_id = question.question_id
+                if assigned_question_id is None:
+                    # This shouldn't happen in retry, but handle it just in case
+                    assigned_question_id = await question_service.get_next_question_id()
 
-                # Update success
-                question_result['status'] = 'success'
-                question_result['question_id'] = question_id
-                upload_data['successful'] += 1
-                upload_data['failed'] -= 1
+                # Check if question with this ID already exists
+                existing_question = await question_service.get_question_by_question_id(assigned_question_id)
+
+                if existing_question:
+                    # Update existing question
+                    question_dict = await self._convert_to_create_request(question, upload_data['user_id'], assigned_question_id)
+                    updated_question_id = await question_service.update_question(
+                        question_id=existing_question['id'],
+                        question_data=question_dict,
+                        updated_by=upload_data['user_id']
+                    )
+                    question_result['status'] = 'success'
+                    question_result['question_id'] = assigned_question_id
+                    upload_data['successful'] += 1
+                    upload_data['failed'] -= 1
+                else:
+                    # Create new question
+                    question_dict = await self._convert_to_create_request(question, upload_data['user_id'], assigned_question_id)
+                    firestore_question_id = await question_service.create_question(
+                        question_data=question_dict,
+                        created_by=upload_data['user_id'],
+                        question_id=assigned_question_id
+                    )
+                    question_result['status'] = 'success'
+                    question_result['question_id'] = assigned_question_id
+                    upload_data['successful'] += 1
+                    upload_data['failed'] -= 1
 
                 # Remove from errors
                 upload_data['errors'] = [e for e in upload_data['errors'] if e['row'] != row_num]
