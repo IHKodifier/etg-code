@@ -123,6 +123,7 @@ async def get_filtered_questions(
     subjects: Optional[str] = None,
     topics: Optional[str] = None,
     difficulties: Optional[str] = None,
+    question_types: Optional[str] = None,
     arde_probabilities: Optional[str] = None,
     search_query: Optional[str] = None,
     tags: Optional[str] = None,
@@ -142,6 +143,7 @@ async def get_filtered_questions(
         subject_list = subjects.split(',') if subjects else None
         topic_list = topics.split(',') if topics else None
         difficulty_list = difficulties.split(',') if difficulties else None
+        question_type_list = question_types.split(',') if question_types else None
         arde_probability_list = arde_probabilities.split(',') if arde_probabilities else None
         tag_list = tags.split(',') if tags else None
 
@@ -151,6 +153,7 @@ async def get_filtered_questions(
             subjects=subject_list,
             topics=topic_list,
             difficulties=difficulty_list,
+            question_types=question_type_list,
             arde_probabilities=arde_probability_list,
             search_query=search_query,
             tags=tag_list,

@@ -103,3 +103,54 @@ enum QuestionStatus {
   /// Question is archived/inactive
   archived,
 }
+
+/// Sort options for the quick filter system
+enum QuickSortOption {
+  /// Newest questions first
+  newestFirst,
+
+  /// Oldest questions first
+  oldestFirst,
+
+  /// Sort by question ID ascending
+  questionIdAsc,
+
+  /// Sort by question ID descending
+  questionIdDesc,
+
+  /// Sort by difficulty ascending
+  difficultyAsc,
+
+  /// Sort by difficulty descending
+  difficultyDesc,
+}
+
+/// Approval status filter options
+enum ApprovalStatusFilter {
+  /// Show all questions
+  all,
+
+  /// Show only pending questions
+  pending,
+
+  /// Show only approved questions
+  approved,
+
+  /// Show only rejected questions
+  rejected,
+
+  /// Show only draft questions
+  draft,
+}
+
+/// User filter options
+enum UserFilterOption {
+  /// Show questions from all users
+  allUsers,
+
+  /// Show only questions created by current user
+  currentUser,
+
+  /// Show questions from specific user (requires userId)
+  specificUser,
+}

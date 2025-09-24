@@ -8,6 +8,7 @@ import '../providers/add_question_provider.dart';
 import 'add_question_widget.dart';
 import 'bulk_upload_widget.dart';
 import 'bulk_upload_widget.dart';
+import 'question_filters_widget.dart';
 
 class QuestionBankListWidget extends ConsumerStatefulWidget {
   const QuestionBankListWidget({super.key});
@@ -101,6 +102,9 @@ class _QuestionBankListWidgetState
               ],
             ),
           ),
+
+          // Quick Filters
+          const QuestionFiltersWidget(),
 
           // Questions list or empty state
           if (questions.isEmpty)

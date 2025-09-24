@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/question_api_service.dart';
+import '../../data/services/realtime_question_service.dart';
 import '../../data/models/question.dart';
 import '../../data/models/question_filter.dart';
 import '../../data/models/question_attempt.dart';
@@ -11,7 +12,12 @@ final presentQuestionNotifierProvider =
     StateNotifierProvider<PresentQuestionNotifier, PresentQuestionState>((ref) {
       final questionApiService = ref.watch(QuestionApiService.provider);
       final firestoreService = ref.watch(firestoreServiceProvider);
-      return PresentQuestionNotifier(questionApiService, firestoreService);
+      final realtimeService = ref.watch(realtimeQuestionServiceProvider);
+      return PresentQuestionNotifier(
+        questionApiService,
+        firestoreService,
+        realtimeService,
+      );
     });
 
 /// StreamProvider for real-time question updates
@@ -40,9 +46,30 @@ final questionsStreamProvider = StreamProvider<List<Question>>((ref) {
 class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
   final QuestionApiService _questionApiService;
   final FirestoreService _firestoreService;
+  final RealtimeQuestionService _realtimeService;
 
-  PresentQuestionNotifier(this._questionApiService, this._firestoreService)
-    : super(const PresentQuestionState());
+  PresentQuestionNotifier(
+    this._questionApiService,
+    this._firestoreService,
+    this._realtimeService,
+  ) : super(const PresentQuestionState()) {
+    // Listen to real-time updates
+    _setupRealtimeListener();
+  }
+
+  /// Setup real-time listener for question updates
+  void _setupRealtimeListener() {
+    _realtimeService.questionsStream.listen(
+      (questions) {
+        // Update state with real-time data
+        state = state.copyWithQuestionsLoaded(questions);
+      },
+      onError: (error) {
+        print('Real-time listener error: $error');
+        // Fall back to API polling if real-time fails
+      },
+    );
+  }
 
   /// Load questions based on filter with pagination
   Future<void> loadQuestions(
@@ -58,6 +85,9 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
       errorMessage: null,
       currentFilter: filter,
     );
+
+    // Update real-time service with new filter
+    _realtimeService.updateFilter(filter);
 
     try {
       final offset = loadMore ? state.questionQueue.length : 0;
@@ -120,6 +150,35 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
 
         // Ensure required fields have default values if null
         final safeData = _sanitizeQuestionData(data);
+
+        // Fetch user information for createdByName
+        final createdBy = safeData['createdBy'];
+        if (createdBy != null && createdBy != 'unknown') {
+          try {
+            final userSnapshot = await _firestoreService.getDocument(
+              'users',
+              createdBy,
+            );
+            if (userSnapshot.exists) {
+              final userData = userSnapshot.data() as Map<String, dynamic>?;
+              if (userData != null && userData['profile'] != null) {
+                safeData['createdByName'] =
+                    userData['profile']['displayName'] ??
+                    userData['profile']['name'] ??
+                    'Unknown User';
+              } else {
+                safeData['createdByName'] = 'Unknown User';
+              }
+            } else {
+              safeData['createdByName'] = 'Unknown User';
+            }
+          } catch (e) {
+            print('Error fetching user data for $createdBy: $e');
+            safeData['createdByName'] = 'Unknown User';
+          }
+        } else {
+          safeData['createdByName'] = 'Unknown User';
+        }
 
         final question = Question.fromJson(safeData);
         questions.add(question);
@@ -355,6 +414,21 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
       if (value == null) return null;
       if (value is DateTime) return value.toIso8601String();
       if (value is String) return value;
+      // Handle Firestore Timestamp
+      if (value != null && value.toString().contains('Timestamp')) {
+        try {
+          // Firestore Timestamp has seconds and nanoseconds
+          final timestamp = value as dynamic;
+          if (timestamp.seconds != null) {
+            final dateTime = DateTime.fromMillisecondsSinceEpoch(
+              timestamp.seconds * 1000,
+            );
+            return dateTime.toIso8601String();
+          }
+        } catch (e) {
+          print('Error parsing Firestore timestamp: $e');
+        }
+      }
       return null;
     }
 
@@ -364,10 +438,7 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
         data['id'],
         'unknown_${DateTime.now().millisecondsSinceEpoch}',
       ),
-      'questionId': _safeString(
-        data['questionId'] ?? data['id'],
-        'unknown_${DateTime.now().millisecondsSinceEpoch}',
-      ),
+      'questionId': _safeInt(data['questionId'] ?? data['question_id'], 0),
       'examCategory': _safeString(
         data['examCategory'] ?? data['exam_type'],
         'General',
@@ -402,9 +473,9 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
       'references': data['references'] ?? [],
 
       // Required ARDE fields with defaults
-      'ardeProbability': _safeString(
+      'ardeProbability': _safeDouble(
         data['ardeProbability'] ?? data['arde_probability'],
-        'medium',
+        0.5,
       ),
       'ardeFrequency': _safeInt(
         data['ardeFrequency'] ?? data['historical_frequency'],

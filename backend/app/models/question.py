@@ -95,6 +95,18 @@ class QuestionResponse(BaseModel):
     reviewed_at: Optional[datetime] = None
     approved_at: Optional[datetime] = None
 
+    @validator('question_id', pre=True)
+    def validate_question_id(cls, v):
+        """Ensure question_id is always an integer"""
+        if isinstance(v, str):
+            # Try to parse as int, fallback to hash for string IDs
+            try:
+                return int(v)
+            except ValueError:
+                # For string IDs, use hash code as fallback
+                return hash(v) % 2147483647  # Max int32 value
+        return v
+
     class Config:
         from_attributes = True
 

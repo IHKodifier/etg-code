@@ -26,6 +26,7 @@ mixin _$QuestionFilter {
   List<String>? get subjects => throw _privateConstructorUsedError;
   List<String>? get topics => throw _privateConstructorUsedError;
   List<DifficultyLevel>? get difficulties => throw _privateConstructorUsedError;
+  List<String>? get questionTypes => throw _privateConstructorUsedError;
   List<ArdeLevel>? get ardeProbabilities =>
       throw _privateConstructorUsedError; // Advanced Filters
   int? get minArdeFrequency => throw _privateConstructorUsedError;
@@ -66,6 +67,7 @@ abstract class $QuestionFilterCopyWith<$Res> {
     List<String>? subjects,
     List<String>? topics,
     List<DifficultyLevel>? difficulties,
+    List<String>? questionTypes,
     List<ArdeLevel>? ardeProbabilities,
     int? minArdeFrequency,
     DateTime? minCreatedDate,
@@ -102,6 +104,7 @@ class _$QuestionFilterCopyWithImpl<$Res, $Val extends QuestionFilter>
     Object? subjects = freezed,
     Object? topics = freezed,
     Object? difficulties = freezed,
+    Object? questionTypes = freezed,
     Object? ardeProbabilities = freezed,
     Object? minArdeFrequency = freezed,
     Object? minCreatedDate = freezed,
@@ -135,6 +138,10 @@ class _$QuestionFilterCopyWithImpl<$Res, $Val extends QuestionFilter>
                 ? _value.difficulties
                 : difficulties // ignore: cast_nullable_to_non_nullable
                       as List<DifficultyLevel>?,
+            questionTypes: freezed == questionTypes
+                ? _value.questionTypes
+                : questionTypes // ignore: cast_nullable_to_non_nullable
+                      as List<String>?,
             ardeProbabilities: freezed == ardeProbabilities
                 ? _value.ardeProbabilities
                 : ardeProbabilities // ignore: cast_nullable_to_non_nullable
@@ -211,6 +218,7 @@ abstract class _$$QuestionFilterImplCopyWith<$Res>
     List<String>? subjects,
     List<String>? topics,
     List<DifficultyLevel>? difficulties,
+    List<String>? questionTypes,
     List<ArdeLevel>? ardeProbabilities,
     int? minArdeFrequency,
     DateTime? minCreatedDate,
@@ -246,6 +254,7 @@ class __$$QuestionFilterImplCopyWithImpl<$Res>
     Object? subjects = freezed,
     Object? topics = freezed,
     Object? difficulties = freezed,
+    Object? questionTypes = freezed,
     Object? ardeProbabilities = freezed,
     Object? minArdeFrequency = freezed,
     Object? minCreatedDate = freezed,
@@ -279,6 +288,10 @@ class __$$QuestionFilterImplCopyWithImpl<$Res>
             ? _value._difficulties
             : difficulties // ignore: cast_nullable_to_non_nullable
                   as List<DifficultyLevel>?,
+        questionTypes: freezed == questionTypes
+            ? _value._questionTypes
+            : questionTypes // ignore: cast_nullable_to_non_nullable
+                  as List<String>?,
         ardeProbabilities: freezed == ardeProbabilities
             ? _value._ardeProbabilities
             : ardeProbabilities // ignore: cast_nullable_to_non_nullable
@@ -348,6 +361,7 @@ class _$QuestionFilterImpl extends _QuestionFilter {
     final List<String>? subjects,
     final List<String>? topics,
     final List<DifficultyLevel>? difficulties,
+    final List<String>? questionTypes,
     final List<ArdeLevel>? ardeProbabilities,
     this.minArdeFrequency,
     this.minCreatedDate,
@@ -366,6 +380,7 @@ class _$QuestionFilterImpl extends _QuestionFilter {
        _subjects = subjects,
        _topics = topics,
        _difficulties = difficulties,
+       _questionTypes = questionTypes,
        _ardeProbabilities = ardeProbabilities,
        _tags = tags,
        super._();
@@ -411,6 +426,16 @@ class _$QuestionFilterImpl extends _QuestionFilter {
     final value = _difficulties;
     if (value == null) return null;
     if (_difficulties is EqualUnmodifiableListView) return _difficulties;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  final List<String>? _questionTypes;
+  @override
+  List<String>? get questionTypes {
+    final value = _questionTypes;
+    if (value == null) return null;
+    if (_questionTypes is EqualUnmodifiableListView) return _questionTypes;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(value);
   }
@@ -470,7 +495,7 @@ class _$QuestionFilterImpl extends _QuestionFilter {
 
   @override
   String toString() {
-    return 'QuestionFilter(examCategories: $examCategories, subjects: $subjects, topics: $topics, difficulties: $difficulties, ardeProbabilities: $ardeProbabilities, minArdeFrequency: $minArdeFrequency, minCreatedDate: $minCreatedDate, maxCreatedDate: $maxCreatedDate, showWeakAreas: $showWeakAreas, showUnattempted: $showUnattempted, showIncorrect: $showIncorrect, showBookmarked: $showBookmarked, searchQuery: $searchQuery, tags: $tags, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, lastDocumentId: $lastDocumentId)';
+    return 'QuestionFilter(examCategories: $examCategories, subjects: $subjects, topics: $topics, difficulties: $difficulties, questionTypes: $questionTypes, ardeProbabilities: $ardeProbabilities, minArdeFrequency: $minArdeFrequency, minCreatedDate: $minCreatedDate, maxCreatedDate: $maxCreatedDate, showWeakAreas: $showWeakAreas, showUnattempted: $showUnattempted, showIncorrect: $showIncorrect, showBookmarked: $showBookmarked, searchQuery: $searchQuery, tags: $tags, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, lastDocumentId: $lastDocumentId)';
   }
 
   @override
@@ -487,6 +512,10 @@ class _$QuestionFilterImpl extends _QuestionFilter {
             const DeepCollectionEquality().equals(
               other._difficulties,
               _difficulties,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._questionTypes,
+              _questionTypes,
             ) &&
             const DeepCollectionEquality().equals(
               other._ardeProbabilities,
@@ -519,12 +548,13 @@ class _$QuestionFilterImpl extends _QuestionFilter {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     const DeepCollectionEquality().hash(_examCategories),
     const DeepCollectionEquality().hash(_subjects),
     const DeepCollectionEquality().hash(_topics),
     const DeepCollectionEquality().hash(_difficulties),
+    const DeepCollectionEquality().hash(_questionTypes),
     const DeepCollectionEquality().hash(_ardeProbabilities),
     minArdeFrequency,
     minCreatedDate,
@@ -539,7 +569,7 @@ class _$QuestionFilterImpl extends _QuestionFilter {
     sortDirection,
     limit,
     lastDocumentId,
-  );
+  ]);
 
   /// Create a copy of QuestionFilter
   /// with the given fields replaced by the non-null parameter values.
@@ -564,6 +594,7 @@ abstract class _QuestionFilter extends QuestionFilter {
     final List<String>? subjects,
     final List<String>? topics,
     final List<DifficultyLevel>? difficulties,
+    final List<String>? questionTypes,
     final List<ArdeLevel>? ardeProbabilities,
     final int? minArdeFrequency,
     final DateTime? minCreatedDate,
@@ -593,6 +624,8 @@ abstract class _QuestionFilter extends QuestionFilter {
   List<String>? get topics;
   @override
   List<DifficultyLevel>? get difficulties;
+  @override
+  List<String>? get questionTypes;
   @override
   List<ArdeLevel>? get ardeProbabilities; // Advanced Filters
   @override

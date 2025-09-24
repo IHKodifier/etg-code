@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+nfrom typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
 from app.core.database import db
@@ -163,6 +163,7 @@ class QuestionService:
         subjects: Optional[List[str]] = None,
         topics: Optional[List[str]] = None,
         difficulties: Optional[List[str]] = None,
+        question_types: Optional[List[str]] = None,
         arde_probabilities: Optional[List[str]] = None,
         search_query: Optional[str] = None,
         tags: Optional[List[str]] = None,
@@ -184,6 +185,8 @@ class QuestionService:
                 filters.append({"field": "topic", "operator": "in", "value": topics})
             if difficulties and len(difficulties) > 0:
                 filters.append({"field": "difficulty", "operator": "in", "value": difficulties})
+            if question_types and len(question_types) > 0:
+                filters.append({"field": "question_type", "operator": "in", "value": question_types})
             if arde_probabilities and len(arde_probabilities) > 0:
                 # Convert enum values to decimal ranges for filtering
                 decimal_ranges = []

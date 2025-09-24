@@ -88,8 +88,21 @@ class Question with _$Question {
       json['correctAnswer'] = [json['correctAnswer'] as String];
     }
 
-    // Handle null values for boolean fields that have defaults
+    // Handle questionId field - convert string to int if necessary
     json = Map<String, dynamic>.from(json);
+    if (json['questionId'] is String) {
+      final questionIdStr = json['questionId'] as String;
+      // Try to parse as int, fallback to hash code for string IDs
+      final parsedId = int.tryParse(questionIdStr);
+      if (parsedId != null) {
+        json['questionId'] = parsedId;
+      } else {
+        // For string IDs like "unknown_123", use hash code as fallback
+        json['questionId'] = questionIdStr.hashCode.abs();
+      }
+    }
+
+    // Handle null values for boolean fields that have defaults
     if (json['isBookmarked'] == null) {
       json['isBookmarked'] = false;
     }
