@@ -28,6 +28,8 @@ class AddQuestionState with _$AddQuestionState {
     @Default(false) bool isSuccess,
     @Default(false) bool isEditing,
     String? editingQuestionId,
+    int?
+    originalQuestionId, // Store the original numeric questionId when editing
   }) = _AddQuestionState;
 
   const AddQuestionState._();

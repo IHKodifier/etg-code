@@ -1,4 +1,4 @@
-nfrom typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
 from app.core.database import db

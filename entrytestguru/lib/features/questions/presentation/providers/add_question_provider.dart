@@ -247,6 +247,7 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
       tags: question.tags,
       isEditing: true,
       editingQuestionId: question.id,
+      originalQuestionId: question.questionId, // Store the numeric questionId
     );
   }
 
@@ -263,72 +264,45 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final question = state.toQuestion();
-      if (question == null) {
-        throw Exception('Failed to create question object');
-      }
-
       // Get current user
       final currentUser = _authService.currentUser;
       if (currentUser == null) {
         throw Exception('User must be logged in to create questions');
       }
 
-      // Create question data for Firestore
-      final questionData = {
-        'id': state.isEditing ? state.editingQuestionId! : question.id,
-        'questionId': state.isEditing
-            ? state.editingQuestionId!
-            : question.questionId,
-        'examCategory': question.examCategory,
-        'subject': question.subject,
-        'topic': question.topic,
-        'subTopic': question.subTopic,
-        'questionText': question.questionText,
-        'questionImageUrls': question.questionImageUrls,
-        'questionLatex': question.questionLatex,
-        'options': question.options
-            .map(
-              (option) => {
-                'id': option.id,
-                'text': option.text,
-                'imageUrl': option.imageUrl,
-                'latex': option.latex,
-              },
-            )
-            .toList(),
-        'correctAnswer': question.correctAnswer,
-        'questionType': question.questionType.name,
-        'explanationText': question.explanationText,
-        'explanationVideoUrl': question.explanationVideoUrl,
-        'explanationSteps': question.explanationSteps,
-        'references': question.references,
-        'ardeProbability': question.ardeProbability,
-        'ardeFrequency': question.ardeFrequency,
-        'ardeAppearanceYears': question.ardeAppearanceYears,
-        'ardeNotes': question.ardeNotes,
-        'ardeContext': question.ardeContext,
-        'difficulty': question.difficulty.name,
-        'estimatedTimeSeconds': question.estimatedTimeSeconds,
-        'tags': question.tags,
-        'createdAt': state.isEditing
-            ? question.createdAt.toIso8601String()
-            : question.createdAt.toIso8601String(),
+      // For new questions, get the next auto-incrementing questionId
+      int nextQuestionId;
+      if (state.isEditing) {
+        // Use the existing questionId for editing
+        nextQuestionId = state.originalQuestionId!;
+      } else {
+        // Fetch the maximum questionId and increment by 1
+        nextQuestionId = await _getNextQuestionId();
+      }
+
+      // Create question with the correct questionId
+      final question = state.toQuestion();
+      if (question == null) {
+        throw Exception('Failed to create question object');
+      }
+
+      // Update question with the correct questionId
+      final questionWithId = question.copyWith(questionId: nextQuestionId);
+
+      // Use the model's toJson() method for consistent serialization
+      final questionData = questionWithId.toJson();
+
+      // Add/update Firestore-specific fields that aren't in the model
+      questionData.addAll({
         'updatedAt': DateTime.now().toIso8601String(),
         'createdBy': state.isEditing ? question.createdBy : currentUser.id,
-        'isActive': question.isActive,
-        'version': state.isEditing
-            ? (question.version ?? 1) + 1
-            : question.version,
-        'status': question.status,
-        'approvalStatus': question.approvalStatus,
-        'submittedAt': question.submittedAt.toIso8601String(),
-        'reviewerId': question.reviewerId,
-        'reviewerName': question.reviewerName,
-        'reviewComments': question.reviewComments,
-        'reviewedAt': question.reviewedAt?.toIso8601String(),
-        'approvedAt': question.approvedAt?.toIso8601String(),
-      };
+        'isActive': true, // Ensure questions are active by default
+      });
+
+      // For editing, update the version
+      if (state.isEditing) {
+        questionData['version'] = (questionData['version'] ?? 1) + 1;
+      }
 
       // Save or update to Firestore
       if (state.isEditing) {
@@ -351,6 +325,40 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
         isLoading: false,
         errorMessage: 'Failed to save question: ${e.toString()}',
       );
+    }
+  }
+
+  /// Get the next auto-incrementing questionId by finding the maximum existing questionId
+  Future<int> _getNextQuestionId() async {
+    try {
+      // Query Firestore to get the maximum questionId
+      final querySnapshot = await _firestoreService.firestore
+          .collection('questions')
+          .orderBy('questionId', descending: true)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final maxQuestionId = querySnapshot.docs.first.data()['questionId'];
+        if (maxQuestionId is int) {
+          return maxQuestionId + 1;
+        } else if (maxQuestionId is String) {
+          // Handle legacy string IDs by parsing or using hash
+          final parsed = int.tryParse(maxQuestionId);
+          if (parsed != null) {
+            return parsed + 1;
+          } else {
+            return maxQuestionId.hashCode.abs() + 1;
+          }
+        }
+      }
+
+      // If no questions exist, start with 1
+      return 1;
+    } catch (e) {
+      print('Error fetching max questionId: $e');
+      // Fallback to timestamp-based ID if query fails
+      return DateTime.now().millisecondsSinceEpoch;
     }
   }
 }

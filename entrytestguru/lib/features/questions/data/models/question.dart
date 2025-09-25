@@ -280,6 +280,13 @@ class Question with _$Question {
     return lastAttempt?.timeSpentFormatted;
   }
 
+  /// Returns the ARDE level based on probability
+  ArdeLevel get ardeLevel {
+    if (ardeProbability >= 0.7) return ArdeLevel.high;
+    if (ardeProbability >= 0.3) return ArdeLevel.medium;
+    return ArdeLevel.low;
+  }
+
   /// Creates a copy with updated user-specific data
   Question copyWithUserData({
     bool? isBookmarked,

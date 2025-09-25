@@ -442,31 +442,11 @@ class BulkUploadService:
 
         logger.info(f"QuestionCreateRequest created successfully")
 
-        # Convert to dict manually to avoid serialization issues
-        question_dict = {
-            "question_text": create_request.question_text,
-            "options": [
-                {
-                    "option_id": opt.option_id,
-                    "text": opt.text,
-                    "is_correct": opt.is_correct
-                }
-                for opt in create_request.options
-            ],
-            "correct_answer": create_request.correct_answer,
-            "exam_type": create_request.exam_type,
-            "subject": create_request.subject,
-            "topic": create_request.topic,
-            "difficulty": create_request.difficulty,
-            "arde_probability": create_request.arde_probability,
-            "historical_frequency": create_request.historical_frequency,
-            "explanation": create_request.explanation,
-            "video_explanation_url": create_request.video_explanation_url,
-            "references": create_request.references,
-            "arde_context": create_request.arde_context
-        }
+        # Use model-based serialization instead of manual dictionary construction
+        # This ensures consistency and prevents field name mismatches
+        question_dict = create_request.dict()
 
-        logger.info(f"Question dict created: options with is_correct = {[(opt['option_id'], opt['is_correct']) for opt in question_dict['options']]}")
+        logger.info(f"Question dict created using model serialization: options with is_correct = {[(opt['option_id'], opt['is_correct']) for opt in question_dict['options']]}")
         return question_dict
 
     async def _update_progress(self, upload_id: str):

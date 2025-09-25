@@ -150,7 +150,7 @@ class RealtimeQuestionService {
       // Handle Firestore Timestamp
       if (value != null && value.toString().contains('Timestamp')) {
         try {
-          final timestamp = value as dynamic;
+          final timestamp = value;
           if (timestamp.seconds != null) {
             final dateTime = DateTime.fromMillisecondsSinceEpoch(
               timestamp.seconds * 1000,
