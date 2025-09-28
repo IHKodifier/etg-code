@@ -1,0 +1,45 @@
+﻿questionId,question_text,questionType,examCategory,subject,topic,subTopic,option_a,option_b,option_c,option_d,option_e,option_f,correct_answer,explanationText,difficulty,tags,estimatedTimeSeconds,ardeProbability,questionImageUrls,explanationVideoUrl
+1,"If 3x-5=13, what is the value of x?",MCQ - Single-select,ECAT,Maths,Algebra,Linear Equations,x=4,6,x=8,x=18,,,A,"To solve the linear equation 3x-5=13, you must isolate the variable x. First, add 5 to both sides of the equation: 3x-5+5=13+5, which simplifies to 3x=18.Next, divide both sides by 3 to find the value of x: 3x/3=18/3, which gives x=6.",Easy,"Algebra, Equations",60,0.9,,
+2,Solve the system of linear equations: 2x+y=7 and x-y=2.,MCQ - Single-select,ECAT,Maths,Algebra,Linear Equations,"(3,1)","(1,5)","(4,3)","(2,3)",,,D,"Using the elimination method, you can add the two equations together to eliminate the y variable: (2x+y)+(x-y)=7+2, which results in 3x=9. Dividing by 3 gives x=3. Substitute x=3 into the second equation: 3-y=2. Subtracting 3 from both sides gives -y=-1, so y=1. The solution is (3,1).",Medium,"Algebra, Equations",120,0.8,,
+3,"The perimeter of a rectangle is 24 cm. If the length is twice the width, what are the dimensions of the rectangle?",MCQ - Single-select,ECAT,Maths,Algebra,Linear Equations,4 cm by 8 cm,6 cm by 6 cm,5 cm by 7 cm,3 cm by 9 cm,,,C,"Let the width be w and the length be l. We are given that l=2w. The formula for the perimeter is P=2l+2w. Substituting the given values: 24=2(2w)+2w, which simplifies to 24=4w+2w, or 24=6w. Dividing by 6, we get w=4 cm. Since l=2w, the length is 2×4=8 cm. The dimensions are 4 cm by 8 cm.",Medium,"Algebra, Word Problems",150,0.8,,
+4,Find the value of x for which the equation 5x-2=3(x+4) is true.,MCQ - Single-select,ECAT,Maths,Algebra,Linear Equations,x=7,x=5,x=3,x=9,,,D,"First, distribute the 3 on the right side: 5x-2=3x+12. Next, subtract 3x from both sides: 2x-2=12. Add 2 to both sides: 2x=14. Finally, divide by 2: x=7.",Easy,"Algebra, Equations",90,0.9,,
+5,"If the sum of two consecutive odd integers is 36, what is the larger of the two integers?",MCQ - Single-select,ECAT,Maths,Algebra,Linear Equations,17,19,15,21,,,A,"Let the first odd integer be x. The next consecutive odd integer will be x+2. The sum is given as 36, so x+(x+2)=36. This simplifies to 2x+2=36. Subtract 2 from both sides: 2x=34. Divide by 2 to get x=17. The larger integer is x+2, which is 17+2=19.",Medium,"Algebra, Word Problems",120,0.8,,
+6,"A force vector of magnitude 10 N is resolved into two components. If one component is at a 30° angle to the original vector and has a magnitude of 8 N, what is the angle of the second component relative to the original vector?",MCQ - Single-select,ECAT,Physics,Mechanics,Law of Sines,45°,60°,90°,75°,,,B,"We can model this as a triangle with sides representing the force vectors. Let the original force be F, and the two components be F_1 and F_2. We have a triangle with sides F, F_1, and F_2. The angle between F and F_1 is 30°. Using the Law of Sines,  
+sin(30°)
+F_2
+​
+ = 
+sin(θ_F,F_2)
+F_1
+​
+ , where θ_F,F_2 is the angle between F and F_2. We need more information to solve this. Let's rephrase the question to make it solvable with Law of Sines. Let's consider a force triangle where two forces F_1=10N and F_2=15N have a resultant force of 20N. The angle between F_1 and the resultant is 30°. We can use the Law of Sines to find the angle between F_2 and the resultant.  
+sin(30°)
+15
+​
+ = 
+sin(θ)
+10
+​
+ . sin(θ)= 
+15
+10sin(30°)
+​
+ = 
+15
+10×0.5
+​
+ =1/3. This is a trigonometry application. The original question is too vague and I will provide a new one.",Hard,"Algebra, Word Problems",120,0.8,,
+7,Solve for x: 4x + 8 = 14,MCQ - Single-select,ECAT,Maths,Algebra,Algebra,x = 5,x = 2,x = 8,x = 12,,,D,"To solve this linear equation, isolate the variable x by performing inverse operations on both sides. First, add or subtract the constant term, then divide by the coefficient of x. Work step by step: rearrange terms, combine like terms, then divide to find x = x = 2.",Medium,"Maths, Algebra",149,0.9,,
+8,"If 13x - 11 = 25, what is the value of x?",MCQ - Single-select,ECAT,Maths,Algebra,Algebra,x = 12,x = 8,x = 5,x = 2,,,B,"Apply algebraic principles: isolate variables, perform inverse operations, and simplify step by step. The answer is x = 2.",Easy,"Maths, Algebra",97,0.9,,
+9,Simplify the expression: 12x + 1 - 15x + 6,MCQ - Single-select,ECAT,Maths,Algebra,Algebra,25,20,30,15,,,B,"Apply algebraic principles: isolate variables, perform inverse operations, and simplify step by step. The answer is 15.",Easy,"Maths, Algebra",75,0.9,,
+10,Find the value of x in the equation: 11(x + 14) = 18,MCQ - Single-select,ECAT,Maths,Algebra,Algebra,x = 8,x = 5,x = 12,x = 2,,,B,"Apply algebraic principles: isolate variables, perform inverse operations, and simplify step by step. The answer is x = 2.",Medium,"Maths, Algebra",94,0.8,,
+11,Solve the system: 4x + 9y = 23 and 10x - 4y = 1,MCQ - Single-select,ECAT,Maths,Algebra,Algebra,25,30,20,15,,,A,"To solve this system of linear equations, use either substitution or elimination method. Elimination: add/subtract equations to eliminate one variable, solve for the remaining variable, then substitute back to find the other variable. The solution is 15.",Hard,"Maths, Algebra",162,1,,
+12,Factor the expression: xÂ² + 17x + 8,MCQ - Single-select,ECAT,Maths,Algebra,Algebra,20,25,15,30,,,C,"To factor this quadratic expression, look for two numbers that multiply to give the constant term and add to give the coefficient of the linear term. Use the factored form (x + a)(x + b) where a and b are these numbers. The answer is 15.",Hard,"Maths, Algebra",116,0.8,,
+13,"If x = 20, find the value of 5xÂ² + 15x + 7",MCQ - Single-select,ECAT,Maths,Algebra,Algebra,30,15,20,25,,,B,"Apply algebraic principles: isolate variables, perform inverse operations, and simplify step by step. The answer is 15.",Easy,"Maths, Algebra",166,0.8,,
+14,Solve for y: 15y + 6 = 16y - 10,MCQ - Single-select,ECAT,Maths,Algebra,Algebra,15,20,30,25,,,A,"Apply algebraic principles: isolate variables, perform inverse operations, and simplify step by step. The answer is 15.",Hard,"Maths, Algebra",124,0.7,,
+15,What is the slope of the line 19x + 11y = 14?,MCQ - Single-select,ECAT,Maths,Algebra,Algebra,-0.666666667,-0.25,3-Apr,1-Feb,,,C,"To find the slope from the standard form Ax + By = C, rearrange to slope-intercept form y = mx + b, where m is the slope. The slope is -A/B. Therefore, the slope is -2/3.",Medium,"Maths, Algebra",86,1,,
+16,Expand: (17x + 14)(21x + 10),MCQ - Single-select,ECAT,Maths,Algebra,Algebra,30,25,15,20,,,D,"Apply algebraic principles: isolate variables, perform inverse operations, and simplify step by step. The answer is 15.",Easy,"Maths, Algebra",104,0.7,,
+17,"If f(x) = 14x + 1, find f(7)",MCQ - Single-select,ECAT,Maths,Functions,Functions,25,30,15,20,,,B,"To evaluate f(x) at a specific value, substitute the given x-value into the function expression. Replace every x with the given number and perform the arithmetic operations in order. This gives f(value) = 15.",Medium,"Maths, Functions",128,0.9,,
+18,What is the domain of f(x) = 1/(x - 1)?,MCQ - Single-select,ECAT,Maths,Functions,Functions,20,15,25,30,,,C,"To find the domain, identify values of x that make the function undefined. For rational functions, exclude values that make the denominator zero. For this function, x cannot equal the value that makes the denominator zero. Domain: 15.",Easy,"Maths, Functions",164,0.9,,
+19,Find the inverse of f(x) = 9x + 10,MCQ - Single-select,ECAT,Maths,Functions,Functions,15,30,20,25,,,D,"To find the inverse function: (1) Replace f(x) with y, (2) Swap x and y, (3) Solve for y, (4) Replace y with fâ»Â¹(x). Following these steps gives the inverse function: 15.",Easy,"Maths, Functions",87,1,,
+20,"if f(x)=81, then what is the degree of the function f(x)",MCQ - Single-select,ECAT,Maths,Functions,Functions,liner,quadratic,cubic,exponential,,,A,lorem ipsum dah dah dah,Easy,"Maths, Functions",5,0.05,,

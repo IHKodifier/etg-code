@@ -30,6 +30,7 @@ mixin _$PresentQuestionState {
   int get currentQuestionIndex => throw _privateConstructorUsedError;
   List<Question> get questionQueue => throw _privateConstructorUsedError;
   bool get hasMore => throw _privateConstructorUsedError;
+  int get totalCount => throw _privateConstructorUsedError;
 
   /// Create a copy of PresentQuestionState
   /// with the given fields replaced by the non-null parameter values.
@@ -59,6 +60,7 @@ abstract class $PresentQuestionStateCopyWith<$Res> {
     int currentQuestionIndex,
     List<Question> questionQueue,
     bool hasMore,
+    int totalCount,
   });
 
   $QuestionCopyWith<$Res>? get currentQuestion;
@@ -97,6 +99,7 @@ class _$PresentQuestionStateCopyWithImpl<
     Object? currentQuestionIndex = null,
     Object? questionQueue = null,
     Object? hasMore = null,
+    Object? totalCount = null,
   }) {
     return _then(
       _value.copyWith(
@@ -152,6 +155,10 @@ class _$PresentQuestionStateCopyWithImpl<
                 ? _value.hasMore
                 : hasMore // ignore: cast_nullable_to_non_nullable
                       as bool,
+            totalCount: null == totalCount
+                ? _value.totalCount
+                : totalCount // ignore: cast_nullable_to_non_nullable
+                      as int,
           )
           as $Val,
     );
@@ -223,6 +230,7 @@ abstract class _$$PresentQuestionStateImplCopyWith<$Res>
     int currentQuestionIndex,
     List<Question> questionQueue,
     bool hasMore,
+    int totalCount,
   });
 
   @override
@@ -260,6 +268,7 @@ class __$$PresentQuestionStateImplCopyWithImpl<$Res>
     Object? currentQuestionIndex = null,
     Object? questionQueue = null,
     Object? hasMore = null,
+    Object? totalCount = null,
   }) {
     return _then(
       _$PresentQuestionStateImpl(
@@ -315,6 +324,10 @@ class __$$PresentQuestionStateImplCopyWithImpl<$Res>
             ? _value.hasMore
             : hasMore // ignore: cast_nullable_to_non_nullable
                   as bool,
+        totalCount: null == totalCount
+            ? _value.totalCount
+            : totalCount // ignore: cast_nullable_to_non_nullable
+                  as int,
       ),
     );
   }
@@ -337,6 +350,7 @@ class _$PresentQuestionStateImpl extends _PresentQuestionState {
     this.currentQuestionIndex = 0,
     final List<Question> questionQueue = const [],
     this.hasMore = true,
+    this.totalCount = 0,
   }) : _selectedAnswers = selectedAnswers,
        _questionQueue = questionQueue,
        super._();
@@ -388,10 +402,13 @@ class _$PresentQuestionStateImpl extends _PresentQuestionState {
   @override
   @JsonKey()
   final bool hasMore;
+  @override
+  @JsonKey()
+  final int totalCount;
 
   @override
   String toString() {
-    return 'PresentQuestionState(currentQuestion: $currentQuestion, selectedAnswers: $selectedAnswers, showExplanation: $showExplanation, isAnswered: $isAnswered, isCorrect: $isCorrect, lastAttempt: $lastAttempt, isLoading: $isLoading, isLoadingMore: $isLoadingMore, errorMessage: $errorMessage, currentFilter: $currentFilter, currentQuestionIndex: $currentQuestionIndex, questionQueue: $questionQueue, hasMore: $hasMore)';
+    return 'PresentQuestionState(currentQuestion: $currentQuestion, selectedAnswers: $selectedAnswers, showExplanation: $showExplanation, isAnswered: $isAnswered, isCorrect: $isCorrect, lastAttempt: $lastAttempt, isLoading: $isLoading, isLoadingMore: $isLoadingMore, errorMessage: $errorMessage, currentFilter: $currentFilter, currentQuestionIndex: $currentQuestionIndex, questionQueue: $questionQueue, hasMore: $hasMore, totalCount: $totalCount)';
   }
 
   @override
@@ -427,7 +444,9 @@ class _$PresentQuestionStateImpl extends _PresentQuestionState {
               other._questionQueue,
               _questionQueue,
             ) &&
-            (identical(other.hasMore, hasMore) || other.hasMore == hasMore));
+            (identical(other.hasMore, hasMore) || other.hasMore == hasMore) &&
+            (identical(other.totalCount, totalCount) ||
+                other.totalCount == totalCount));
   }
 
   @override
@@ -446,6 +465,7 @@ class _$PresentQuestionStateImpl extends _PresentQuestionState {
     currentQuestionIndex,
     const DeepCollectionEquality().hash(_questionQueue),
     hasMore,
+    totalCount,
   );
 
   /// Create a copy of PresentQuestionState
@@ -476,6 +496,7 @@ abstract class _PresentQuestionState extends PresentQuestionState {
     final int currentQuestionIndex,
     final List<Question> questionQueue,
     final bool hasMore,
+    final int totalCount,
   }) = _$PresentQuestionStateImpl;
   const _PresentQuestionState._() : super._();
 
@@ -505,6 +526,8 @@ abstract class _PresentQuestionState extends PresentQuestionState {
   List<Question> get questionQueue;
   @override
   bool get hasMore;
+  @override
+  int get totalCount;
 
   /// Create a copy of PresentQuestionState
   /// with the given fields replaced by the non-null parameter values.

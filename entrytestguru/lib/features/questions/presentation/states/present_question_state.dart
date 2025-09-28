@@ -23,6 +23,7 @@ class PresentQuestionState with _$PresentQuestionState {
     @Default(0) int currentQuestionIndex,
     @Default([]) List<Question> questionQueue,
     @Default(true) bool hasMore,
+    @Default(0) int totalCount,
   }) = _PresentQuestionState;
 
   const PresentQuestionState._();
@@ -136,6 +137,7 @@ class PresentQuestionState with _$PresentQuestionState {
   PresentQuestionState copyWithQuestionsLoaded(
     List<Question> questions, {
     bool hasMore = true,
+    int totalCount = 0,
   }) {
     if (questions.isEmpty) {
       return copyWith(
@@ -145,6 +147,7 @@ class PresentQuestionState with _$PresentQuestionState {
         isLoading: false,
         isLoadingMore: false,
         hasMore: hasMore,
+        totalCount: totalCount,
       );
     }
 
@@ -168,6 +171,7 @@ class PresentQuestionState with _$PresentQuestionState {
       isLoadingMore: false,
       errorMessage: null,
       hasMore: hasMore,
+      totalCount: totalCount,
     );
   }
 }

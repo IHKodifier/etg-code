@@ -3,6 +3,7 @@ import '../../data/models/question.dart';
 import '../../data/models/question_enums.dart';
 import '../../data/models/question_option.dart';
 import '../../data/models/question_performance_stats.dart';
+import '../../utils/question_schema_mapper.dart';
 
 part 'add_question_state.freezed.dart';
 
@@ -67,9 +68,14 @@ class AddQuestionState with _$AddQuestionState {
       return null;
     }
 
+    // Use schema mapper for consistent ID generation
+    final questionId = isEditing && originalQuestionId != null
+        ? originalQuestionId!
+        : QuestionSchemaMapper.generateUniqueQuestionId();
+
     return Question(
-      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-      questionId: DateTime.now().millisecondsSinceEpoch,
+      id: 'temp_${questionId}',
+      questionId: questionId,
       examCategory: examCategory,
       subject: subject,
       topic: topic,

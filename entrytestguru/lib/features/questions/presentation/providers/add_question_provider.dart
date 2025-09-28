@@ -1,28 +1,40 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/question_api_service.dart';
+import '../../data/services/bulk_upload_api_service.dart';
 import '../../data/models/question.dart';
 import '../../data/models/question_option.dart';
 import '../../data/models/question_enums.dart';
+import '../../data/models/question_create_request.dart';
 import '../states/add_question_state.dart';
 import '../../../../core/services/firestore_service.dart';
-import '../../../../core/services/firebase_auth_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../../utils/question_schema_mapper.dart';
+import 'package:logging/logging.dart';
 
 /// StateNotifierProvider for managing add question state
 final addQuestionNotifierProvider =
     StateNotifierProvider<AddQuestionNotifier, AddQuestionState>((ref) {
+      final questionApiService = ref.watch(QuestionApiService.provider);
+      final bulkUploadApiService = ref.watch(BulkUploadApiService.provider);
       final firestoreService = ref.watch(firestoreServiceProvider);
-      final authService = ref.watch(authServiceProvider);
-      return AddQuestionNotifier(firestoreService, authService);
+      return AddQuestionNotifier(
+        questionApiService,
+        bulkUploadApiService,
+        firestoreService,
+      );
     });
 
 /// StateNotifier for managing add question operations
 class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
+  final QuestionApiService _questionApiService;
+  final BulkUploadApiService _bulkUploadApiService;
   final FirestoreService _firestoreService;
-  final FirebaseAuthService _authService;
+  final Logger _logger = Logger('AddQuestionNotifier');
 
-  AddQuestionNotifier(this._firestoreService, this._authService)
-    : super(const AddQuestionState()) {
+  AddQuestionNotifier(
+    this._questionApiService,
+    this._bulkUploadApiService,
+    this._firestoreService,
+  ) : super(const AddQuestionState()) {
     // Initialize with 2 default options
     addOption();
     addOption();
@@ -264,26 +276,72 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // Get current user
-      final currentUser = _authService.currentUser;
-      if (currentUser == null) {
-        throw Exception('User must be logged in to create questions');
+      // Create question from state
+      final question = state.toQuestion();
+      if (question == null) {
+        throw Exception('Failed to create question object');
       }
 
-      // For new questions, get the next auto-incrementing questionId
+      // For new questions, generate timestamp-based questionId
       int nextQuestionId;
       if (state.isEditing) {
         // Use the existing questionId for editing
         nextQuestionId = state.originalQuestionId!;
       } else {
-        // Fetch the maximum questionId and increment by 1
-        nextQuestionId = await _getNextQuestionId();
+        // Generate unique timestamp-based ID for new questions
+        nextQuestionId = QuestionSchemaMapper.generateUniqueQuestionId();
       }
 
-      // Create question with the correct questionId
+      // Update question with the correct questionId
+      final questionWithId = question.copyWith(questionId: nextQuestionId);
+
+      // Try to use the API service first
+      final request = QuestionCreateRequest.fromQuestion(questionWithId);
+      final createdQuestion = await _questionApiService.createQuestion(request);
+
+      _logger.info(
+        'Question ${state.isEditing ? 'updated' : 'created'} successfully via API: ${createdQuestion.id}',
+      );
+
+      state = state.copyWith(
+        isLoading: false,
+        isSuccess: true,
+        errorMessage: null,
+      );
+    } catch (e) {
+      // If API fails, fall back to Firestore with manual questionId generation
+      _logger.warning('API call failed, falling back to Firestore: $e');
+
+      try {
+        await _submitQuestionToFirestore();
+      } catch (firestoreError) {
+        _logger.severe('Both API and Firestore failed: $firestoreError');
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage:
+              'Unable to save question. Please check your connection and try again.',
+        );
+      }
+    }
+  }
+
+  /// Fallback method to submit question directly to Firestore
+  Future<void> _submitQuestionToFirestore() async {
+    try {
+      // Create question from state
       final question = state.toQuestion();
       if (question == null) {
         throw Exception('Failed to create question object');
+      }
+
+      // For new questions, generate timestamp-based questionId
+      int nextQuestionId;
+      if (state.isEditing) {
+        // Use the existing questionId for editing
+        nextQuestionId = state.originalQuestionId!;
+      } else {
+        // Generate unique timestamp-based ID for new questions
+        nextQuestionId = QuestionSchemaMapper.generateUniqueQuestionId();
       }
 
       // Update question with the correct questionId
@@ -295,7 +353,9 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
       // Add/update Firestore-specific fields that aren't in the model
       questionData.addAll({
         'updatedAt': DateTime.now().toIso8601String(),
-        'createdBy': state.isEditing ? question.createdBy : currentUser.id,
+        'createdBy': state.isEditing
+            ? question.createdBy
+            : 'current_user', // TODO: Get from auth
         'isActive': true, // Ensure questions are active by default
       });
 
@@ -315,50 +375,18 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
         await _firestoreService.addDocument('questions', questionData);
       }
 
+      _logger.info(
+        'Question ${state.isEditing ? 'updated' : 'created'} successfully via Firestore fallback',
+      );
+
       state = state.copyWith(
         isLoading: false,
         isSuccess: true,
         errorMessage: null,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Failed to save question: ${e.toString()}',
-      );
-    }
-  }
-
-  /// Get the next auto-incrementing questionId by finding the maximum existing questionId
-  Future<int> _getNextQuestionId() async {
-    try {
-      // Query Firestore to get the maximum questionId
-      final querySnapshot = await _firestoreService.firestore
-          .collection('questions')
-          .orderBy('questionId', descending: true)
-          .limit(1)
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        final maxQuestionId = querySnapshot.docs.first.data()['questionId'];
-        if (maxQuestionId is int) {
-          return maxQuestionId + 1;
-        } else if (maxQuestionId is String) {
-          // Handle legacy string IDs by parsing or using hash
-          final parsed = int.tryParse(maxQuestionId);
-          if (parsed != null) {
-            return parsed + 1;
-          } else {
-            return maxQuestionId.hashCode.abs() + 1;
-          }
-        }
-      }
-
-      // If no questions exist, start with 1
-      return 1;
-    } catch (e) {
-      print('Error fetching max questionId: $e');
-      // Fallback to timestamp-based ID if query fails
-      return DateTime.now().millisecondsSinceEpoch;
+      _logger.severe('Failed to save question to Firestore', e);
+      rethrow;
     }
   }
 }

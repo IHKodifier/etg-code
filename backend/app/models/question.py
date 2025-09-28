@@ -110,6 +110,9 @@ class QuestionResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class QuestionListResponse(BaseModel):
+    questions: List[QuestionResponse]
+
 class QuestionExplanationResponse(BaseModel):
     question_id: str
     explanation: Dict[str, Any]

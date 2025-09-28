@@ -83,7 +83,7 @@ Map<String, dynamic> _$QuestionToJson(Question instance) => <String, dynamic>{
   'questionText': instance.questionText,
   'questionImageUrls': instance.questionImageUrls,
   'questionLatex': instance.questionLatex,
-  'options': instance.options,
+  'options': instance.options.map((e) => e.toJson()).toList(),
   'correctAnswer': instance.correctAnswer,
   'questionType': _$QuestionTypeEnumMap[instance.questionType]!,
   'explanationText': instance.explanationText,
@@ -115,7 +115,7 @@ Map<String, dynamic> _$QuestionToJson(Question instance) => <String, dynamic>{
   'approved_at': instance.approvedAt?.toIso8601String(),
   'isBookmarked': instance.isBookmarked,
   'userNotes': instance.userNotes,
-  'lastAttempt': instance.lastAttempt,
+  'lastAttempt': instance.lastAttempt?.toJson(),
 };
 
 const _$QuestionTypeEnumMap = {

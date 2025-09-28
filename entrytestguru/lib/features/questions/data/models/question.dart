@@ -10,7 +10,7 @@ part 'question.g.dart';
 /// Main Question model representing a complete question with all its data
 /// Compatible with backend Python Question model for seamless API integration
 @freezed
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Question with _$Question {
   const Question._();
 

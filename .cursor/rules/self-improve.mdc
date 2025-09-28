@@ -36,11 +36,24 @@ alwaysApply: false
     select: { id: true, email: true },
     where: { status: 'ACTIVE' }
   });
-  
+
   // Consider adding to [prisma.mdc](mdc:.cursor/rules/prisma.mdc):
   // - Standard select fields
   // - Common where conditions
   // - Performance optimization patterns
+  ```
+
+- **API Configuration Pattern Recognition:**
+  ```dart
+  // If you see repeated API path issues like:
+  static const String _questionsPath = '/api/v1/questions';  // ❌ Double prefix
+  // When ApiClient.baseUrl already includes '/api/v1'
+
+  // Consider adding to [general-flutter-rule.mdc](mdc:.cursor/rules/general-flutter-rule.mdc):
+  // - API client base URL configuration standards
+  // - Service path relative vs absolute path guidelines
+  // - API debugging patterns for 401/404 errors
+  // - Path concatenation validation rules
   ```
 
 - **Rule Quality Checks:**

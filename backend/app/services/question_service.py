@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
+from google.cloud import firestore
 from app.core.database import db
 from app.core.exceptions import NotFoundError, ValidationError
 
@@ -10,25 +11,37 @@ class QuestionService:
     """Question bank management service"""
     
     async def get_next_question_id(self) -> int:
-        """Get the next available numeric question ID"""
+        """Atomically get the next available numeric question ID using transactions"""
         try:
-            # Query for the highest question_id in the questions collection
-            questions = await db.query_collection(
-                "questions",
-                filters=[],
-                limit=1,
-                order_by="-question_id"  # Get the highest question_id
-            )
+            async def get_next_id_transaction(transaction):
+                """Transaction function to atomically get next question ID"""
+                try:
+                    # Query for the highest question_id in the questions collection
+                    questions_ref = db.client.collection("questions")
+                    query = questions_ref.order_by("question_id", direction=firestore.Query.DESCENDING).limit(1)
 
-            if questions and questions[0].get("question_id") is not None:
-                next_id = int(questions[0]["question_id"]) + 1
-            else:
-                next_id = 1  # Start from 1 if no questions exist
+                    # Execute query within transaction
+                    docs = query.get(transaction=transaction)
 
+                    if docs:
+                        max_id = docs[0].get("question_id") or 0
+                        next_id = int(max_id) + 1
+                    else:
+                        next_id = 1  # Start from 1 if no questions exist
+
+                    logger.info(f"Generated next question ID: {next_id}")
+                    return next_id
+
+                except Exception as e:
+                    logger.error(f"Transaction failed to get next question ID: {e}")
+                    raise
+
+            # Execute the transaction
+            next_id = await db.transactional(get_next_id_transaction)
             return next_id
 
         except Exception as e:
-            logger.error(f"Failed to get next question ID: {e}")
+            logger.error(f"Failed to get next question ID atomically: {e}")
             raise
 
     async def get_question_by_question_id(self, question_id: int) -> Optional[Dict[str, Any]]:
@@ -756,6 +769,26 @@ class QuestionService:
                 "recent_activity": 0,
                 "approval_rate": 0
             }
+
+    async def get_total_question_count(self) -> int:
+        """Get total count of active questions in the database"""
+        try:
+            # Query for all active questions
+            questions = await db.query_collection(
+                "questions",
+                filters=[
+                    {"field": "is_active", "operator": "==", "value": True}
+                ],
+                limit=100000  # Large limit to get all questions, adjust as needed
+            )
+
+            count = len(questions)
+            logger.info(f"Total active questions count: {count}")
+            return count
+
+        except Exception as e:
+            logger.error(f"Failed to get total question count: {e}")
+            return 0
 
 # Global question service instance
 question_service = QuestionService()

@@ -103,6 +103,33 @@ class _QuestionBankListWidgetState
             ),
           ),
 
+          // Total count header
+          if (state.totalCount > 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'Total Questions: ${state.totalCount}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'Showing: ${questions.length}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           // Quick Filters
           const QuestionFiltersWidget(),
 

@@ -71,10 +71,10 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
     );
   }
 
-  /// Load questions based on filter with pagination
+  /// Load questions based on filter with pagination (100 per page)
   Future<void> loadQuestions(
     QuestionFilter filter, {
-    int limit = 20,
+    int limit = 100,
     bool loadMore = false,
   }) async {
     if (loadMore && state.isLoadingMore) return;
@@ -102,6 +102,17 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
       // Sort by creation date (newest first) - API might not guarantee order
       questions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
+      // Fetch total count if this is the initial load (not loadMore)
+      int totalCount = state.totalCount;
+      if (!loadMore) {
+        try {
+          totalCount = await _questionApiService.getTotalQuestionCount();
+        } catch (countError) {
+          print('Failed to fetch total count: $countError');
+          totalCount = 0; // Fallback to 0
+        }
+      }
+
       if (loadMore) {
         // Append new questions to existing list
         final updatedQuestions = List<Question>.from(state.questionQueue)
@@ -109,11 +120,13 @@ class PresentQuestionNotifier extends StateNotifier<PresentQuestionState> {
         state = state.copyWithQuestionsLoaded(
           updatedQuestions,
           hasMore: questions.length == limit,
+          totalCount: totalCount,
         );
       } else {
         state = state.copyWithQuestionsLoaded(
           questions,
           hasMore: questions.length == limit,
+          totalCount: totalCount,
         );
       }
     } catch (e) {

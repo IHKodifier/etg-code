@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
-import '../../../../core/api/api_client.dart';
+import '../../data/services/bulk_upload_api_service.dart';
 import '../../../../widgets/app_button.dart';
 
 class BulkUploadWidget extends ConsumerStatefulWidget {
@@ -655,24 +655,14 @@ class _BulkUploadWidgetState extends ConsumerState<BulkUploadWidget> {
     });
 
     try {
-      final formData = FormData.fromMap({
-        'file': MultipartFile.fromBytes(
-          _selectedFile!.bytes!,
-          filename: _selectedFile!.name,
-        ),
-        'filename': _selectedFile!.name,
-      });
-
-      final response = await ref
-          .read(apiClientProvider)
-          .post(
-            '/questions/bulk-upload/preview',
-            data: formData,
-            options: Options(contentType: 'multipart/form-data'),
-          );
+      final bulkUploadService = ref.read(BulkUploadApiService.provider);
+      final result = await bulkUploadService.previewBulkUpload(
+        _selectedFile!.bytes!,
+        _selectedFile!.name,
+      );
 
       setState(() {
-        _previewData = response.data;
+        _previewData = result;
       });
     } catch (e) {
       setState(() {
@@ -693,26 +683,16 @@ class _BulkUploadWidgetState extends ConsumerState<BulkUploadWidget> {
     });
 
     try {
-      final formData = FormData.fromMap({
-        'file': MultipartFile.fromBytes(
-          _selectedFile!.bytes!,
-          filename: _selectedFile!.name,
-        ),
-        'filename': _selectedFile!.name,
-      });
-
-      final response = await ref
-          .read(apiClientProvider)
-          .post(
-            '/questions/bulk-upload',
-            data: formData,
-            options: Options(contentType: 'multipart/form-data'),
-          );
+      final bulkUploadService = ref.read(BulkUploadApiService.provider);
+      final result = await bulkUploadService.startBulkUpload(
+        _selectedFile!.bytes!,
+        _selectedFile!.name,
+      );
 
       setState(() {
-        _uploadId = response.data['upload_id'];
+        _uploadId = result['upload_id'];
         _uploadProgress = {
-          'total': response.data['total_questions'],
+          'total': result['total_questions'] ?? 0,
           'processed': 0,
           'successful': 0,
           'failed': 0,
@@ -735,19 +715,17 @@ class _BulkUploadWidgetState extends ConsumerState<BulkUploadWidget> {
     if (_uploadId == null) return;
 
     try {
-      final response = await ref
-          .read(apiClientProvider)
-          .get('/questions/bulk-upload/$_uploadId/progress');
+      final bulkUploadService = ref.read(BulkUploadApiService.provider);
+      final result = await bulkUploadService.getBulkUploadProgress(_uploadId!);
 
       setState(() {
-        _uploadProgress = response.data;
+        _uploadProgress = result;
         _questionResults = List<Map<String, dynamic>>.from(
-          response.data['question_results'] ?? [],
+          result['question_results'] ?? [],
         );
       });
 
-      if (response.data['status'] == 'completed' ||
-          response.data['status'] == 'failed') {
+      if (result['status'] == 'completed' || result['status'] == 'failed') {
         setState(() {
           _isUploading = false;
         });
@@ -765,12 +743,11 @@ class _BulkUploadWidgetState extends ConsumerState<BulkUploadWidget> {
     if (_uploadId == null) return;
 
     try {
-      final response = await ref
-          .read(apiClientProvider)
-          .get('/questions/bulk-upload/$_uploadId/summary');
+      final bulkUploadService = ref.read(BulkUploadApiService.provider);
+      final result = await bulkUploadService.getBulkUploadSummary(_uploadId!);
 
       setState(() {
-        _uploadSummary = response.data;
+        _uploadSummary = result;
       });
     } catch (e) {
       // Handle error
@@ -806,13 +783,15 @@ ${_uploadSummary!['errors'].map((e) => 'Row ${e['row']}: ${e['error']}').join('\
     if (_uploadId == null) return;
 
     try {
-      final response = await ref
-          .read(apiClientProvider)
-          .post('/questions/bulk-upload/$_uploadId/retry', data: [rowNumber]);
+      final bulkUploadService = ref.read(BulkUploadApiService.provider);
+      final result = await bulkUploadService.retryFailedQuestions(_uploadId!, [
+        rowNumber,
+      ]);
 
-      if (response.data['retry_results'] != null) {
-        final result = response.data['retry_results'][0];
-        if (result['status'] == 'success') {
+      if (result['retry_results'] != null &&
+          result['retry_results'].isNotEmpty) {
+        final retryResult = result['retry_results'][0];
+        if (retryResult['status'] == 'success') {
           // Refresh progress
           _pollProgress();
           if (mounted) {
@@ -829,7 +808,7 @@ ${_uploadSummary!['errors'].map((e) => 'Row ${e['row']}: ${e['error']}').join('\
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Failed to retry row $rowNumber: ${result['error']}',
+                  'Failed to retry row $rowNumber: ${retryResult['error']}',
                 ),
                 backgroundColor: Colors.red,
               ),

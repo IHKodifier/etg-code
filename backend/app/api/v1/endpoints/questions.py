@@ -9,6 +9,7 @@ from app.services.question_service import question_service
 from app.services.bulk_upload_service import bulk_upload_service
 from app.models.question import (
     QuestionResponse,
+    QuestionListResponse,
     QuestionCreateRequest,
     QuestionExplanationResponse,
     QuestionApprovalRequest,
@@ -117,7 +118,7 @@ async def get_current_user_dependency(token: str = Depends(security)):
 
     return user
 
-@router.get("/", response_model=List[QuestionResponse])
+@router.get("/", response_model=QuestionListResponse)
 async def get_filtered_questions(
     exam_categories: Optional[str] = None,
     subjects: Optional[str] = None,
@@ -161,7 +162,9 @@ async def get_filtered_questions(
             offset=offset
         )
 
-        return [QuestionResponse(**q) for q in questions]
+        return QuestionListResponse(
+            questions=[QuestionResponse(**q) for q in questions]
+        )
 
     except HTTPException:
         raise
@@ -173,7 +176,29 @@ async def get_filtered_questions(
         )
 
 
-@router.get("/practice", response_model=List[QuestionResponse])
+@router.get("/count")
+async def get_total_question_count(
+    current_user = Depends(get_current_user_dependency)
+):
+    """Get total count of questions in the database"""
+    try:
+        # For now, skip user checks when auth is bypassed
+        # TODO: Re-enable when proper authentication is restored
+
+        count = await question_service.get_total_question_count()
+        return {"total_count": count}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get total question count: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve question count"
+        )
+
+
+@router.get("/practice", response_model=QuestionListResponse)
 async def get_practice_questions(
     exam_type: str,
     subject: Optional[str] = None,
@@ -201,7 +226,9 @@ async def get_practice_questions(
             limit=limit
         )
 
-        return [QuestionResponse(**q) for q in questions]
+        return QuestionListResponse(
+            questions=[QuestionResponse(**q) for q in questions]
+        )
 
     except HTTPException:
         raise
@@ -428,7 +455,7 @@ async def get_usage_limits(current_user = Depends(get_current_user_dependency)):
 
 # Approval Workflow Endpoints
 
-@router.get("/pending", response_model=List[QuestionResponse])
+@router.get("/pending", response_model=QuestionListResponse)
 async def get_pending_questions(
     exam_type: Optional[str] = None,
     subject: Optional[str] = None,
@@ -449,7 +476,9 @@ async def get_pending_questions(
             limit=limit
         )
 
-        return [QuestionResponse(**q) for q in questions]
+        return QuestionListResponse(
+            questions=[QuestionResponse(**q) for q in questions]
+        )
 
     except HTTPException:
         raise
