@@ -310,30 +310,47 @@ class FirestoreClient:
         try:
             if isinstance(self._client, MockFirestoreClient):
                 return await self._client.batch_write(operations)
-            
+
             # Real Firebase logic
             batch = self.client.batch()
-            
+
             for op in operations:
                 operation_type = op.get('type')
                 collection = op.get('collection')
                 document_id = op.get('document_id')
                 data = op.get('data', {})
-                
+
                 doc_ref = self.client.collection(collection).document(document_id)
-                
+
                 if operation_type == 'create':
                     batch.set(doc_ref, data)
                 elif operation_type == 'update':
                     batch.update(doc_ref, data)
                 elif operation_type == 'delete':
                     batch.delete(doc_ref)
-            
+
             batch.commit()
             return True
         except Exception as e:
             logger.error(f"Failed to perform batch write: {e}")
             return False
+
+    async def transactional(self, transaction_func):
+        """Execute a function within a Firestore transaction"""
+        try:
+            if isinstance(self._client, MockFirestoreClient):
+                # For mock client, just execute the function without transaction
+                return await transaction_func(lambda: None)
+
+            # Real Firebase logic
+            @firestore.transactional
+            def run_transaction(transaction, func):
+                return func(transaction)
+
+            return await run_transaction(self.client, transaction_func)
+        except Exception as e:
+            logger.error(f"Failed to execute transaction: {e}")
+            raise
 
 # Global database instance
 db = FirestoreClient()

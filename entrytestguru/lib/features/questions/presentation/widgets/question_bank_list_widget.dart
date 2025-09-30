@@ -6,6 +6,9 @@ import '../../../../core/utils/time_utils.dart';
 import '../providers/present_question_provider.dart';
 import '../providers/add_question_provider.dart';
 import 'add_question_widget.dart';
+import 'bulk_upload_widget.dart';
+import 'bulk_upload_widget.dart';
+import 'question_filters_widget.dart';
 
 class QuestionBankListWidget extends ConsumerStatefulWidget {
   const QuestionBankListWidget({super.key});
@@ -62,42 +65,141 @@ class _QuestionBankListWidgetState
 
     final questions = state.questionQueue;
 
-    if (questions.isEmpty) {
-      return const Center(child: Text('No questions available'));
-    }
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32.0),
       child: Column(
         children: [
-          // Add button at the top
+          // Add buttons at the top - always show these
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: () => _showAddQuestionDialog(context),
-                icon: const Icon(Icons.add),
-                label: const Text('Add Question'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showAddQuestionDialog(context),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Question'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showBulkUploadDialog(context),
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text('Bulk Upload'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                      foregroundColor: Theme.of(
+                        context,
+                      ).colorScheme.onSecondary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
-          // Questions list
-          Expanded(
-            child: ListView.builder(
-              itemCount: questions.length,
-              itemBuilder: (context, index) {
-                final question = questions[index];
-                return _buildQuestionTile(question);
-              },
+          // Total count header
+          if (state.totalCount > 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'Total Questions: ${state.totalCount}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'Showing: ${questions.length}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+
+          // Quick Filters
+          const QuestionFiltersWidget(),
+
+          // Questions list or empty state
+          if (questions.isEmpty)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.question_answer_outlined,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No questions available',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Start by adding your first question or uploading a bulk file',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: questions.length,
+                      itemBuilder: (context, index) {
+                        final question = questions[index];
+                        return _buildQuestionTile(question);
+                      },
+                    ),
+                  ),
+                  // Load More button
+                  if (state.hasMore && !state.isLoadingMore)
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          ref
+                              .read(presentQuestionNotifierProvider.notifier)
+                              .loadQuestions(
+                                state.currentFilter ?? const QuestionFilter(),
+                                loadMore: true,
+                              );
+                        },
+                        child: const Text('Load More'),
+                      ),
+                    ),
+                  // Loading indicator for load more
+                  if (state.isLoadingMore)
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -263,13 +365,6 @@ class _QuestionBankListWidgetState
     showDialog(
       context: context,
       builder: (dialogContext) {
-        // Listen for success state to auto-dismiss
-        ref.listen(addQuestionNotifierProvider, (previous, next) {
-          if (next.isSuccess && !next.isLoading) {
-            Navigator.of(dialogContext).pop();
-          }
-        });
-
         return Dialog(
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -338,13 +433,6 @@ class _QuestionBankListWidgetState
     showDialog(
       context: context,
       builder: (dialogContext) {
-        // Listen for success state to auto-dismiss
-        ref.listen(addQuestionNotifierProvider, (previous, next) {
-          if (next.isSuccess && !next.isLoading) {
-            Navigator.of(dialogContext).pop();
-          }
-        });
-
         return Dialog(
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -401,6 +489,23 @@ class _QuestionBankListWidgetState
           .loadQuestions(const QuestionFilter());
       // Reset the add question form
       ref.read(addQuestionNotifierProvider.notifier).reset();
+    });
+  }
+
+  void _showBulkUploadDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 800, maxHeight: 600),
+          child: const BulkUploadWidget(),
+        ),
+      ),
+    ).then((_) {
+      // Refresh the list after dialog closes
+      ref
+          .read(presentQuestionNotifierProvider.notifier)
+          .loadQuestions(const QuestionFilter());
     });
   }
 }

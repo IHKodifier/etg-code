@@ -1,28 +1,40 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/question_api_service.dart';
+import '../../data/services/bulk_upload_api_service.dart';
 import '../../data/models/question.dart';
 import '../../data/models/question_option.dart';
 import '../../data/models/question_enums.dart';
+import '../../data/models/question_create_request.dart';
 import '../states/add_question_state.dart';
 import '../../../../core/services/firestore_service.dart';
-import '../../../../core/services/firebase_auth_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../../utils/question_schema_mapper.dart';
+import 'package:logging/logging.dart';
 
 /// StateNotifierProvider for managing add question state
 final addQuestionNotifierProvider =
     StateNotifierProvider<AddQuestionNotifier, AddQuestionState>((ref) {
+      final questionApiService = ref.watch(QuestionApiService.provider);
+      final bulkUploadApiService = ref.watch(BulkUploadApiService.provider);
       final firestoreService = ref.watch(firestoreServiceProvider);
-      final authService = ref.watch(authServiceProvider);
-      return AddQuestionNotifier(firestoreService, authService);
+      return AddQuestionNotifier(
+        questionApiService,
+        bulkUploadApiService,
+        firestoreService,
+      );
     });
 
 /// StateNotifier for managing add question operations
 class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
+  final QuestionApiService _questionApiService;
+  final BulkUploadApiService _bulkUploadApiService;
   final FirestoreService _firestoreService;
-  final FirebaseAuthService _authService;
+  final Logger _logger = Logger('AddQuestionNotifier');
 
-  AddQuestionNotifier(this._firestoreService, this._authService)
-    : super(const AddQuestionState()) {
+  AddQuestionNotifier(
+    this._questionApiService,
+    this._bulkUploadApiService,
+    this._firestoreService,
+  ) : super(const AddQuestionState()) {
     // Initialize with 2 default options
     addOption();
     addOption();
@@ -149,7 +161,7 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
 
   /// Toggle correct answer for single choice
   void toggleCorrectAnswer(String optionId) {
-    if (state.questionType == QuestionType.singleChoice) {
+    if (state.questionType == QuestionType.mcqSingleSelect) {
       state = state.copyWith(correctAnswers: [optionId]);
     } else {
       // Multiple choice
@@ -168,7 +180,7 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
     // Reset correct answers when switching types
     state = state.copyWith(
       questionType: type,
-      correctAnswers: type == QuestionType.singleChoice
+      correctAnswers: type == QuestionType.mcqSingleSelect
           ? []
           : state.correctAnswers,
     );
@@ -247,6 +259,7 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
       tags: question.tags,
       isEditing: true,
       editingQuestionId: question.id,
+      originalQuestionId: question.questionId, // Store the numeric questionId
     );
   }
 
@@ -263,81 +276,93 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
+      // Create question from state
       final question = state.toQuestion();
       if (question == null) {
         throw Exception('Failed to create question object');
       }
 
-      // Get current user
-      final currentUser = _authService.currentUser;
-      if (currentUser == null) {
-        throw Exception('User must be logged in to create questions');
+      // For new questions, generate timestamp-based questionId
+      int nextQuestionId;
+      if (state.isEditing) {
+        // Use the existing questionId for editing
+        nextQuestionId = state.originalQuestionId!;
+      } else {
+        // Generate unique timestamp-based ID for new questions
+        nextQuestionId = QuestionSchemaMapper.generateUniqueQuestionId();
       }
 
-      // Create question data for Firestore
-      final questionData = {
-        'id': state.isEditing ? state.editingQuestionId! : question.id,
-        'questionId': state.isEditing
-            ? state.editingQuestionId!
-            : question.questionId,
-        'examCategory': question.examCategory,
-        'subject': question.subject,
-        'topic': question.topic,
-        'subTopic': question.subTopic,
-        'questionText': question.questionText,
-        'questionImageUrls': question.questionImageUrls,
-        'questionLatex': question.questionLatex,
-        'options': question.options
-            .map(
-              (option) => {
-                'id': option.id,
-                'text': option.text,
-                'imageUrl': option.imageUrl,
-                'latex': option.latex,
-              },
-            )
-            .toList(),
-        'correctAnswer': question.correctAnswer,
-        'questionType': question.questionType.name,
-        'explanationText': question.explanationText,
-        'explanationVideoUrl': question.explanationVideoUrl,
-        'explanationSteps': question.explanationSteps,
-        'references': question.references,
-        'ardeProbability': question.ardeProbability.name,
-        'ardeFrequency': question.ardeFrequency,
-        'ardeAppearanceYears': question.ardeAppearanceYears,
-        'ardeNotes': question.ardeNotes,
-        'ardeContext': question.ardeContext,
-        'difficulty': question.difficulty.name,
-        'estimatedTimeSeconds': question.estimatedTimeSeconds,
-        'globalStats': {
-          'totalAttempts': question.globalStats.totalAttempts,
-          'totalCorrect': question.globalStats.totalCorrect,
-          'globalAccuracy': question.globalStats.globalAccuracy,
-          'averageTimeSeconds': question.globalStats.averageTimeSeconds,
-          'medianTimeSeconds': question.globalStats.medianTimeSeconds,
-          'p95TimeSeconds': question.globalStats.p95TimeSeconds,
-          'calculatedDifficulty': question.globalStats.calculatedDifficulty,
-        },
-        'tags': question.tags,
-        'createdAt': state.isEditing
-            ? question.createdAt.toIso8601String()
-            : question.createdAt.toIso8601String(),
+      // Update question with the correct questionId
+      final questionWithId = question.copyWith(questionId: nextQuestionId);
+
+      // Try to use the API service first
+      final request = QuestionCreateRequest.fromQuestion(questionWithId);
+      final createdQuestion = await _questionApiService.createQuestion(request);
+
+      _logger.info(
+        'Question ${state.isEditing ? 'updated' : 'created'} successfully via API: ${createdQuestion.id}',
+      );
+
+      state = state.copyWith(
+        isLoading: false,
+        isSuccess: true,
+        errorMessage: null,
+      );
+    } catch (e) {
+      // If API fails, fall back to Firestore with manual questionId generation
+      _logger.warning('API call failed, falling back to Firestore: $e');
+
+      try {
+        await _submitQuestionToFirestore();
+      } catch (firestoreError) {
+        _logger.severe('Both API and Firestore failed: $firestoreError');
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage:
+              'Unable to save question. Please check your connection and try again.',
+        );
+      }
+    }
+  }
+
+  /// Fallback method to submit question directly to Firestore
+  Future<void> _submitQuestionToFirestore() async {
+    try {
+      // Create question from state
+      final question = state.toQuestion();
+      if (question == null) {
+        throw Exception('Failed to create question object');
+      }
+
+      // For new questions, generate timestamp-based questionId
+      int nextQuestionId;
+      if (state.isEditing) {
+        // Use the existing questionId for editing
+        nextQuestionId = state.originalQuestionId!;
+      } else {
+        // Generate unique timestamp-based ID for new questions
+        nextQuestionId = QuestionSchemaMapper.generateUniqueQuestionId();
+      }
+
+      // Update question with the correct questionId
+      final questionWithId = question.copyWith(questionId: nextQuestionId);
+
+      // Use the model's toJson() method for consistent serialization
+      final questionData = questionWithId.toJson();
+
+      // Add/update Firestore-specific fields that aren't in the model
+      questionData.addAll({
         'updatedAt': DateTime.now().toIso8601String(),
-        'createdBy': state.isEditing ? question.createdBy : currentUser.id,
-        'isActive': question.isActive,
-        'version': state.isEditing
-            ? (question.version ?? 1) + 1
-            : question.version,
-        'status': question.status,
-        'approvalStatus': question.approvalStatus,
-        'submittedAt': question.submittedAt.toIso8601String(),
-        'reviewerId': question.reviewerId,
-        'reviewerName': question.reviewerName,
-        'reviewComments': question.reviewComments,
-        'reviewedAt': question.reviewedAt?.toIso8601String(),
-        'approvedAt': question.approvedAt?.toIso8601String(),
-      };
+        'createdBy': state.isEditing
+            ? question.createdBy
+            : 'current_user', // TODO: Get from auth
+        'isActive': true, // Ensure questions are active by default
+      });
+
+      // For editing, update the version
+      if (state.isEditing) {
+        questionData['version'] = (questionData['version'] ?? 1) + 1;
+      }
 
       // Save or update to Firestore
       if (state.isEditing) {
@@ -350,16 +375,18 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
         await _firestoreService.addDocument('questions', questionData);
       }
 
+      _logger.info(
+        'Question ${state.isEditing ? 'updated' : 'created'} successfully via Firestore fallback',
+      );
+
       state = state.copyWith(
         isLoading: false,
         isSuccess: true,
         errorMessage: null,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Failed to save question: ${e.toString()}',
-      );
+      _logger.severe('Failed to save question to Firestore', e);
+      rethrow;
     }
   }
 }

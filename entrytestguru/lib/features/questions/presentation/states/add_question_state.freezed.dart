@@ -38,6 +38,7 @@ mixin _$AddQuestionState {
   bool get isSuccess => throw _privateConstructorUsedError;
   bool get isEditing => throw _privateConstructorUsedError;
   String? get editingQuestionId => throw _privateConstructorUsedError;
+  int? get originalQuestionId => throw _privateConstructorUsedError;
 
   /// Create a copy of AddQuestionState
   /// with the given fields replaced by the non-null parameter values.
@@ -73,6 +74,7 @@ abstract class $AddQuestionStateCopyWith<$Res> {
     bool isSuccess,
     bool isEditing,
     String? editingQuestionId,
+    int? originalQuestionId,
   });
 }
 
@@ -110,6 +112,7 @@ class _$AddQuestionStateCopyWithImpl<$Res, $Val extends AddQuestionState>
     Object? isSuccess = null,
     Object? isEditing = null,
     Object? editingQuestionId = freezed,
+    Object? originalQuestionId = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -189,6 +192,10 @@ class _$AddQuestionStateCopyWithImpl<$Res, $Val extends AddQuestionState>
                 ? _value.editingQuestionId
                 : editingQuestionId // ignore: cast_nullable_to_non_nullable
                       as String?,
+            originalQuestionId: freezed == originalQuestionId
+                ? _value.originalQuestionId
+                : originalQuestionId // ignore: cast_nullable_to_non_nullable
+                      as int?,
           )
           as $Val,
     );
@@ -224,6 +231,7 @@ abstract class _$$AddQuestionStateImplCopyWith<$Res>
     bool isSuccess,
     bool isEditing,
     String? editingQuestionId,
+    int? originalQuestionId,
   });
 }
 
@@ -260,6 +268,7 @@ class __$$AddQuestionStateImplCopyWithImpl<$Res>
     Object? isSuccess = null,
     Object? isEditing = null,
     Object? editingQuestionId = freezed,
+    Object? originalQuestionId = freezed,
   }) {
     return _then(
       _$AddQuestionStateImpl(
@@ -339,6 +348,10 @@ class __$$AddQuestionStateImplCopyWithImpl<$Res>
             ? _value.editingQuestionId
             : editingQuestionId // ignore: cast_nullable_to_non_nullable
                   as String?,
+        originalQuestionId: freezed == originalQuestionId
+            ? _value.originalQuestionId
+            : originalQuestionId // ignore: cast_nullable_to_non_nullable
+                  as int?,
       ),
     );
   }
@@ -353,7 +366,7 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
     final List<String>? questionLatex,
     final List<QuestionOption> options = const [],
     final List<String> correctAnswers = const [],
-    this.questionType = QuestionType.singleChoice,
+    this.questionType = QuestionType.mcqSingleSelect,
     this.examCategory = '',
     this.subject = '',
     this.topic = '',
@@ -367,6 +380,7 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
     this.isSuccess = false,
     this.isEditing = false,
     this.editingQuestionId,
+    this.originalQuestionId,
   }) : _questionImageUrls = questionImageUrls,
        _questionLatex = questionLatex,
        _options = options,
@@ -464,10 +478,12 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
   final bool isEditing;
   @override
   final String? editingQuestionId;
+  @override
+  final int? originalQuestionId;
 
   @override
   String toString() {
-    return 'AddQuestionState(questionText: $questionText, questionImageUrls: $questionImageUrls, questionLatex: $questionLatex, options: $options, correctAnswers: $correctAnswers, questionType: $questionType, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, explanationText: $explanationText, tags: $tags, isLoading: $isLoading, errorMessage: $errorMessage, isSuccess: $isSuccess, isEditing: $isEditing, editingQuestionId: $editingQuestionId)';
+    return 'AddQuestionState(questionText: $questionText, questionImageUrls: $questionImageUrls, questionLatex: $questionLatex, options: $options, correctAnswers: $correctAnswers, questionType: $questionType, examCategory: $examCategory, subject: $subject, topic: $topic, subTopic: $subTopic, difficulty: $difficulty, estimatedTimeSeconds: $estimatedTimeSeconds, explanationText: $explanationText, tags: $tags, isLoading: $isLoading, errorMessage: $errorMessage, isSuccess: $isSuccess, isEditing: $isEditing, editingQuestionId: $editingQuestionId, originalQuestionId: $originalQuestionId)';
   }
 
   @override
@@ -514,7 +530,9 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
             (identical(other.isEditing, isEditing) ||
                 other.isEditing == isEditing) &&
             (identical(other.editingQuestionId, editingQuestionId) ||
-                other.editingQuestionId == editingQuestionId));
+                other.editingQuestionId == editingQuestionId) &&
+            (identical(other.originalQuestionId, originalQuestionId) ||
+                other.originalQuestionId == originalQuestionId));
   }
 
   @override
@@ -539,6 +557,7 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
     isSuccess,
     isEditing,
     editingQuestionId,
+    originalQuestionId,
   ]);
 
   /// Create a copy of AddQuestionState
@@ -574,6 +593,7 @@ abstract class _AddQuestionState extends AddQuestionState {
     final bool isSuccess,
     final bool isEditing,
     final String? editingQuestionId,
+    final int? originalQuestionId,
   }) = _$AddQuestionStateImpl;
   const _AddQuestionState._() : super._();
 
@@ -615,6 +635,8 @@ abstract class _AddQuestionState extends AddQuestionState {
   bool get isEditing;
   @override
   String? get editingQuestionId;
+  @override
+  int? get originalQuestionId;
 
   /// Create a copy of AddQuestionState
   /// with the given fields replaced by the non-null parameter values.

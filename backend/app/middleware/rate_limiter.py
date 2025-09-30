@@ -97,6 +97,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return False, 0, max_requests, window_seconds
     
     async def dispatch(self, request: Request, call_next):
+        # Skip ALL rate limiting for bulk upload endpoints
+        if request.url.path.startswith("/api/v1/questions/bulk-upload/"):
+            response = await call_next(request)
+            return response
+
         # Skip rate limiting for exempt routes
         if request.url.path in self.exempt_routes:
             response = await call_next(request)

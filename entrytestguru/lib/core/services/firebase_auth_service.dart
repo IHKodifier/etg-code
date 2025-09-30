@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/user.dart';
 import '../models/device.dart';
+import '../api/auth_api.dart';
 import 'device_fingerprint_service.dart';
 import 'dart:async';
 

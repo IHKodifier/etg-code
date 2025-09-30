@@ -20,6 +20,9 @@ _$QuestionFilterImpl _$$QuestionFilterImplFromJson(Map<String, dynamic> json) =>
       difficulties: (json['difficulties'] as List<dynamic>?)
           ?.map((e) => $enumDecode(_$DifficultyLevelEnumMap, e))
           .toList(),
+      questionTypes: (json['questionTypes'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
       ardeProbabilities: (json['ardeProbabilities'] as List<dynamic>?)
           ?.map((e) => $enumDecode(_$ArdeLevelEnumMap, e))
           .toList(),
@@ -53,6 +56,7 @@ Map<String, dynamic> _$$QuestionFilterImplToJson(
   'difficulties': instance.difficulties
       ?.map((e) => _$DifficultyLevelEnumMap[e]!)
       .toList(),
+  'questionTypes': instance.questionTypes,
   'ardeProbabilities': instance.ardeProbabilities
       ?.map((e) => _$ArdeLevelEnumMap[e]!)
       .toList(),

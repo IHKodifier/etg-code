@@ -16,6 +16,7 @@ class QuestionFilter with _$QuestionFilter {
     List<String>? subjects,
     List<String>? topics,
     List<DifficultyLevel>? difficulties,
+    List<String>? questionTypes,
     List<ArdeLevel>? ardeProbabilities,
 
     // Advanced Filters
@@ -112,6 +113,7 @@ class QuestionFilter with _$QuestionFilter {
         (subjects?.isNotEmpty ?? false) ||
         (topics?.isNotEmpty ?? false) ||
         (difficulties?.isNotEmpty ?? false) ||
+        (questionTypes?.isNotEmpty ?? false) ||
         (ardeProbabilities?.isNotEmpty ?? false) ||
         (minArdeFrequency != null) ||
         (minCreatedDate != null) ||
@@ -131,6 +133,7 @@ class QuestionFilter with _$QuestionFilter {
     if (subjects?.isNotEmpty ?? false) count++;
     if (topics?.isNotEmpty ?? false) count++;
     if (difficulties?.isNotEmpty ?? false) count++;
+    if (questionTypes?.isNotEmpty ?? false) count++;
     if (ardeProbabilities?.isNotEmpty ?? false) count++;
     if (minArdeFrequency != null) count++;
     if (minCreatedDate != null) count++;
@@ -354,6 +357,10 @@ extension QuestionFilterExtension on QuestionFilter {
 
     if (difficulties?.isNotEmpty ?? false) {
       map['difficulties'] = difficulties?.map((d) => d.name).toList();
+    }
+
+    if (questionTypes?.isNotEmpty ?? false) {
+      map['question_types'] = questionTypes;
     }
 
     if (ardeProbabilities?.isNotEmpty ?? false) {

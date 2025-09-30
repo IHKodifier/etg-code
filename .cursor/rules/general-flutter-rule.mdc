@@ -100,9 +100,261 @@ You are an expert in Flutter, Dart, Riverpod, Freezed, Flutter Hooks, and Fireba
 - always implement Equality via equatable  pub.dev package.
 - for collections use deep collectionEquality
 - prefer to use packages that are atleast available for all of the  web, android,iOs platforms.
-- Only use packages that have a good rating on pub.dev 
+- Only use packages that have a good rating on pub.dev
 -before adding a package dependency always check whether it can create compatibility issues within packages, if found so, inform the developer in cursor chat
 
+# Serialization and Deserialization Standards
+- **ALWAYS use model-based serialization and deserialization** instead of manual dictionary construction/parsing
+- **NEVER manually construct data dictionaries or parse JSON** for API calls or database operations
+- Use `.toJson()`/`.fromJson()` for Freezed models and `.dict()`/`.parse_obj()` for Pydantic models
+- Manual dictionary construction/parsing leads to:
+  - Field name inconsistencies (camelCase vs snake_case)
+  - Silent data corruption and parsing failures
+  - Maintenance nightmares when models change
+  - Serialization/deserialization bugs that are hard to debug
+  - Type safety violations
+
+## Serialization (Object → JSON/Dict)
+
+- **Examples of what NOT to do:**
+  ```dart
+  // ❌ WRONG - Manual dictionary construction
+  final questionData = {
+    'id': question.id,
+    'questionId': question.questionId,
+    'examCategory': question.examCategory,  // camelCase - WRONG!
+    'approvalStatus': question.approvalStatus,  // camelCase - WRONG!
+  };
+  ```
+
+  ```python
+  # ❌ WRONG - Manual dictionary construction
+  question_dict = {
+      "question_text": create_request.question_text,
+      "options": [...],  # Manual field mapping
+  }
+  ```
+
+- **Examples of what TO do:**
+  ```dart
+  // ✅ CORRECT - Model-based serialization
+  final questionData = question.toJson();
+  ```
+
+  ```python
+  # ✅ CORRECT - Model-based serialization
+  question_dict = create_request.dict()
+  ```
+
+## Deserialization (JSON/Dict → Object)
+
+- **Examples of what NOT to do:**
+  ```dart
+  // ❌ WRONG - Manual JSON parsing
+  final question = Question(
+    id: json['id'],
+    questionId: json['questionId'],  // May be string or int inconsistently
+    examCategory: json['exam_category'],  // Wrong field name mapping
+    // ... manual field mapping with potential null errors
+  );
+  ```
+
+  ```python
+  # ❌ WRONG - Manual dictionary parsing
+  question = Question(
+      question_text=data.get("question_text"),
+      options=data.get("options", []),  # Manual parsing
+  )
+  ```
+
+- **Examples of what TO do:**
+  ```dart
+  // ✅ CORRECT - Model-based deserialization
+  final question = Question.fromJson(json);
+  ```
+
+  ```python
+  # ✅ CORRECT - Model-based deserialization
+  question = QuestionCreateRequest.parse_obj(data)
+  ```
+
+- **Benefits**: Type safety, automatic field mapping, validation, consistency, maintainability
+- **Enforcement**: All serialization/deserialization code must use model methods, never manual construction/parsing
+
+# API Client and Networking Standards
+- **ALWAYS use relative paths in API service classes** when ApiClient has a base URL with path prefixes
+- **NEVER hardcode absolute API paths** that duplicate the base URL prefixes
+- **ALWAYS verify actual request URLs** when debugging 401/404 API errors
+- API path concatenation issues cause silent authentication failures and routing errors
+
+## API Client Configuration
+
+- **Examples of what NOT to do:**
+  ```dart
+  // ❌ WRONG - Hardcoded absolute paths with base URL prefix
+  class ApiClient {
+    static String get baseUrl => 'http://localhost:8080/api/v1';  // Includes /api/v1
+  }
+
+  class QuestionApiService {
+    static const String _questionsPath = '/api/v1/questions';  // ❌ Double /api/v1
+    // Results in: http://localhost:8080/api/v1/api/v1/questions
+  }
+  ```
+
+- **Examples of what TO do:**
+  ```dart
+  // ✅ CORRECT - Relative paths with base URL prefix
+  class ApiClient {
+    static String get baseUrl => 'http://localhost:8080/api/v1';  // Includes /api/v1
+  }
+
+  class QuestionApiService {
+    static const String _questionsPath = '/questions';  // ✅ Relative path
+    // Results in: http://localhost:8080/api/v1/questions
+  }
+  ```
+
+## API Debugging Patterns
+
+- **When API calls fail with 401/404 errors:**
+  - Check browser dev tools or logs for actual request URLs
+  - Verify path concatenation (look for double prefixes like `/api/v1/api/v1`)
+  - Ensure service paths are relative to ApiClient base URL
+  - Test API endpoints directly before implementing fallbacks
+
+- **Benefits**: Prevents silent authentication failures, ensures correct routing, easier debugging
+- **Enforcement**: All API service paths must be relative to base URL, never absolute with duplicate prefixes
+
+# UI-Backend Communication Architecture
+- **NEVER allow UI widgets to communicate directly with the backend**
+- **ALL backend communication MUST go through API service layers  (talking to the api end points) **
+- **UI widgets are strictly presentation layer components** - they should only consume state and trigger actions through providers
+
+## Architecture Layers (Bottom to Top)
+1. **Backend API** - External REST/GraphQL endpoints
+2. **API Service Layer** - Dart classes that handle HTTP requests/responses
+3. **Repository Layer** - Data access abstraction (optional but recommended)
+4. **Riverpod Providers** - State management and business logic
+5. **UI Widgets** - Pure presentation components
+
+## What UI Widgets CAN Do
+- **Consume state** from Riverpod providers using `ref.watch()`
+- **Trigger actions** through Riverpod providers using `ref.read()`
+- **Handle user interactions** and pass them to providers
+- **Display data** from provider state
+- **Show loading/error states** from AsyncValue
+
+## What UI Widgets CANNOT Do
+- **Make direct HTTP requests** using `http`, `dio`, or similar packages
+- **Import API service classes** directly
+- **Handle authentication tokens** or API keys
+- **Parse raw JSON responses**
+- **Manage network state** or retry logic
+- **Cache data** locally (except for UI-specific state)
+
+## Correct Architecture Pattern
+
+### ✅ CORRECT - UI Widget using Provider
+```dart
+class QuestionListWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final questionsState = ref.watch(questionsProvider);
+    
+    return questionsState.when(
+      data: (questions) => ListView.builder(
+        itemCount: questions.length,
+        itemBuilder: (context, index) => QuestionCard(question: questions[index]),
+      ),
+      loading: () => const CircularProgressIndicator(),
+      error: (error, stack) => SelectableText.rich(
+        TextSpan(
+          text: 'Error: $error',
+          style: TextStyle(color: Colors.red),
+        ),
+      ),
+    );
+  }
+}
+
+// Provider handles all backend communication
+@riverpod
+class QuestionsNotifier extends _$QuestionsNotifier {
+  @override
+  Future<List<Question>> build() async {
+    return await _questionApiService.getQuestions();
+  }
+  
+  Future<void> createQuestion(QuestionCreateRequest request) async {
+    state = const AsyncValue.loading();
+    try {
+      final newQuestion = await _questionApiService.createQuestion(request);
+      // Update state with new question
+      ref.invalidateSelf();
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
+  }
+}
+```
+
+### ❌ WRONG - UI Widget making direct API calls
+```dart
+class QuestionListWidget extends StatefulWidget {
+  @override
+  _QuestionListWidgetState createState() => _QuestionListWidgetState();
+}
+
+class _QuestionListWidgetState extends State<QuestionListWidget> {
+  List<Question> questions = [];
+  bool isLoading = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadQuestions(); // ❌ WRONG - Direct API call from UI
+  }
+  
+  Future<void> _loadQuestions() async {
+    setState(() => isLoading = true);
+    try {
+      // ❌ WRONG - Direct HTTP call from UI widget
+      final response = await http.get(
+        Uri.parse('${ApiClient.baseUrl}/questions'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      final data = json.decode(response.body);
+      setState(() {
+        questions = (data as List).map((q) => Question.fromJson(q)).toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      // ❌ WRONG - Error handling in UI
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+}
+```
+
+## Benefits of This Architecture
+- **Separation of Concerns**: UI focuses on presentation, providers handle business logic
+- **Testability**: Easy to mock providers for widget testing
+- **Reusability**: Providers can be consumed by multiple widgets
+- **State Management**: Centralized state with automatic UI updates
+- **Error Handling**: Consistent error handling across the app
+- **Caching**: Providers can implement intelligent caching strategies
+- **Loading States**: Built-in loading state management with AsyncValue
+
+## Enforcement Rules
+- **No direct imports** of `http`, `dio`, or other HTTP packages in UI files
+- **No direct imports** of API service classes in UI files
+- **All network calls** must be encapsulated in Riverpod providers
+- **All state management** must use Riverpod providers, never setState()
+- **All error handling** must be done through AsyncValue, not try-catch in UI
 
 ## Widgets and UI Components
 - Create small, private widget classes instead of methods like Widget _build....

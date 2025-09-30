@@ -10,13 +10,14 @@ part 'question.g.dart';
 /// Main Question model representing a complete question with all its data
 /// Compatible with backend Python Question model for seamless API integration
 @freezed
+@JsonSerializable(explicitToJson: true)
 class Question with _$Question {
   const Question._();
 
   const factory Question({
     // Identity & Metadata
     required String id,
-    required String questionId,
+    required int questionId, // Changed from String to int
     required String examCategory,
     required String subject,
     required String topic,
@@ -29,7 +30,7 @@ class Question with _$Question {
     // Options & Answer
     required List<QuestionOption> options,
     required List<String> correctAnswer,
-    @Default(QuestionType.singleChoice) QuestionType questionType,
+    @Default(QuestionType.mcqSingleSelect) QuestionType questionType,
 
     // Explanations & Resources
     required String explanationText,
@@ -38,7 +39,7 @@ class Question with _$Question {
     List<String>? references,
 
     // ARDE Intelligence (Core Differentiator)
-    required ArdeLevel ardeProbability,
+    required double ardeProbability, // Changed from ArdeLevel enum to double
     @Default(0) int ardeFrequency,
     List<int>? ardeAppearanceYears,
     String? ardeNotes,
@@ -48,8 +49,7 @@ class Question with _$Question {
     required DifficultyLevel difficulty,
     @Default(60) int estimatedTimeSeconds,
 
-    // Global Performance Analytics
-    required QuestionPerformanceStats globalStats,
+    // Performance stats removed - now calculated from question_attempts collection
 
     // Search & Discovery
     @Default([]) List<String> tags,
@@ -80,8 +80,58 @@ class Question with _$Question {
   }) = _Question;
 
   /// Creates Question from JSON
-  factory Question.fromJson(Map<String, dynamic> json) =>
-      _$QuestionFromJson(json);
+  /// Now handles CSV format responses as the standard
+  factory Question.fromJson(Map<String, dynamic> json) {
+    json = Map<String, dynamic>.from(json);
+
+    // Handle backward compatibility for correctAnswer field
+    if (json['correctAnswer'] is String) {
+      // Convert string to list for backward compatibility
+      json['correctAnswer'] = [json['correctAnswer'] as String];
+    }
+
+    // Handle questionId field - convert string to int if necessary
+    if (json['questionId'] is String) {
+      final questionIdStr = json['questionId'] as String;
+      // Try to parse as int, fallback to hash code for string IDs
+      final parsedId = int.tryParse(questionIdStr);
+      if (parsedId != null) {
+        json['questionId'] = parsedId;
+      } else {
+        // For string IDs like "unknown_123", use hash code as fallback
+        json['questionId'] = questionIdStr.hashCode.abs();
+      }
+    }
+
+    // Handle difficulty field - accept CSV format strings
+    if (json['difficulty'] is String) {
+      final difficultyStr = json['difficulty'] as String;
+      // Map CSV format to enum values
+      switch (difficultyStr) {
+        case 'Easy':
+          json['difficulty'] = 'easy'; // Map to enum name
+          break;
+        case 'Medium':
+          json['difficulty'] = 'medium';
+          break;
+        case 'Hard':
+          json['difficulty'] = 'hard';
+          break;
+        default:
+          json['difficulty'] = 'medium'; // Default fallback
+      }
+    }
+
+    // Handle null values for boolean fields that have defaults
+    if (json['isBookmarked'] == null) {
+      json['isBookmarked'] = false;
+    }
+
+    return _$QuestionFromJson(json);
+  }
+
+  /// Converts Question to JSON
+  Map<String, dynamic> toJson() => _$QuestionToJson(this);
 
   /// Returns the primary subject area
   String get primarySubject => subject;
@@ -97,28 +147,25 @@ class Question with _$Question {
   /// Returns the question type as a readable string
   String get questionTypeDisplay {
     switch (questionType) {
-      case QuestionType.singleChoice:
-        return 'Single Choice';
-      case QuestionType.multipleChoice:
-        return 'Multiple Choice';
-      case QuestionType.assertionReason:
-        return 'Assertion-Reason';
-      case QuestionType.numerical:
-        return 'Numerical';
+      case QuestionType.mcqSingleSelect:
+        return 'MCQ Single Select';
+      case QuestionType.mcqMultiSelect:
+        return 'MCQ Multi Select';
     }
   }
 
   /// Returns the difficulty level as a readable string
+  /// Now displays CSV format values: "Easy", "Medium", "Hard"
   String get difficultyDisplay {
     switch (difficulty) {
       case DifficultyLevel.veryEasy:
         return 'Very Easy';
       case DifficultyLevel.easy:
-        return 'Easy';
+        return 'Easy'; // Matches CSV format
       case DifficultyLevel.medium:
-        return 'Medium';
+        return 'Medium'; // Matches CSV format
       case DifficultyLevel.hard:
-        return 'Hard';
+        return 'Hard'; // Matches CSV format
       case DifficultyLevel.veryHard:
         return 'Very Hard';
     }
@@ -126,25 +173,23 @@ class Question with _$Question {
 
   /// Returns the ARDE probability as a readable string
   String get ardeProbabilityDisplay {
-    switch (ardeProbability) {
-      case ArdeLevel.high:
-        return 'High Probability';
-      case ArdeLevel.medium:
-        return 'Medium Probability';
-      case ArdeLevel.low:
-        return 'Low Probability';
+    if (ardeProbability >= 0.7) {
+      return 'High Probability';
+    } else if (ardeProbability >= 0.3) {
+      return 'Medium Probability';
+    } else {
+      return 'Low Probability';
     }
   }
 
   /// Returns the ARDE probability as a percentage string
   String get ardeProbabilityPercentage {
-    switch (ardeProbability) {
-      case ArdeLevel.high:
-        return '70%+';
-      case ArdeLevel.medium:
-        return '30-70%';
-      case ArdeLevel.low:
-        return '<30%';
+    if (ardeProbability >= 0.7) {
+      return '70%+';
+    } else if (ardeProbability >= 0.3) {
+      return '30-70%';
+    } else {
+      return '<30%';
     }
   }
 
@@ -186,10 +231,10 @@ class Question with _$Question {
   }
 
   /// Checks if the question is single choice
-  bool get isSingleChoice => questionType == QuestionType.singleChoice;
+  bool get isSingleChoice => questionType == QuestionType.mcqSingleSelect;
 
   /// Checks if the question is multiple choice
-  bool get isMultipleChoice => questionType == QuestionType.multipleChoice;
+  bool get isMultipleChoice => questionType == QuestionType.mcqMultiSelect;
 
   /// Returns the number of correct answers expected
   int get expectedCorrectAnswers => correctAnswer.length;
@@ -231,13 +276,11 @@ class Question with _$Question {
         topic.toLowerCase().contains(searchQuery);
   }
 
-  /// Returns the question's performance rating
+  /// Returns the question's performance rating (placeholder - will be calculated from attempts)
   String get performanceRating {
-    final accuracy = globalStats.globalAccuracy;
-    if (accuracy >= 0.8) return 'Excellent';
-    if (accuracy >= 0.6) return 'Good';
-    if (accuracy >= 0.4) return 'Average';
-    return 'Needs Review';
+    // TODO: Calculate from question_attempts collection
+    // For now, return a default rating
+    return 'Not Available';
   }
 
   /// Checks if the question has been attempted by the user
@@ -252,6 +295,13 @@ class Question with _$Question {
   /// Returns the user's last attempt time formatted
   String? get lastAttemptTimeFormatted {
     return lastAttempt?.timeSpentFormatted;
+  }
+
+  /// Returns the ARDE level based on probability
+  ArdeLevel get ardeLevel {
+    if (ardeProbability >= 0.7) return ArdeLevel.high;
+    if (ardeProbability >= 0.3) return ArdeLevel.medium;
+    return ArdeLevel.low;
   }
 
   /// Creates a copy with updated user-specific data
@@ -273,10 +323,8 @@ extension QuestionListExtension on List<Question> {
   /// Returns questions sorted by ARDE probability (high first)
   List<Question> get sortedByArdeProbability {
     return [...this]..sort((a, b) {
-      final ardeOrder = {'high': 3, 'medium': 2, 'low': 1};
-      final aOrder = ardeOrder[a.ardeProbability.name] ?? 0;
-      final bOrder = ardeOrder[b.ardeProbability.name] ?? 0;
-      return bOrder.compareTo(aOrder);
+      // Sort by decimal value (higher values first)
+      return b.ardeProbability.compareTo(a.ardeProbability);
     });
   }
 
@@ -287,11 +335,10 @@ extension QuestionListExtension on List<Question> {
   }
 
   /// Returns questions sorted by accuracy (lowest first - needs improvement)
+  /// TODO: Implement when performance stats are calculated from attempts
   List<Question> get sortedByAccuracy {
-    return [...this]..sort(
-      (a, b) =>
-          a.globalStats.globalAccuracy.compareTo(b.globalStats.globalAccuracy),
-    );
+    // For now, return unsorted list
+    return [...this];
   }
 
   /// Returns questions filtered by exam category
@@ -341,23 +388,17 @@ extension QuestionListExtension on List<Question> {
   }
 
   /// Returns the average accuracy across all questions
+  /// TODO: Implement when performance stats are calculated from attempts
   double get averageAccuracy {
-    if (isEmpty) return 0.0;
-    final totalAccuracy = fold<double>(
-      0.0,
-      (sum, question) => sum + question.globalStats.globalAccuracy,
-    );
-    return totalAccuracy / length;
+    // For now, return 0.0
+    return 0.0;
   }
 
   /// Returns the average difficulty across all questions
+  /// TODO: Implement when performance stats are calculated from attempts
   double get averageDifficulty {
-    if (isEmpty) return 0.0;
-    final totalDifficulty = fold<double>(
-      0.0,
-      (sum, question) => sum + question.globalStats.calculatedDifficulty,
-    );
-    return totalDifficulty / length;
+    // For now, return 0.0
+    return 0.0;
   }
 
   /// Groups questions by subject
@@ -370,10 +411,12 @@ extension QuestionListExtension on List<Question> {
   }
 
   /// Groups questions by ARDE probability
-  Map<ArdeLevel, List<Question>> get groupedByArdeProbability {
-    final grouped = <ArdeLevel, List<Question>>{};
+  Map<String, List<Question>> get groupedByArdeProbability {
+    final grouped = <String, List<Question>>{};
     for (final question in this) {
-      grouped.putIfAbsent(question.ardeProbability, () => []).add(question);
+      final category =
+          question.ardeProbabilityDisplay; // Use the display string
+      grouped.putIfAbsent(category, () => []).add(question);
     }
     return grouped;
   }

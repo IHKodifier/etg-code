@@ -1,0 +1,2 @@
+questionId,questionText,questionType,examCategory,subject,topic,subTopic,optionA,optionB,optionC,optionD,optionE,optionF,correctAnswers,explanationText,difficulty,tags,estimatedTimeSeconds,ardeProbability,questionImageUrls,explanationVideoUrl
+10,Find the value of x in the equation: 11(x + 14) = 18,MCQ - Single-select,ECAT,Maths,Algebra,Algebra,x = 8,x = 5,x = 12,x = 2,,,A,Apply algebraic principles: isolate variables, perform inverse operations, and simplify step by step. The answer is x = 2.,Medium,Maths, Algebra,94,0.8,,
