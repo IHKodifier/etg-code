@@ -302,14 +302,10 @@ class _QuestionFiltersWidgetState extends ConsumerState<QuestionFiltersWidget> {
 
   String _getQuestionTypeDisplayName(QuestionType type) {
     switch (type) {
-      case QuestionType.singleChoice:
+      case QuestionType.mcqSingleSelect:
         return 'Single Choice';
-      case QuestionType.multipleChoice:
+      case QuestionType.mcqMultiSelect:
         return 'Multiple Choice';
-      case QuestionType.assertionReason:
-        return 'Assertion-Reason';
-      case QuestionType.numerical:
-        return 'Numerical';
     }
   }
 }

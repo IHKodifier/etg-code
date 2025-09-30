@@ -34,7 +34,8 @@ class QuestionCreateRequest(BaseModel):
     
     @validator('difficulty')
     def validate_difficulty(cls, v):
-        allowed_difficulties = ['easy', 'medium', 'hard']
+        # Accept CSV format: "Easy", "Medium", "Hard" (capitalized)
+        allowed_difficulties = ['Easy', 'Medium', 'Hard']
         if v not in allowed_difficulties:
             raise ValueError(f'Difficulty must be one of: {", ".join(allowed_difficulties)}')
         return v
@@ -224,7 +225,7 @@ class BulkUploadQuestion(BaseModel):
 
     @validator('question_type')
     def validate_question_type(cls, v):
-        allowed_types = ['MCQ - Single-select', 'MCQ - Multi-select']
+        allowed_types = ['mcq.singleSelect', 'mcq.multiSelect']  # Definitive dot notation
         if v not in allowed_types:
             raise ValueError(f'Question type must be one of: {", ".join(allowed_types)}')
         return v
@@ -233,6 +234,7 @@ class BulkUploadQuestion(BaseModel):
     def validate_difficulty(cls, v):
         if v is None:
             return v
+        # Accept CSV format: "Easy", "Medium", "Hard" (capitalized)
         allowed_difficulties = ['Easy', 'Medium', 'Hard']
         if v not in allowed_difficulties:
             raise ValueError(f'Difficulty must be one of: {", ".join(allowed_difficulties)}')

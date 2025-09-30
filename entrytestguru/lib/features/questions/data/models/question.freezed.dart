@@ -693,7 +693,7 @@ class _$QuestionImpl extends _Question {
     final List<String>? questionLatex,
     required final List<QuestionOption> options,
     required final List<String> correctAnswer,
-    this.questionType = QuestionType.singleChoice,
+    this.questionType = QuestionType.mcqSingleSelect,
     required this.explanationText,
     this.explanationVideoUrl,
     final List<String>? explanationSteps,

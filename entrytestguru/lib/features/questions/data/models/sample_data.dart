@@ -30,7 +30,7 @@ class SampleData {
       ],
 
       correctAnswer: ["C"],
-      questionType: QuestionType.singleChoice,
+      questionType: QuestionType.mcqSingleSelect,
 
       explanationText:
           "At the highest point, the velocity becomes zero because "
@@ -97,7 +97,7 @@ class SampleData {
       ],
 
       correctAnswer: ["B"],
-      questionType: QuestionType.singleChoice,
+      questionType: QuestionType.mcqSingleSelect,
 
       explanationText:
           "In SN1 reactions, the rate-determining step is the "
@@ -152,7 +152,7 @@ class SampleData {
       ],
 
       correctAnswer: ["B"],
-      questionType: QuestionType.singleChoice,
+      questionType: QuestionType.mcqSingleSelect,
 
       explanationText:
           "This is a standard limit that appears frequently in calculus. "

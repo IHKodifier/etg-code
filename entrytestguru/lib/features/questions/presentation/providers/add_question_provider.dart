@@ -161,7 +161,7 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
 
   /// Toggle correct answer for single choice
   void toggleCorrectAnswer(String optionId) {
-    if (state.questionType == QuestionType.singleChoice) {
+    if (state.questionType == QuestionType.mcqSingleSelect) {
       state = state.copyWith(correctAnswers: [optionId]);
     } else {
       // Multiple choice
@@ -180,7 +180,7 @@ class AddQuestionNotifier extends StateNotifier<AddQuestionState> {
     // Reset correct answers when switching types
     state = state.copyWith(
       questionType: type,
-      correctAnswers: type == QuestionType.singleChoice
+      correctAnswers: type == QuestionType.mcqSingleSelect
           ? []
           : state.correctAnswers,
     );

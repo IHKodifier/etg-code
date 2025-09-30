@@ -35,7 +35,7 @@ class BulkUploadService:
 
     def _has_required_columns(self, df: pd.DataFrame) -> bool:
         """Check if DataFrame has required columns for bulk upload"""
-        required_columns = ['questionId', 'questionText', 'questionType', 'correctAnswers']
+        required_columns = ['question_id', 'question_text', 'question_type', 'correct_answers']
         return all(col in df.columns for col in required_columns)
 
     async def validate_file(self, file_content: bytes, filename: str) -> Tuple[bool, str]:
@@ -92,7 +92,7 @@ class BulkUploadService:
 
                 # Check if required columns exist
                 if not self._has_required_columns(df):
-                    required_columns = ['questionText', 'questionType', 'correctAnswers']
+                    required_columns = ['question_text', 'question_type', 'correct_answers']
                     missing_columns = [col for col in required_columns if col not in df.columns]
                     return False, f"Missing required columns: {', '.join(missing_columns)}"
 
@@ -154,37 +154,37 @@ class BulkUploadService:
             questions = []
             for index, row in df.iterrows():
                 try:
-                    # Parse questionId - convert to int if provided, otherwise None for auto-generation
+                    # Parse question_id - convert to int if provided, otherwise None for auto-generation
                     question_id = None
-                    if pd.notna(row.get('questionId')) and str(row.get('questionId', '')).strip():
+                    if pd.notna(row.get('question_id')) and str(row.get('question_id', '')).strip():
                         try:
-                            question_id = int(float(row.get('questionId')))
+                            question_id = int(float(row.get('question_id')))
                         except (ValueError, TypeError):
-                            logger.warning(f"Invalid questionId at row {index + 1}: {row.get('questionId')}, will auto-generate")
+                            logger.warning(f"Invalid question_id at row {index + 1}: {row.get('question_id')}, will auto-generate")
                             question_id = None
 
                     question = BulkUploadQuestion(
                         question_id=question_id,
-                        question_text=str(row.get('questionText', '')).strip(),
-                        question_type=str(row.get('questionType', '')).strip(),
-                        exam_category=str(row.get('examCategory', '')) if pd.notna(row.get('examCategory')) else None,
+                        question_text=str(row.get('question_text', '')).strip(),
+                        question_type=str(row.get('question_type', '')).strip(),
+                        exam_category=str(row.get('exam_category', '')) if pd.notna(row.get('exam_category')) else None,
                         subject=str(row.get('subject', '')) if pd.notna(row.get('subject')) else None,
                         topic=str(row.get('topic', '')) if pd.notna(row.get('topic')) else None,
-                        sub_topic=str(row.get('subTopic', '')) if pd.notna(row.get('subTopic')) else None,
-                        option_a=str(row.get('optionA', '')) if pd.notna(row.get('optionA')) else None,
-                        option_b=str(row.get('optionB', '')) if pd.notna(row.get('optionB')) else None,
-                        option_c=str(row.get('optionC', '')) if pd.notna(row.get('optionC')) else None,
-                        option_d=str(row.get('optionD', '')) if pd.notna(row.get('optionD')) else None,
-                        option_e=str(row.get('optionE', '')) if pd.notna(row.get('optionE')) else None,
-                        option_f=str(row.get('optionF', '')) if pd.notna(row.get('optionF')) else None,
-                        correct_answers=str(row.get('correctAnswers', '')).strip(),
-                        explanation_text=str(row.get('explanationText', '')) if pd.notna(row.get('explanationText')) else None,
+                        sub_topic=str(row.get('sub_topic', '')) if pd.notna(row.get('sub_topic')) else None,
+                        option_a=str(row.get('option_a', '')) if pd.notna(row.get('option_a')) else None,
+                        option_b=str(row.get('option_b', '')) if pd.notna(row.get('option_b')) else None,
+                        option_c=str(row.get('option_c', '')) if pd.notna(row.get('option_c')) else None,
+                        option_d=str(row.get('option_d', '')) if pd.notna(row.get('option_d')) else None,
+                        option_e=str(row.get('option_e', '')) if pd.notna(row.get('option_e')) else None,
+                        option_f=str(row.get('option_f', '')) if pd.notna(row.get('option_f')) else None,
+                        correct_answers=str(row.get('correct_answers', '')).strip(),
+                        explanation_text=str(row.get('explanation+text', '')) if pd.notna(row.get('explanation+text')) else None,  # Fix: CSV header is 'explanation+text'
                         difficulty=str(row.get('difficulty', '')) if pd.notna(row.get('difficulty')) else None,
                         tags=str(row.get('tags', '')) if pd.notna(row.get('tags')) else None,
-                        estimated_time_seconds=int(row.get('estimatedTimeSeconds', 60)) if pd.notna(row.get('estimatedTimeSeconds')) else None,
-                        arde_probability=float(row.get('ardeProbability', 0.5)) if pd.notna(row.get('ardeProbability')) else None,
-                        question_image_urls=str(row.get('questionImageUrls', '')) if pd.notna(row.get('questionImageUrls')) else None,
-                        explanation_video_url=str(row.get('explanationVideoUrl', '')) if pd.notna(row.get('explanationVideoUrl')) else None,
+                        estimated_time_seconds=int(row.get('estimated_time_seconds', 60)) if pd.notna(row.get('estimated_time_seconds')) else None,
+                        arde_probability=float(row.get('arde_probability', 0.5)) if pd.notna(row.get('arde_probability')) else None,
+                        question_image_urls=str(row.get('question_image_urls', '')) if pd.notna(row.get('question_image_urls')) else None,
+                        explanation_video_url=str(row.get('explanation_video_url', '')) if pd.notna(row.get('explanation_video_url')) else None,
                     )
                     questions.append(question)
                 except Exception as e:
@@ -228,7 +228,7 @@ class BulkUploadService:
             if len(options) < 2:
                 question_errors.append("At least 2 options are required for choice questions")
 
-            # For MCQ questions, correctAnswers should contain option letters (A, B, C, D, etc.)
+            # For MCQ questions, correct_answers should contain option letters (A, B, C, D, etc.)
             # NOT the actual answer text
             correct_answer_letters = [ans.strip() for ans in question.correct_answers.split(',')]
             valid_option_ids = [opt[0] for opt in options]
@@ -236,12 +236,12 @@ class BulkUploadService:
             # Check if all correct answer letters are valid option IDs
             for letter in correct_answer_letters:
                 if letter not in valid_option_ids:
-                    question_errors.append(f"Correct answer '{letter}' is not a valid option. Use option letters (A, B, C, D, etc.) in correctAnswers column, not the actual answer text.")
+                    question_errors.append(f"Correct answer '{letter}' is not a valid option. Use option letters (A, B, C, D, etc.) in correct_answers column, not the actual answer text.")
 
-            if question.question_type == 'MCQ - Single-select' and len(correct_answer_letters) != 1:
+            if question.question_type == 'mcq.singleSelect' and len(correct_answer_letters) != 1:
                 question_errors.append("Single choice questions must have exactly one correct answer")
 
-            if question.question_type == 'MCQ - Multi-select' and len(correct_answer_letters) < 1:
+            if question.question_type == 'mcq.multiSelect' and len(correct_answer_letters) < 1:
                 question_errors.append("Multiple choice questions must have at least one correct answer")
 
             if question_errors:
@@ -373,7 +373,7 @@ class BulkUploadService:
         await self._update_progress(upload_id)
 
     async def _convert_to_create_request(self, question: BulkUploadQuestion, user_id: str, question_id: Optional[int] = None) -> Dict[str, Any]:
-        """Convert BulkUploadQuestion to QuestionCreateRequest"""
+        """Convert BulkUploadQuestion to QuestionCreateRequest using CSV format as standard"""
         options = []
 
         # Build options list
@@ -399,23 +399,10 @@ class BulkUploadService:
                     is_correct=is_correct
                 ))
 
-        # Convert question type from user format to internal format
-        question_type_mapping = {
-            'MCQ - Single-select': 'singleChoice',
-            'MCQ - Multi-select': 'multipleChoice'
-        }
-        internal_question_type = question_type_mapping.get(question.question_type, question.question_type)
-
-        # Convert difficulty from user format to internal format
-        difficulty_mapping = {
-            'Easy': 'easy',
-            'Medium': 'medium',
-            'Hard': 'hard'
-        }
-        internal_difficulty = difficulty_mapping.get(question.difficulty, question.difficulty) or 'medium'
-
-        # Use arde_probability as decimal value directly (no conversion to enum)
-        arde_probability = question.arde_probability if question.arde_probability is not None else 0.5
+        # Use CSV format values directly - no conversion needed
+        # CSV format is now the standard
+        csv_difficulty = question.difficulty  # "Easy", "Medium", "Hard"
+        csv_arde_probability = question.arde_probability if question.arde_probability is not None else 0.5
 
         # All questions are MCQ types - convert correct_answers string to list
         correct_answer = [ans.strip() for ans in question.correct_answers.split(',')]
@@ -423,6 +410,7 @@ class BulkUploadService:
         logger.info(f"Creating QuestionCreateRequest for question {question_id}:")
         logger.info(f"  correct_answer list: {correct_answer}")
         logger.info(f"  options with is_correct: {[(opt.option_id, opt.is_correct) for opt in options]}")
+        logger.info(f"  using CSV format - difficulty: '{csv_difficulty}', arde_probability: {csv_arde_probability}")
 
         create_request = QuestionCreateRequest(
             question_text=question.question_text,
@@ -431,8 +419,8 @@ class BulkUploadService:
             exam_type=question.exam_category or 'ECAT',  # Default fallback
             subject=question.subject or 'General',
             topic=question.topic or 'General',
-            difficulty=internal_difficulty,
-            arde_probability=arde_probability,  # Now a float value
+            difficulty=csv_difficulty,  # Use CSV format directly: "Easy"
+            arde_probability=csv_arde_probability,  # Use CSV format directly
             historical_frequency=0,  # Will be updated based on actual data
             explanation={'text': question.explanation_text} if question.explanation_text else None,
             video_explanation_url=question.explanation_video_url,
@@ -440,7 +428,7 @@ class BulkUploadService:
             arde_context=None
         )
 
-        logger.info(f"QuestionCreateRequest created successfully")
+        logger.info(f"QuestionCreateRequest created successfully using CSV format")
 
         # Use model-based serialization instead of manual dictionary construction
         # This ensures consistency and prevents field name mismatches

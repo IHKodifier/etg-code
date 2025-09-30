@@ -276,6 +276,30 @@ class BulkUploadApiService {
     }
   }
 
+  /// Translates front-end question type to back-end format
+  String _translateQuestionTypeToBackend(String frontendType) {
+    switch (frontendType) {
+      case 'mcq.singleSelect':
+        return 'singleChoice';
+      case 'mcq.multiSelect':
+        return 'multipleChoice';
+      default:
+        return frontendType; // Fallback to original if unknown
+    }
+  }
+
+  /// Translates back-end question type to front-end format
+  String _translateQuestionTypeToFrontend(String backendType) {
+    switch (backendType) {
+      case 'singleChoice':
+        return 'mcq.singleSelect';
+      case 'multipleChoice':
+        return 'mcq.multiSelect';
+      default:
+        return backendType; // Fallback to original if unknown
+    }
+  }
+
   /// Fallback method: Preview bulk upload using Firestore
   /// Parse CSV file client-side for basic validation and preview
   Future<Map<String, dynamic>> _previewBulkUploadFromFirestore(
@@ -326,7 +350,7 @@ class BulkUploadApiService {
         'option_b',
         'option_c',
         'option_d',
-        'correct_answer',
+        'correct_answers',
       ];
       final missingColumns = requiredColumns
           .where((col) => !headers.contains(col))
@@ -377,7 +401,7 @@ class BulkUploadApiService {
           final optionA = questionMap['option_a']?.toString().trim() ?? '';
           final optionB = questionMap['option_b']?.toString().trim() ?? '';
           final correctAnswer =
-              questionMap['correct_answer']?.toString().trim() ?? '';
+              questionMap['correct_answers']?.toString().trim() ?? '';
 
           final rowErrors = <String>[];
 

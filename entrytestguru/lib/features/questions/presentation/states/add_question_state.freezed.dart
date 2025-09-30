@@ -366,7 +366,7 @@ class _$AddQuestionStateImpl extends _AddQuestionState {
     final List<String>? questionLatex,
     final List<QuestionOption> options = const [],
     final List<String> correctAnswers = const [],
-    this.questionType = QuestionType.singleChoice,
+    this.questionType = QuestionType.mcqSingleSelect,
     this.examCategory = '',
     this.subject = '',
     this.topic = '',

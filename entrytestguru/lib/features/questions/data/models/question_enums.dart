@@ -34,17 +34,11 @@ enum DifficultyLevel {
 
 /// Types of questions supported
 enum QuestionType {
-  /// Single choice question (one correct answer)
-  singleChoice,
+  /// Single choice MCQ question (one correct answer)
+  mcqSingleSelect,
 
-  /// Multiple choice question (multiple correct answers)
-  multipleChoice,
-
-  /// Assertion-reason type questions
-  assertionReason,
-
-  /// Numerical answer questions
-  numerical,
+  /// Multiple choice MCQ question (multiple correct answers)
+  mcqMultiSelect,
 }
 
 /// Sorting options for question lists

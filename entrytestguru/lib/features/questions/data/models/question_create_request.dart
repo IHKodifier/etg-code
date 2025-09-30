@@ -32,16 +32,19 @@ class QuestionCreateRequest with _$QuestionCreateRequest {
       _$QuestionCreateRequestFromJson(json);
 
   /// Creates QuestionCreateRequest from a Question model
+  /// Now uses CSV format as standard
   factory QuestionCreateRequest.fromQuestion(Question question) {
     return QuestionCreateRequest(
       questionText: question.questionText,
       options: question.options,
       correctAnswer: question.correctAnswer,
-      examType: question.examCategory, // Convert camelCase to snake_case
-      subject: question.subject,
-      topic: question.topic,
-      difficulty: question.difficulty.name, // Convert enum to string
-      ardeProbability: question.ardeProbability,
+      examType: question.examCategory, // Keep as-is (already matches CSV)
+      subject: question.subject, // Keep as-is (already matches CSV)
+      topic: question.topic, // Keep as-is (already matches CSV)
+      difficulty:
+          question.difficulty.name, // Use CSV format: "Easy", "Medium", "Hard"
+      ardeProbability:
+          question.ardeProbability, // Keep as decimal (matches CSV)
       explanation: question.explanationText,
       videoExplanationUrl: question.explanationVideoUrl,
       references: question.references ?? [],

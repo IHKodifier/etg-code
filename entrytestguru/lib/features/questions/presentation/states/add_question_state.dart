@@ -15,7 +15,7 @@ class AddQuestionState with _$AddQuestionState {
     List<String>? questionLatex, // Multiple LaTeX expressions
     @Default([]) List<QuestionOption> options,
     @Default([]) List<String> correctAnswers,
-    @Default(QuestionType.singleChoice) QuestionType questionType,
+    @Default(QuestionType.mcqSingleSelect) QuestionType questionType,
     @Default('') String examCategory,
     @Default('') String subject,
     @Default('') String topic,
@@ -53,9 +53,9 @@ class AddQuestionState with _$AddQuestionState {
   bool get hasValidCorrectAnswers {
     if (correctAnswers.isEmpty) return false;
 
-    if (questionType == QuestionType.singleChoice) {
+    if (questionType == QuestionType.mcqSingleSelect) {
       return correctAnswers.length == 1;
-    } else if (questionType == QuestionType.multipleChoice) {
+    } else if (questionType == QuestionType.mcqMultiSelect) {
       return correctAnswers.length >= 1 &&
           correctAnswers.length < options.length;
     }

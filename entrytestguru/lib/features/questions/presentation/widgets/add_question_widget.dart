@@ -532,11 +532,11 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
               SegmentedButton<QuestionType>(
                 segments: const [
                   ButtonSegment(
-                    value: QuestionType.singleChoice,
+                    value: QuestionType.mcqSingleSelect,
                     label: Text('Single Choice'),
                   ),
                   ButtonSegment(
-                    value: QuestionType.multipleChoice,
+                    value: QuestionType.mcqMultiSelect,
                     label: Text('Multiple Choice'),
                   ),
                 ],
@@ -569,11 +569,11 @@ class _AddQuestionWidgetState extends ConsumerState<AddQuestionWidget> {
         SegmentedButton<QuestionType>(
           segments: const [
             ButtonSegment(
-              value: QuestionType.singleChoice,
+              value: QuestionType.mcqSingleSelect,
               label: Text('Single Choice'),
             ),
             ButtonSegment(
-              value: QuestionType.multipleChoice,
+              value: QuestionType.mcqMultiSelect,
               label: Text('Multiple Choice'),
             ),
           ],

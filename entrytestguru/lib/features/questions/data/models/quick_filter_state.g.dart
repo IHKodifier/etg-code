@@ -68,8 +68,6 @@ const _$DifficultyLevelEnumMap = {
 };
 
 const _$QuestionTypeEnumMap = {
-  QuestionType.singleChoice: 'singleChoice',
-  QuestionType.multipleChoice: 'multipleChoice',
-  QuestionType.assertionReason: 'assertionReason',
-  QuestionType.numerical: 'numerical',
+  QuestionType.mcqSingleSelect: 'mcqSingleSelect',
+  QuestionType.mcqMultiSelect: 'mcqMultiSelect',
 };

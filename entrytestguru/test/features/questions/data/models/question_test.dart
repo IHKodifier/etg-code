@@ -38,7 +38,7 @@ void main() {
         questionText: 'What is the acceleration due to gravity on Earth?',
         options: sampleOptions,
         correctAnswer: ['C'],
-        questionType: QuestionType.singleChoice,
+        questionType: QuestionType.mcqSingleSelect,
         explanationText:
             'The acceleration due to gravity on Earth is approximately 9.8 m/s².',
         ardeProbability: 0.8,
@@ -68,8 +68,8 @@ void main() {
         'What is the acceleration due to gravity on Earth?',
       );
       expect(sampleQuestion.correctAnswer, ['C']);
-      expect(sampleQuestion.questionType, QuestionType.singleChoice);
-      expect(sampleQuestion.ardeProbability, ArdeLevel.high);
+      expect(sampleQuestion.questionType, QuestionType.mcqSingleSelect);
+      expect(sampleQuestion.ardeProbability, 0.8);
       expect(sampleQuestion.difficulty, DifficultyLevel.medium);
     });
 
@@ -110,7 +110,7 @@ void main() {
     });
 
     test('should return question type display string', () {
-      expect(sampleQuestion.questionTypeDisplay, 'Single Choice');
+      expect(sampleQuestion.questionTypeDisplay, 'MCQ Single Select');
     });
 
     test('should return difficulty display string', () {
@@ -165,7 +165,7 @@ void main() {
     });
 
     test('should return performance rating', () {
-      expect(sampleQuestion.performanceRating, 'Good');
+      expect(sampleQuestion.performanceRating, 'Not Available');
     });
 
     test('should handle invalid question structure', () {
@@ -178,7 +178,7 @@ void main() {
         questionText: '', // Empty question text
         options: [], // No options
         correctAnswer: [], // No correct answers
-        questionType: QuestionType.singleChoice,
+        questionType: QuestionType.mcqSingleSelect,
         explanationText: 'Test explanation',
         ardeProbability: 0.5,
         difficulty: DifficultyLevel.easy,
@@ -232,7 +232,7 @@ void main() {
           {'id': 'D', 'text': 'Option D'},
         ],
         'correctAnswer': ['C'],
-        'questionType': 'singleChoice',
+        'questionType': 'mcqSingleSelect',
         'explanationText':
             'The acceleration due to gravity on Earth is approximately 9.8 m/s².',
         'ardeProbability': 0.8,

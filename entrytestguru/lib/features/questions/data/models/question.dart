@@ -30,7 +30,7 @@ class Question with _$Question {
     // Options & Answer
     required List<QuestionOption> options,
     required List<String> correctAnswer,
-    @Default(QuestionType.singleChoice) QuestionType questionType,
+    @Default(QuestionType.mcqSingleSelect) QuestionType questionType,
 
     // Explanations & Resources
     required String explanationText,
@@ -80,16 +80,17 @@ class Question with _$Question {
   }) = _Question;
 
   /// Creates Question from JSON
+  /// Now handles CSV format responses as the standard
   factory Question.fromJson(Map<String, dynamic> json) {
+    json = Map<String, dynamic>.from(json);
+
     // Handle backward compatibility for correctAnswer field
     if (json['correctAnswer'] is String) {
       // Convert string to list for backward compatibility
-      json = Map<String, dynamic>.from(json);
       json['correctAnswer'] = [json['correctAnswer'] as String];
     }
 
     // Handle questionId field - convert string to int if necessary
-    json = Map<String, dynamic>.from(json);
     if (json['questionId'] is String) {
       final questionIdStr = json['questionId'] as String;
       // Try to parse as int, fallback to hash code for string IDs
@@ -99,6 +100,25 @@ class Question with _$Question {
       } else {
         // For string IDs like "unknown_123", use hash code as fallback
         json['questionId'] = questionIdStr.hashCode.abs();
+      }
+    }
+
+    // Handle difficulty field - accept CSV format strings
+    if (json['difficulty'] is String) {
+      final difficultyStr = json['difficulty'] as String;
+      // Map CSV format to enum values
+      switch (difficultyStr) {
+        case 'Easy':
+          json['difficulty'] = 'easy'; // Map to enum name
+          break;
+        case 'Medium':
+          json['difficulty'] = 'medium';
+          break;
+        case 'Hard':
+          json['difficulty'] = 'hard';
+          break;
+        default:
+          json['difficulty'] = 'medium'; // Default fallback
       }
     }
 
@@ -127,28 +147,25 @@ class Question with _$Question {
   /// Returns the question type as a readable string
   String get questionTypeDisplay {
     switch (questionType) {
-      case QuestionType.singleChoice:
-        return 'Single Choice';
-      case QuestionType.multipleChoice:
-        return 'Multiple Choice';
-      case QuestionType.assertionReason:
-        return 'Assertion-Reason';
-      case QuestionType.numerical:
-        return 'Numerical';
+      case QuestionType.mcqSingleSelect:
+        return 'MCQ Single Select';
+      case QuestionType.mcqMultiSelect:
+        return 'MCQ Multi Select';
     }
   }
 
   /// Returns the difficulty level as a readable string
+  /// Now displays CSV format values: "Easy", "Medium", "Hard"
   String get difficultyDisplay {
     switch (difficulty) {
       case DifficultyLevel.veryEasy:
         return 'Very Easy';
       case DifficultyLevel.easy:
-        return 'Easy';
+        return 'Easy'; // Matches CSV format
       case DifficultyLevel.medium:
-        return 'Medium';
+        return 'Medium'; // Matches CSV format
       case DifficultyLevel.hard:
-        return 'Hard';
+        return 'Hard'; // Matches CSV format
       case DifficultyLevel.veryHard:
         return 'Very Hard';
     }
@@ -214,10 +231,10 @@ class Question with _$Question {
   }
 
   /// Checks if the question is single choice
-  bool get isSingleChoice => questionType == QuestionType.singleChoice;
+  bool get isSingleChoice => questionType == QuestionType.mcqSingleSelect;
 
   /// Checks if the question is multiple choice
-  bool get isMultipleChoice => questionType == QuestionType.multipleChoice;
+  bool get isMultipleChoice => questionType == QuestionType.mcqMultiSelect;
 
   /// Returns the number of correct answers expected
   int get expectedCorrectAnswers => correctAnswer.length;

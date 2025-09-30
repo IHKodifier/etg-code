@@ -33,10 +33,10 @@ class PresentQuestionState with _$PresentQuestionState {
   bool get canSubmitAnswer => hasSelectedAnswers && !isAnswered;
 
   bool get isMultipleChoice =>
-      currentQuestion?.questionType == QuestionType.multipleChoice;
+      currentQuestion?.questionType == QuestionType.mcqMultiSelect;
 
   bool get isSingleChoice =>
-      currentQuestion?.questionType == QuestionType.singleChoice;
+      currentQuestion?.questionType == QuestionType.mcqSingleSelect;
 
   List<String> get correctAnswers => currentQuestion?.correctAnswer ?? [];
 

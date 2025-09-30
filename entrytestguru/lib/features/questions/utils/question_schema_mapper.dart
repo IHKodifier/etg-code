@@ -11,18 +11,15 @@ class QuestionSchemaMapper {
   }
 
   /// Converts CSV difficulty string to DifficultyLevel enum
+  /// Now uses CSV format as standard: "Easy", "Medium", "Hard"
   static DifficultyLevel mapCsvDifficulty(String csvDifficulty) {
-    switch (csvDifficulty.toLowerCase()) {
-      case 'easy':
+    switch (csvDifficulty) {
+      case 'Easy':
         return DifficultyLevel.easy;
-      case 'medium':
+      case 'Medium':
         return DifficultyLevel.medium;
-      case 'hard':
+      case 'Hard':
         return DifficultyLevel.hard;
-      case 'very easy':
-        return DifficultyLevel.veryEasy;
-      case 'very hard':
-        return DifficultyLevel.veryHard;
       default:
         return DifficultyLevel.medium; // Default fallback
     }
@@ -31,16 +28,12 @@ class QuestionSchemaMapper {
   /// Converts CSV question type string to QuestionType enum
   static QuestionType mapCsvQuestionType(String csvQuestionType) {
     final type = csvQuestionType.toLowerCase();
-    if (type.contains('single') || type.contains('mcq')) {
-      return QuestionType.singleChoice;
-    } else if (type.contains('multiple')) {
-      return QuestionType.multipleChoice;
-    } else if (type.contains('assertion')) {
-      return QuestionType.assertionReason;
-    } else if (type.contains('numerical')) {
-      return QuestionType.numerical;
+    if (type.contains('singleselect') || type.contains('mcq.single')) {
+      return QuestionType.mcqSingleSelect;
+    } else if (type.contains('multiselect') || type.contains('mcq.multi')) {
+      return QuestionType.mcqMultiSelect;
     }
-    return QuestionType.singleChoice; // Default fallback
+    return QuestionType.mcqSingleSelect; // Default fallback
   }
 
   /// Normalizes correct answers from CSV format to List<String>
@@ -133,15 +126,16 @@ class QuestionSchemaMapper {
   }
 
   /// Validates that CSV data has minimum required fields for question creation
+  /// Now uses CSV format field names as the standard
   static List<String> validateCsvQuestionData(Map<String, dynamic> csvRow) {
     final errors = <String>[];
 
-    // Required fields
+    // Required fields - using CSV snake_case field names
     if (csvRow['question_text']?.toString().trim().isEmpty ?? true) {
       errors.add('Question text is required');
     }
 
-    if (csvRow['examCategory']?.toString().trim().isEmpty ?? true) {
+    if (csvRow['exam_category']?.toString().trim().isEmpty ?? true) {
       errors.add('Exam category is required');
     }
 
@@ -160,9 +154,9 @@ class QuestionSchemaMapper {
     }
 
     // Check if correct answer is provided and valid
-    final correctAnswer = csvRow['correct_answer']?.toString().trim();
+    final correctAnswer = csvRow['correct_answers']?.toString().trim();
     if (correctAnswer == null || correctAnswer.isEmpty) {
-      errors.add('Correct answer is required');
+      errors.add('Correct answers is required');
     } else {
       final normalizedAnswers = normalizeCorrectAnswers(correctAnswer);
       if (normalizedAnswers.isEmpty) {
@@ -185,7 +179,7 @@ class QuestionSchemaMapper {
   }
 
   /// Creates a complete Question object from validated CSV data
-  /// This ensures CSV and manual creation produce identical Question objects
+  /// Now uses CSV format field names as the standard
   static Question createQuestionFromCsvData(
     Map<String, dynamic> csvRow, {
     required String createdBy,
@@ -193,46 +187,51 @@ class QuestionSchemaMapper {
   }) {
     final questionId =
         overrideQuestionId ??
-        (csvRow['questionId'] != null
+        (csvRow['question_id'] != null
             ? safeParseInt(
-                csvRow['questionId'].toString(),
+                csvRow['question_id'].toString(),
                 generateUniqueQuestionId(),
               )
             : generateUniqueQuestionId());
 
     final options = createOptionsFromCsv(csvRow);
     final correctAnswers = normalizeCorrectAnswers(
-      csvRow['correct_answer'].toString(),
+      csvRow['correct_answers'].toString(),
     );
 
     return Question(
       id: 'csv_$questionId',
       questionId: questionId,
-      examCategory: csvRow['examCategory'].toString().trim(),
+      examCategory: csvRow['exam_category'].toString().trim(),
       subject: csvRow['subject'].toString().trim(),
       topic: csvRow['topic'].toString().trim(),
       subTopic: csvRow['subTopic']?.toString().trim(),
       questionText: csvRow['question_text'].toString().trim(),
       questionImageUrls: parseCsvImageUrls(
-        csvRow['questionImageUrls']?.toString(),
+        csvRow['question_image_urls']?.toString(),
       ),
       questionLatex: parseCsvImageUrls(
-        csvRow['questionLatex']?.toString(),
+        csvRow['question_latex']?.toString(),
       ), // Reuse for LaTeX
       options: options,
       correctAnswer: correctAnswers,
-      questionType: mapCsvQuestionType(csvRow['questionType'].toString()),
+      questionType: mapCsvQuestionType(csvRow['question_type'].toString()),
       explanationText:
-          csvRow['explanationText']?.toString().trim() ??
+          csvRow['explanation+text']
+              ?.toString()
+              .trim() ?? // Fix: CSV header is 'explanation+text'
+          csvRow['explanation_text']
+              ?.toString()
+              .trim() ?? // Fallback for underscore version
           'Explanation not provided',
-      explanationVideoUrl: csvRow['explanationVideoUrl']?.toString().trim(),
+      explanationVideoUrl: csvRow['explanation_video_url']?.toString().trim(),
       ardeProbability: safeParseDouble(
-        csvRow['ardeProbability']?.toString(),
+        csvRow['arde_probability']?.toString(),
         0.5,
       ),
       difficulty: mapCsvDifficulty(csvRow['difficulty'].toString()),
       estimatedTimeSeconds: safeParseInt(
-        csvRow['estimatedTimeSeconds']?.toString(),
+        csvRow['estimated_time_seconds']?.toString(),
         60,
       ),
       tags: parseCsvTags(csvRow['tags']?.toString()),
