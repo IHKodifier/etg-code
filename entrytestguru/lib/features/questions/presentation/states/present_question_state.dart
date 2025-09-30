@@ -17,10 +17,13 @@ class PresentQuestionState with _$PresentQuestionState {
     @Default(false) bool isCorrect,
     QuestionAttempt? lastAttempt,
     @Default(false) bool isLoading,
+    @Default(false) bool isLoadingMore,
     String? errorMessage,
     QuestionFilter? currentFilter,
     @Default(0) int currentQuestionIndex,
     @Default([]) List<Question> questionQueue,
+    @Default(true) bool hasMore,
+    @Default(0) int totalCount,
   }) = _PresentQuestionState;
 
   const PresentQuestionState._();
@@ -30,10 +33,10 @@ class PresentQuestionState with _$PresentQuestionState {
   bool get canSubmitAnswer => hasSelectedAnswers && !isAnswered;
 
   bool get isMultipleChoice =>
-      currentQuestion?.questionType == QuestionType.multipleChoice;
+      currentQuestion?.questionType == QuestionType.mcqMultiSelect;
 
   bool get isSingleChoice =>
-      currentQuestion?.questionType == QuestionType.singleChoice;
+      currentQuestion?.questionType == QuestionType.mcqSingleSelect;
 
   List<String> get correctAnswers => currentQuestion?.correctAnswer ?? [];
 
@@ -131,13 +134,20 @@ class PresentQuestionState with _$PresentQuestionState {
     return copyWith(selectedAnswers: newSelectedAnswers);
   }
 
-  PresentQuestionState copyWithQuestionsLoaded(List<Question> questions) {
+  PresentQuestionState copyWithQuestionsLoaded(
+    List<Question> questions, {
+    bool hasMore = true,
+    int totalCount = 0,
+  }) {
     if (questions.isEmpty) {
       return copyWith(
         questionQueue: [],
         currentQuestion: null,
         currentQuestionIndex: 0,
         isLoading: false,
+        isLoadingMore: false,
+        hasMore: hasMore,
+        totalCount: totalCount,
       );
     }
 
@@ -158,7 +168,10 @@ class PresentQuestionState with _$PresentQuestionState {
       isCorrect: false,
       lastAttempt: null,
       isLoading: false,
+      isLoadingMore: false,
       errorMessage: null,
+      hasMore: hasMore,
+      totalCount: totalCount,
     );
   }
 }

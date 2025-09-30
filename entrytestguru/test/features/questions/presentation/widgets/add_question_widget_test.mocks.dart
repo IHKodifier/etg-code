@@ -3,16 +3,18 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i3;
+import 'dart:async' as _i4;
 
 import 'package:entrytestguru/features/questions/data/models/question.dart'
-    as _i4;
+    as _i2;
 import 'package:entrytestguru/features/questions/data/models/question_attempt.dart'
+    as _i7;
+import 'package:entrytestguru/features/questions/data/models/question_create_request.dart'
     as _i6;
 import 'package:entrytestguru/features/questions/data/models/question_filter.dart'
     as _i5;
 import 'package:entrytestguru/features/questions/data/services/question_api_service.dart'
-    as _i2;
+    as _i3;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -29,35 +31,59 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
+class _FakeQuestion_0 extends _i1.SmartFake implements _i2.Question {
+  _FakeQuestion_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [QuestionApiService].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockQuestionApiService extends _i1.Mock
-    implements _i2.QuestionApiService {
+    implements _i3.QuestionApiService {
   MockQuestionApiService() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<List<_i4.Question>> getFilteredQuestions(
-    _i5.QuestionFilter? filter,
-  ) =>
+  _i4.Future<List<_i2.Question>> getFilteredQuestions(
+    _i5.QuestionFilter? filter, {
+    int? limit = 20,
+    int? offset = 0,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#getFilteredQuestions, [filter]),
-            returnValue: _i3.Future<List<_i4.Question>>.value(<_i4.Question>[]),
+            Invocation.method(
+              #getFilteredQuestions,
+              [filter],
+              {#limit: limit, #offset: offset},
+            ),
+            returnValue: _i4.Future<List<_i2.Question>>.value(<_i2.Question>[]),
           )
-          as _i3.Future<List<_i4.Question>>);
+          as _i4.Future<List<_i2.Question>>);
 
   @override
-  _i3.Future<_i4.Question?> getQuestion(String? questionId) =>
+  _i4.Future<_i2.Question?> getQuestion(String? questionId) =>
       (super.noSuchMethod(
             Invocation.method(#getQuestion, [questionId]),
-            returnValue: _i3.Future<_i4.Question?>.value(),
+            returnValue: _i4.Future<_i2.Question?>.value(),
           )
-          as _i3.Future<_i4.Question?>);
+          as _i4.Future<_i2.Question?>);
 
   @override
-  _i3.Future<List<_i4.Question>> searchQuestions(
+  _i4.Future<_i2.Question> createQuestion(_i6.QuestionCreateRequest? request) =>
+      (super.noSuchMethod(
+            Invocation.method(#createQuestion, [request]),
+            returnValue: _i4.Future<_i2.Question>.value(
+              _FakeQuestion_0(
+                this,
+                Invocation.method(#createQuestion, [request]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Question>);
+
+  @override
+  _i4.Future<List<_i2.Question>> searchQuestions(
     String? query, {
     String? examCategory,
     int? limit = 20,
@@ -68,12 +94,12 @@ class MockQuestionApiService extends _i1.Mock
               [query],
               {#examCategory: examCategory, #limit: limit},
             ),
-            returnValue: _i3.Future<List<_i4.Question>>.value(<_i4.Question>[]),
+            returnValue: _i4.Future<List<_i2.Question>>.value(<_i2.Question>[]),
           )
-          as _i3.Future<List<_i4.Question>>);
+          as _i4.Future<List<_i2.Question>>);
 
   @override
-  _i3.Future<List<_i4.Question>> getQuestionsForPractice({
+  _i4.Future<List<_i2.Question>> getQuestionsForPractice({
     required String? examCategory,
     String? subject,
     String? topic,
@@ -86,12 +112,12 @@ class MockQuestionApiService extends _i1.Mock
               #topic: topic,
               #limit: limit,
             }),
-            returnValue: _i3.Future<List<_i4.Question>>.value(<_i4.Question>[]),
+            returnValue: _i4.Future<List<_i2.Question>>.value(<_i2.Question>[]),
           )
-          as _i3.Future<List<_i4.Question>>);
+          as _i4.Future<List<_i2.Question>>);
 
   @override
-  _i3.Future<List<_i4.Question>> getQuestionsForExam({
+  _i4.Future<List<_i2.Question>> getQuestionsForExam({
     required String? examCategory,
     int? questionCount = 100,
     bool? prioritizeHighArde = true,
@@ -102,21 +128,21 @@ class MockQuestionApiService extends _i1.Mock
               #questionCount: questionCount,
               #prioritizeHighArde: prioritizeHighArde,
             }),
-            returnValue: _i3.Future<List<_i4.Question>>.value(<_i4.Question>[]),
+            returnValue: _i4.Future<List<_i2.Question>>.value(<_i2.Question>[]),
           )
-          as _i3.Future<List<_i4.Question>>);
+          as _i4.Future<List<_i2.Question>>);
 
   @override
-  _i3.Future<void> recordAttempt(_i6.QuestionAttempt? attempt) =>
+  _i4.Future<void> recordAttempt(_i7.QuestionAttempt? attempt) =>
       (super.noSuchMethod(
             Invocation.method(#recordAttempt, [attempt]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<List<_i6.QuestionAttempt>> getQuestionAttempts(
+  _i4.Future<List<_i7.QuestionAttempt>> getQuestionAttempts(
     String? questionId, {
     String? userId,
   }) =>
@@ -126,41 +152,41 @@ class MockQuestionApiService extends _i1.Mock
               [questionId],
               {#userId: userId},
             ),
-            returnValue: _i3.Future<List<_i6.QuestionAttempt>>.value(
-              <_i6.QuestionAttempt>[],
+            returnValue: _i4.Future<List<_i7.QuestionAttempt>>.value(
+              <_i7.QuestionAttempt>[],
             ),
           )
-          as _i3.Future<List<_i6.QuestionAttempt>>);
+          as _i4.Future<List<_i7.QuestionAttempt>>);
 
   @override
-  _i3.Future<List<_i6.QuestionAttempt>> getSessionAttempts(String? sessionId) =>
+  _i4.Future<List<_i7.QuestionAttempt>> getSessionAttempts(String? sessionId) =>
       (super.noSuchMethod(
             Invocation.method(#getSessionAttempts, [sessionId]),
-            returnValue: _i3.Future<List<_i6.QuestionAttempt>>.value(
-              <_i6.QuestionAttempt>[],
+            returnValue: _i4.Future<List<_i7.QuestionAttempt>>.value(
+              <_i7.QuestionAttempt>[],
             ),
           )
-          as _i3.Future<List<_i6.QuestionAttempt>>);
+          as _i4.Future<List<_i7.QuestionAttempt>>);
 
   @override
-  _i3.Future<void> toggleBookmark(String? questionId, {String? userId}) =>
+  _i4.Future<void> toggleBookmark(String? questionId, {String? userId}) =>
       (super.noSuchMethod(
             Invocation.method(#toggleBookmark, [questionId], {#userId: userId}),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<List<_i4.Question>> getBookmarkedQuestions({String? userId}) =>
+  _i4.Future<List<_i2.Question>> getBookmarkedQuestions({String? userId}) =>
       (super.noSuchMethod(
             Invocation.method(#getBookmarkedQuestions, [], {#userId: userId}),
-            returnValue: _i3.Future<List<_i4.Question>>.value(<_i4.Question>[]),
+            returnValue: _i4.Future<List<_i2.Question>>.value(<_i2.Question>[]),
           )
-          as _i3.Future<List<_i4.Question>>);
+          as _i4.Future<List<_i2.Question>>);
 
   @override
-  _i3.Future<void> addQuestionNote(
+  _i4.Future<void> addQuestionNote(
     String? questionId,
     String? note, {
     String? userId,
@@ -171,13 +197,13 @@ class MockQuestionApiService extends _i1.Mock
               [questionId, note],
               {#userId: userId},
             ),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<List<_i4.Question>> getWeakAreaQuestions({
+  _i4.Future<List<_i2.Question>> getWeakAreaQuestions({
     String? examCategory,
     int? limit = 20,
   }) =>
@@ -186,12 +212,12 @@ class MockQuestionApiService extends _i1.Mock
               #examCategory: examCategory,
               #limit: limit,
             }),
-            returnValue: _i3.Future<List<_i4.Question>>.value(<_i4.Question>[]),
+            returnValue: _i4.Future<List<_i2.Question>>.value(<_i2.Question>[]),
           )
-          as _i3.Future<List<_i4.Question>>);
+          as _i4.Future<List<_i2.Question>>);
 
   @override
-  _i3.Future<List<_i4.Question>> getUnattemptedQuestions({
+  _i4.Future<List<_i2.Question>> getUnattemptedQuestions({
     String? examCategory,
     String? subject,
     int? limit = 20,
@@ -202,12 +228,12 @@ class MockQuestionApiService extends _i1.Mock
               #subject: subject,
               #limit: limit,
             }),
-            returnValue: _i3.Future<List<_i4.Question>>.value(<_i4.Question>[]),
+            returnValue: _i4.Future<List<_i2.Question>>.value(<_i2.Question>[]),
           )
-          as _i3.Future<List<_i4.Question>>);
+          as _i4.Future<List<_i2.Question>>);
 
   @override
-  _i3.Future<List<_i4.Question>> getHighArdeQuestions({
+  _i4.Future<List<_i2.Question>> getHighArdeQuestions({
     String? examCategory,
     int? limit = 20,
   }) =>
@@ -216,65 +242,25 @@ class MockQuestionApiService extends _i1.Mock
               #examCategory: examCategory,
               #limit: limit,
             }),
-            returnValue: _i3.Future<List<_i4.Question>>.value(<_i4.Question>[]),
+            returnValue: _i4.Future<List<_i2.Question>>.value(<_i2.Question>[]),
           )
-          as _i3.Future<List<_i4.Question>>);
+          as _i4.Future<List<_i2.Question>>);
 
   @override
-  _i3.Future<Map<String, dynamic>> getQuestionStats(String? questionId) =>
+  _i4.Future<Map<String, dynamic>> getQuestionStats(String? questionId) =>
       (super.noSuchMethod(
             Invocation.method(#getQuestionStats, [questionId]),
-            returnValue: _i3.Future<Map<String, dynamic>>.value(
+            returnValue: _i4.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
           )
-          as _i3.Future<Map<String, dynamic>>);
+          as _i4.Future<Map<String, dynamic>>);
 
   @override
-  _i3.Future<Map<String, dynamic>> upgradeAnonymousToRegistered({
-    required String? email,
-    required String? password,
-    required String? examType,
-  }) =>
+  _i4.Future<int> getTotalQuestionCount() =>
       (super.noSuchMethod(
-            Invocation.method(#upgradeAnonymousToRegistered, [], {
-              #email: email,
-              #password: password,
-              #examType: examType,
-            }),
-            returnValue: _i3.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
+            Invocation.method(#getTotalQuestionCount, []),
+            returnValue: _i4.Future<int>.value(0),
           )
-          as _i3.Future<Map<String, dynamic>>);
-
-  @override
-  _i3.Future<Map<String, dynamic>> upgradeToProTier(String? paymentToken) =>
-      (super.noSuchMethod(
-            Invocation.method(#upgradeToProTier, [paymentToken]),
-            returnValue: _i3.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
-          )
-          as _i3.Future<Map<String, dynamic>>);
-
-  @override
-  _i3.Future<Map<String, dynamic>> getSubscriptionStatus() =>
-      (super.noSuchMethod(
-            Invocation.method(#getSubscriptionStatus, []),
-            returnValue: _i3.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
-          )
-          as _i3.Future<Map<String, dynamic>>);
-
-  @override
-  _i3.Future<Map<String, dynamic>> getUsageLimits() =>
-      (super.noSuchMethod(
-            Invocation.method(#getUsageLimits, []),
-            returnValue: _i3.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
-          )
-          as _i3.Future<Map<String, dynamic>>);
+          as _i4.Future<int>);
 }

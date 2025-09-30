@@ -21,6 +21,7 @@ hiredis>=2.2.3
 # Data processing
 pandas>=2.2.0
 numpy>=1.26.0
+openpyxl>=3.1.0
 pydantic-settings>=2.1.0
 pydantic[email]>=2.5.0
 

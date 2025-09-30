@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/question.dart';
 import '../models/question_filter.dart';
 import '../models/question_attempt.dart';
+import '../models/question_create_request.dart';
 
 /// API service for question-related backend communication
 /// Handles HTTP requests to the FastAPI backend endpoints
@@ -14,7 +15,7 @@ class QuestionApiService {
   QuestionApiService(this._apiClient);
 
   /// Base path for question endpoints
-  static const String _questionsPath = '/api/v1/questions';
+  static const String _questionsPath = '/questions';
 
   /// Provider for dependency injection
   static final provider = Provider<QuestionApiService>((ref) {
@@ -22,13 +23,21 @@ class QuestionApiService {
     return QuestionApiService(apiClient);
   });
 
-  /// Fetches questions based on filter criteria
+  /// Fetches questions based on filter criteria with pagination
   /// Converts QuestionFilter to API parameters
-  Future<List<Question>> getFilteredQuestions(QuestionFilter filter) async {
+  Future<List<Question>> getFilteredQuestions(
+    QuestionFilter filter, {
+    int limit = 20,
+    int offset = 0,
+  }) async {
     try {
+      final queryParams = filter.toApiMap();
+      queryParams['limit'] = limit;
+      queryParams['offset'] = offset;
+
       final response = await _apiClient.get(
         _questionsPath,
-        queryParameters: filter.toApiMap(),
+        queryParameters: queryParams,
       );
 
       if (response.statusCode == 200) {
@@ -59,6 +68,24 @@ class QuestionApiService {
         return null;
       }
       throw _handleDioError(e, 'fetching question $questionId');
+    }
+  }
+
+  /// Creates a new question
+  Future<Question> createQuestion(QuestionCreateRequest request) async {
+    try {
+      final response = await _apiClient.post(
+        _questionsPath,
+        data: jsonEncode(request.toJson()),
+      );
+
+      if (response.statusCode == 201) {
+        return Question.fromJson(response.data);
+      } else {
+        throw Exception('Failed to create question: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw _handleDioError(e, 'creating question');
     }
   }
 
@@ -198,9 +225,7 @@ class QuestionApiService {
   /// Fetches attempts for a session
   Future<List<QuestionAttempt>> getSessionAttempts(String sessionId) async {
     try {
-      final response = await _apiClient.get(
-        '/api/v1/sessions/$sessionId/attempts',
-      );
+      final response = await _apiClient.get('/sessions/$sessionId/attempts');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['attempts'] ?? [];
@@ -387,89 +412,20 @@ class QuestionApiService {
     }
   }
 
-  // Subscription Management Methods
-
-  /// Upgrades anonymous user to registered account
-  Future<Map<String, dynamic>> upgradeAnonymousToRegistered({
-    required String email,
-    required String password,
-    required String examType,
-  }) async {
+  /// Gets the total count of questions in the collection
+  Future<int> getTotalQuestionCount() async {
     try {
-      final data = {
-        'email': email,
-        'password': password,
-        'exam_type': examType,
-      };
-
-      final response = await _apiClient.post(
-        '$_questionsPath/subscription/upgrade-anonymous',
-        data: jsonEncode(data),
-      );
+      final response = await _apiClient.get('$_questionsPath/count');
 
       if (response.statusCode == 200) {
-        return response.data;
-      } else {
-        throw Exception('Failed to upgrade account: ${response.statusCode}');
-      }
-    } on DioException catch (e) {
-      throw _handleDioError(e, 'upgrading anonymous account');
-    }
-  }
-
-  /// Upgrades user to pro tier
-  Future<Map<String, dynamic>> upgradeToProTier(String paymentToken) async {
-    try {
-      final data = {'payment_token': paymentToken};
-
-      final response = await _apiClient.post(
-        '$_questionsPath/subscription/upgrade-to-pro',
-        data: jsonEncode(data),
-      );
-
-      if (response.statusCode == 200) {
-        return response.data;
-      } else {
-        throw Exception('Failed to upgrade to pro: ${response.statusCode}');
-      }
-    } on DioException catch (e) {
-      throw _handleDioError(e, 'upgrading to pro tier');
-    }
-  }
-
-  /// Gets current user's subscription status
-  Future<Map<String, dynamic>> getSubscriptionStatus() async {
-    try {
-      final response = await _apiClient.get(
-        '$_questionsPath/subscription/status',
-      );
-
-      if (response.statusCode == 200) {
-        return response.data;
+        return response.data['total_count'] ?? 0;
       } else {
         throw Exception(
-          'Failed to get subscription status: ${response.statusCode}',
+          'Failed to fetch question count: ${response.statusCode}',
         );
       }
     } on DioException catch (e) {
-      throw _handleDioError(e, 'getting subscription status');
-    }
-  }
-
-  /// Gets current user's usage limits
-  Future<Map<String, dynamic>> getUsageLimits() async {
-    try {
-      final response = await _apiClient.get(
-        '$_questionsPath/subscription/limits',
-      );
-
-      if (response.statusCode == 200) {
-        return response.data;
-      } else {
-        throw Exception('Failed to get usage limits: ${response.statusCode}');
-      }
-    } on DioException catch (e) {
-      throw _handleDioError(e, 'getting usage limits');
+      throw _handleDioError(e, 'fetching question count');
     }
   }
 

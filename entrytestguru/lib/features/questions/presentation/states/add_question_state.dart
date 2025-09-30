@@ -3,6 +3,7 @@ import '../../data/models/question.dart';
 import '../../data/models/question_enums.dart';
 import '../../data/models/question_option.dart';
 import '../../data/models/question_performance_stats.dart';
+import '../../utils/question_schema_mapper.dart';
 
 part 'add_question_state.freezed.dart';
 
@@ -14,7 +15,7 @@ class AddQuestionState with _$AddQuestionState {
     List<String>? questionLatex, // Multiple LaTeX expressions
     @Default([]) List<QuestionOption> options,
     @Default([]) List<String> correctAnswers,
-    @Default(QuestionType.singleChoice) QuestionType questionType,
+    @Default(QuestionType.mcqSingleSelect) QuestionType questionType,
     @Default('') String examCategory,
     @Default('') String subject,
     @Default('') String topic,
@@ -28,6 +29,8 @@ class AddQuestionState with _$AddQuestionState {
     @Default(false) bool isSuccess,
     @Default(false) bool isEditing,
     String? editingQuestionId,
+    int?
+    originalQuestionId, // Store the original numeric questionId when editing
   }) = _AddQuestionState;
 
   const AddQuestionState._();
@@ -50,9 +53,9 @@ class AddQuestionState with _$AddQuestionState {
   bool get hasValidCorrectAnswers {
     if (correctAnswers.isEmpty) return false;
 
-    if (questionType == QuestionType.singleChoice) {
+    if (questionType == QuestionType.mcqSingleSelect) {
       return correctAnswers.length == 1;
-    } else if (questionType == QuestionType.multipleChoice) {
+    } else if (questionType == QuestionType.mcqMultiSelect) {
       return correctAnswers.length >= 1 &&
           correctAnswers.length < options.length;
     }
@@ -65,9 +68,14 @@ class AddQuestionState with _$AddQuestionState {
       return null;
     }
 
+    // Use schema mapper for consistent ID generation
+    final questionId = isEditing && originalQuestionId != null
+        ? originalQuestionId!
+        : QuestionSchemaMapper.generateUniqueQuestionId();
+
     return Question(
-      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-      questionId: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+      id: 'temp_${questionId}',
+      questionId: questionId,
       examCategory: examCategory,
       subject: subject,
       topic: topic,
@@ -79,18 +87,9 @@ class AddQuestionState with _$AddQuestionState {
       correctAnswer: correctAnswers,
       questionType: questionType,
       explanationText: explanationText ?? '',
-      ardeProbability: ArdeLevel.medium, // Default for new questions
+      ardeProbability: 0.5, // Default for new questions
       difficulty: difficulty,
       estimatedTimeSeconds: estimatedTimeSeconds,
-      globalStats: const QuestionPerformanceStats(
-        totalAttempts: 0,
-        totalCorrect: 0,
-        globalAccuracy: 0.0,
-        averageTimeSeconds: 0.0,
-        medianTimeSeconds: 0.0,
-        p95TimeSeconds: 0.0,
-        calculatedDifficulty: 0.5,
-      ),
       tags: tags,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),

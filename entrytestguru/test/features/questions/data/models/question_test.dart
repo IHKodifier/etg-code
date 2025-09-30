@@ -30,7 +30,7 @@ void main() {
 
       sampleQuestion = Question(
         id: 'TEST_001',
-        questionId: 'TEST_001',
+        questionId: 1,
         examCategory: 'ECAT',
         subject: 'Physics',
         topic: 'Kinematics',
@@ -38,14 +38,13 @@ void main() {
         questionText: 'What is the acceleration due to gravity on Earth?',
         options: sampleOptions,
         correctAnswer: ['C'],
-        questionType: QuestionType.singleChoice,
+        questionType: QuestionType.mcqSingleSelect,
         explanationText:
             'The acceleration due to gravity on Earth is approximately 9.8 m/s².',
-        ardeProbability: ArdeLevel.high,
+        ardeProbability: 0.8,
         ardeFrequency: 5,
         difficulty: DifficultyLevel.medium,
         estimatedTimeSeconds: 60,
-        globalStats: sampleStats,
         tags: ['physics', 'gravity', 'kinematics'],
         createdAt: DateTime(2024, 1, 1),
         updatedAt: DateTime(2024, 1, 1),
@@ -69,8 +68,8 @@ void main() {
         'What is the acceleration due to gravity on Earth?',
       );
       expect(sampleQuestion.correctAnswer, ['C']);
-      expect(sampleQuestion.questionType, QuestionType.singleChoice);
-      expect(sampleQuestion.ardeProbability, ArdeLevel.high);
+      expect(sampleQuestion.questionType, QuestionType.mcqSingleSelect);
+      expect(sampleQuestion.ardeProbability, 0.8);
       expect(sampleQuestion.difficulty, DifficultyLevel.medium);
     });
 
@@ -111,7 +110,7 @@ void main() {
     });
 
     test('should return question type display string', () {
-      expect(sampleQuestion.questionTypeDisplay, 'Single Choice');
+      expect(sampleQuestion.questionTypeDisplay, 'MCQ Single Select');
     });
 
     test('should return difficulty display string', () {
@@ -166,25 +165,24 @@ void main() {
     });
 
     test('should return performance rating', () {
-      expect(sampleQuestion.performanceRating, 'Good');
+      expect(sampleQuestion.performanceRating, 'Not Available');
     });
 
     test('should handle invalid question structure', () {
       final invalidQuestion = Question(
         id: 'INVALID',
-        questionId: 'INVALID',
+        questionId: 999,
         examCategory: 'TEST',
         subject: 'Test',
         topic: 'Test',
         questionText: '', // Empty question text
         options: [], // No options
         correctAnswer: [], // No correct answers
-        questionType: QuestionType.singleChoice,
+        questionType: QuestionType.mcqSingleSelect,
         explanationText: 'Test explanation',
-        ardeProbability: ArdeLevel.medium,
+        ardeProbability: 0.5,
         difficulty: DifficultyLevel.easy,
         estimatedTimeSeconds: 30,
-        globalStats: sampleStats,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         createdBy: 'test',
@@ -221,7 +219,7 @@ void main() {
       // Create proper JSON structure for deserialization
       final json = {
         'id': 'TEST_001',
-        'questionId': 'TEST_001',
+        'questionId': 1,
         'examCategory': 'ECAT',
         'subject': 'Physics',
         'topic': 'Kinematics',
@@ -234,22 +232,13 @@ void main() {
           {'id': 'D', 'text': 'Option D'},
         ],
         'correctAnswer': ['C'],
-        'questionType': 'singleChoice',
+        'questionType': 'mcqSingleSelect',
         'explanationText':
             'The acceleration due to gravity on Earth is approximately 9.8 m/s².',
-        'ardeProbability': 'high',
+        'ardeProbability': 0.8,
         'ardeFrequency': 5,
         'difficulty': 'medium',
         'estimatedTimeSeconds': 60,
-        'globalStats': {
-          'totalAttempts': 100,
-          'totalCorrect': 75,
-          'globalAccuracy': 0.75,
-          'averageTimeSeconds': 45.0,
-          'medianTimeSeconds': 42.0,
-          'p95TimeSeconds': 120.0,
-          'calculatedDifficulty': 0.6,
-        },
         'tags': ['physics', 'gravity', 'kinematics'],
         'createdAt': '2024-01-01T00:00:00.000Z',
         'updatedAt': '2024-01-01T00:00:00.000Z',
@@ -257,6 +246,10 @@ void main() {
         'isActive': true,
         'version': 1,
         'status': 'approved',
+
+        // User-specific fields
+        'isBookmarked': false,
+        'userNotes': null,
 
         // Approval workflow fields
         'approval_status': 'approved',

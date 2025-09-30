@@ -11,7 +11,7 @@ class SampleData {
   static Question createSamplePhysicsQuestion() {
     return Question(
       id: "ECAT_PHY_001",
-      questionId: "ECAT_PHY_001",
+      questionId: 1,
       examCategory: "ECAT",
       subject: "Physics",
       topic: "Kinematics",
@@ -30,7 +30,7 @@ class SampleData {
       ],
 
       correctAnswer: ["C"],
-      questionType: QuestionType.singleChoice,
+      questionType: QuestionType.mcqSingleSelect,
 
       explanationText:
           "At the highest point, the velocity becomes zero because "
@@ -45,7 +45,7 @@ class SampleData {
         "Step 5: At maximum height: 20 - g × t = 0, so t = 2s",
       ],
 
-      ardeProbability: ArdeLevel.high,
+      ardeProbability: 0.8,
       ardeFrequency: 3,
       ardeAppearanceYears: [2023, 2022, 2020],
       ardeNotes: "Frequently asked in kinematics section",
@@ -53,36 +53,6 @@ class SampleData {
 
       difficulty: DifficultyLevel.medium,
       estimatedTimeSeconds: 60,
-
-      globalStats: QuestionPerformanceStats(
-        totalAttempts: 1523,
-        totalCorrect: 1023,
-        globalAccuracy: 0.672,
-        averageTimeSeconds: 45.3,
-        medianTimeSeconds: 42.0,
-        p95TimeSeconds: 120.0,
-        calculatedDifficulty: 0.65,
-        tierPerformance: {
-          "anonymous": TierPerformance(
-            tier: "anonymous",
-            attempts: 456,
-            accuracy: 0.58,
-            avgTimeSeconds: 52.3,
-          ),
-          "free": TierPerformance(
-            tier: "free",
-            attempts: 723,
-            accuracy: 0.68,
-            avgTimeSeconds: 43.1,
-          ),
-          "paid": TierPerformance(
-            tier: "paid",
-            attempts: 344,
-            accuracy: 0.78,
-            avgTimeSeconds: 38.7,
-          ),
-        },
-      ),
 
       tags: ["kinematics", "projectile motion", "maximum height", "velocity"],
       relatedQuestions: ["ECAT_PHY_002", "ECAT_PHY_003"],
@@ -109,7 +79,7 @@ class SampleData {
   static Question createSampleChemistryQuestion() {
     return Question(
       id: "MCAT_CHEM_001",
-      questionId: "MCAT_CHEM_001",
+      questionId: 2,
       examCategory: "MCAT",
       subject: "Chemistry",
       topic: "Organic Chemistry",
@@ -127,29 +97,19 @@ class SampleData {
       ],
 
       correctAnswer: ["B"],
-      questionType: QuestionType.singleChoice,
+      questionType: QuestionType.mcqSingleSelect,
 
       explanationText:
           "In SN1 reactions, the rate-determining step is the "
           "formation of the carbocation intermediate. This step involves only "
           "the substrate and is unimolecular, hence the name SN1.",
 
-      ardeProbability: ArdeLevel.medium,
+      ardeProbability: 0.5,
       ardeFrequency: 2,
       ardeAppearanceYears: [2023, 2021],
 
       difficulty: DifficultyLevel.hard,
       estimatedTimeSeconds: 90,
-
-      globalStats: QuestionPerformanceStats(
-        totalAttempts: 987,
-        totalCorrect: 654,
-        globalAccuracy: 0.663,
-        averageTimeSeconds: 67.8,
-        medianTimeSeconds: 65.0,
-        p95TimeSeconds: 150.0,
-        calculatedDifficulty: 0.75,
-      ),
 
       tags: ["sn1", "reaction mechanism", "carbocation", "organic chemistry"],
       relatedQuestions: ["MCAT_CHEM_002", "MCAT_CHEM_003"],
@@ -176,7 +136,7 @@ class SampleData {
   static Question createSampleMathQuestion() {
     return Question(
       id: "ECAT_MATH_001",
-      questionId: "ECAT_MATH_001",
+      questionId: 3,
       examCategory: "ECAT",
       subject: "Mathematics",
       topic: "Calculus",
@@ -192,29 +152,19 @@ class SampleData {
       ],
 
       correctAnswer: ["B"],
-      questionType: QuestionType.singleChoice,
+      questionType: QuestionType.mcqSingleSelect,
 
       explanationText:
           "This is a standard limit that appears frequently in calculus. "
           "The limit of sin(x)/x as x approaches 0 is 1. This can be proven using "
           "the squeeze theorem or L'Hôpital's rule.",
 
-      ardeProbability: ArdeLevel.high,
+      ardeProbability: 0.8,
       ardeFrequency: 4,
       ardeAppearanceYears: [2023, 2022, 2021, 2020],
 
       difficulty: DifficultyLevel.medium,
       estimatedTimeSeconds: 45,
-
-      globalStats: QuestionPerformanceStats(
-        totalAttempts: 2134,
-        totalCorrect: 1789,
-        globalAccuracy: 0.838,
-        averageTimeSeconds: 38.2,
-        medianTimeSeconds: 35.0,
-        p95TimeSeconds: 90.0,
-        calculatedDifficulty: 0.45,
-      ),
 
       tags: ["limits", "trigonometric limits", "calculus", "squeeze theorem"],
       relatedQuestions: ["ECAT_MATH_002", "ECAT_MATH_003"],
@@ -283,7 +233,7 @@ class SampleData {
   /// Creates sample questions with high ARDE probability
   static List<Question> createHighArdeQuestions() {
     return createSampleQuestions()
-        .where((question) => question.ardeProbability == ArdeLevel.high)
+        .where((question) => question.ardeProbability >= 0.7)
         .toList();
   }
 

@@ -9,7 +9,10 @@
             "cwd": "entrytestguru",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "debug"
+            "flutterMode": "debug",
+            "args": [
+                "--web-port=8080"
+            ]
         },
         {
             "name": "entrytestguru (profile mode)",
