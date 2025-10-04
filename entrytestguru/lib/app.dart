@@ -8,6 +8,7 @@ import 'features/auth/presentation/screens/auth_wrapper.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/questions/presentation/screens/question_bank_screen.dart';
+import 'features/questions/presentation/screens/practice_session_create_screen.dart';
 
 class EntryTestGuruApp extends ConsumerWidget {
   const EntryTestGuruApp({super.key});
@@ -28,7 +29,10 @@ class EntryTestGuruApp extends ConsumerWidget {
         routes: {
           '/home': (context) => const AuthWrapper(),
           '/login': (context) => const LoginScreen(),
-          '/questions': (context) => const QuestionBankScreen(),
+          '/questions': (context) =>
+              const QuestionBankScreen(), // Content management
+          '/practice': (context) =>
+              const PracticeSessionCreateScreen(), // Practice mode
         },
       ),
     );

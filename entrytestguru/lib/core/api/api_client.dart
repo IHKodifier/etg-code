@@ -14,11 +14,11 @@ class ApiClient {
   // Use different URLs for web vs mobile/desktop
   static String get baseUrl {
     // Web browsers can't connect to localhost, so use 127.0.0.1 for web
-    // Backend runs on port 8080 to avoid conflict with Flutter web app on 8080
+    // Backend runs on port 8081 to avoid conflict with Flutter web app on 8080
     if (kIsWeb) {
-      return 'http://127.0.0.1:8080/api/v1';
+      return 'http://127.0.0.1:8081/api/v1';
     }
-    return 'http://localhost:8080/api/v1';
+    return 'http://localhost:8081/api/v1';
   }
 
   static const _storage = FlutterSecureStorage();
@@ -47,6 +47,9 @@ class ApiClient {
           final token = await getStoredToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
+            print('ApiClient: Added JWT token to request: ${options.path}');
+          } else {
+            print('ApiClient: No JWT token found for request: ${options.path}');
           }
           handler.next(options);
         },

@@ -317,43 +317,47 @@ class QuestionService:
     ) -> List[Dict[str, Any]]:
         """Get questions for practice session"""
         try:
-            filters = [
-                {"field": "exam_type", "operator": "==", "value": exam_type},
-                {"field": "is_active", "operator": "==", "value": True},
-                {"field": "approval_status", "operator": "==", "value": "approved"}
-            ]
-            
-            # Add optional filters
-            if subject:
-                filters.append({"field": "subject", "operator": "==", "value": subject})
-            if topic:
-                filters.append({"field": "topic", "operator": "==", "value": topic})
-            if difficulty:
-                filters.append({"field": "difficulty", "operator": "==", "value": difficulty})
-            if arde_probability:
-                # Convert enum value to decimal range for filtering
-                if arde_probability == "low":
-                    # Filter for arde_probability between 0.0 and 0.3
-                    filters.append({"field": "arde_probability", "operator": ">=", "value": 0.0})
-                    filters.append({"field": "arde_probability", "operator": "<=", "value": 0.3})
-                elif arde_probability == "medium":
-                    # Filter for arde_probability between 0.3 and 0.7
-                    filters.append({"field": "arde_probability", "operator": ">", "value": 0.3})
-                    filters.append({"field": "arde_probability", "operator": "<=", "value": 0.7})
-                elif arde_probability == "high":
-                    # Filter for arde_probability between 0.7 and 1.0
-                    filters.append({"field": "arde_probability", "operator": ">", "value": 0.7})
-                    filters.append({"field": "arde_probability", "operator": "<=", "value": 1.0})
-            
-            questions = await db.query_collection(
+            # TEMPORARY: Simplify query to avoid index requirements during development
+            # Get all approved questions first, then filter in memory
+            approved_questions = await db.query_collection(
                 "questions",
-                filters=filters,
-                limit=limit,
-                order_by="-created_at"
+                filters=[
+                    {"field": "approval_status", "operator": "==", "value": "approved"},
+                    {"field": "is_active", "operator": "==", "value": True}
+                ],
+                limit=1000  # Get more questions, filter in memory
             )
 
+            # Filter by exam_type and other criteria in memory
+            filtered_questions = []
+            for question in approved_questions:
+                if question.get("exam_type") == exam_type:
+                    # Check optional filters
+                    if subject and question.get("subject") != subject:
+                        continue
+                    if topic and question.get("topic") != topic:
+                        continue
+                    if difficulty and question.get("difficulty") != difficulty:
+                        continue
+                    if arde_probability:
+                        arde_prob = question.get("arde_probability", 0.5)
+                        if arde_probability == "low" and not (0.0 <= arde_prob <= 0.3):
+                            continue
+                        elif arde_probability == "medium" and not (0.3 < arde_prob <= 0.7):
+                            continue
+                        elif arde_probability == "high" and not (0.7 < arde_prob <= 1.0):
+                            continue
+
+                    filtered_questions.append(question)
+
+                    if len(filtered_questions) >= limit:
+                        break
+
+            # Sort by created_at descending (most recent first)
+            filtered_questions.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+
             # Add creator names before removing sensitive info
-            for question in questions:
+            for question in filtered_questions:
                 creator_id = question.get("created_by")
                 if creator_id:
                     user = await db.get_document("users", creator_id)
@@ -365,12 +369,13 @@ class QuestionService:
                     question["created_by_name"] = "Unknown"
 
             # Remove sensitive information for practice
-            for question in questions:
+            for question in filtered_questions:
                 question.pop("created_by", None)
                 question.pop("approval_status", None)
 
-            return questions
-            
+            logger.info(f"Found {len(filtered_questions)} practice questions for exam_type: {exam_type}")
+            return filtered_questions[:limit]
+
         except Exception as e:
             logger.error(f"Failed to get practice questions: {e}")
             return []

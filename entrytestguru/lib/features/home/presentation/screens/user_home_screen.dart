@@ -394,7 +394,7 @@ class UserHomeScreen extends ConsumerWidget {
                 child: AppButton(
                   text: 'Practice MCQs',
                   onPressed: () {
-                    Navigator.pushNamed(context, '/questions');
+                    Navigator.pushNamed(context, '/practice');
                   },
                 ),
               ),
@@ -462,7 +462,7 @@ class UserHomeScreen extends ConsumerWidget {
                 child: AppButton(
                   text: 'Practice MCQs',
                   onPressed: () {
-                    Navigator.pushNamed(context, '/questions');
+                    Navigator.pushNamed(context, '/practice');
                   },
                 ),
               ),
@@ -515,7 +515,7 @@ class UserHomeScreen extends ConsumerWidget {
               child: AppButton(
                 text: 'Practice MCQs',
                 onPressed: () {
-                  Navigator.pushNamed(context, '/questions');
+                  Navigator.pushNamed(context, '/practice');
                 },
               ),
             ),

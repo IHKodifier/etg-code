@@ -3,9 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:dio/dio.dart';
 import '../models/user.dart';
 import '../models/device.dart';
 import '../api/auth_api.dart';
+import '../api/api_client.dart';
 import 'device_fingerprint_service.dart';
 import 'dart:async';
 
@@ -50,6 +52,11 @@ class FirebaseAuthService {
       firebase_auth.User? firebaseUser,
     ) async {
       if (firebaseUser != null) {
+        // NEW: For anonymous users, ensure we have backend JWT tokens
+        if (firebaseUser.isAnonymous) {
+          await _ensureAnonymousBackendAuth(firebaseUser);
+        }
+
         _currentUser = await _convertFirebaseUserToAppUser(firebaseUser);
         _authStateController.add(_currentUser);
       } else {
@@ -61,6 +68,11 @@ class FirebaseAuthService {
     // Check current user on startup
     final currentFirebaseUser = _firebaseAuth.currentUser;
     if (currentFirebaseUser != null) {
+      // NEW: For anonymous users, ensure we have backend JWT tokens
+      if (currentFirebaseUser.isAnonymous) {
+        await _ensureAnonymousBackendAuth(currentFirebaseUser);
+      }
+
       _currentUser = await _convertFirebaseUserToAppUser(currentFirebaseUser);
       _authStateController.add(_currentUser);
     }
@@ -112,17 +124,28 @@ class FirebaseAuthService {
           .signInAnonymously();
       final user = await _convertFirebaseUserToAppUser(credential.user!);
 
-      // Get Firebase ID token
-      final idToken = await credential.user!.getIdToken();
+      // Get device info for backend authentication
+      final deviceInfo = await _deviceFingerprintService.getDeviceInfo();
+
+      // Call backend to get JWT tokens for anonymous user
+      final backendTokens = await _callBackendAnonymousLogin(deviceInfo);
+
+      // Store JWT tokens in secure storage for ApiClient to use
+      final apiClient = ApiClient(this);
+      await apiClient.setTokens(
+        backendTokens['access_token'] as String,
+        backendTokens['refresh_token'] as String,
+      );
 
       final authTokens = AuthTokens(
-        accessToken: idToken ?? '',
-        refreshToken:
-            'firebase_refresh_token', // Firebase handles refresh automatically
-        tokenType: 'Bearer',
+        accessToken: backendTokens['access_token'] as String,
+        refreshToken: backendTokens['refresh_token'] as String,
+        tokenType: backendTokens['token_type'] as String,
         user: user,
       );
+
       print('Anonymous sign-in successful: ${authTokens.user.id}');
+      print('JWT tokens stored for API authentication');
       return authTokens;
     } catch (e) {
       print('Anonymous sign-in failed: $e');
@@ -402,6 +425,77 @@ class FirebaseAuthService {
   /// Get platform name
   ///
   ///
+  /// Ensure anonymous user has backend JWT tokens (for auto-signin scenarios)
+  Future<void> _ensureAnonymousBackendAuth(
+    firebase_auth.User firebaseUser,
+  ) async {
+    try {
+      // Check if we already have JWT tokens
+      final apiClient = ApiClient(this);
+      final existingToken = await apiClient.getToken();
+
+      if (existingToken != null) {
+        print('Anonymous backend auth: JWT tokens already exist');
+        return; // Already have tokens
+      }
+
+      // Get device info for backend authentication
+      final deviceInfo = await _deviceFingerprintService.getDeviceInfo();
+
+      // Call backend to get JWT tokens
+      final backendTokens = await _callBackendAnonymousLogin(deviceInfo);
+
+      // Store JWT tokens in ApiClient
+      await apiClient.setTokens(
+        backendTokens['access_token'] as String,
+        backendTokens['refresh_token'] as String,
+      );
+
+      print(
+        'Anonymous backend auth successful for auto-signed-in user: ${firebaseUser.uid}',
+      );
+    } catch (e) {
+      print('Anonymous backend auth failed for auto-signed-in user: $e');
+      // Don't throw - allow Firebase auth to proceed even if backend fails
+    }
+  }
+
+  /// Call backend anonymous login endpoint
+  Future<Map<String, dynamic>> _callBackendAnonymousLogin(
+    Map<String, dynamic> deviceInfo,
+  ) async {
+    try {
+      // Make direct HTTP call to avoid circular dependency
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: ApiClient.baseUrl,
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+          headers: {'Content-Type': 'application/json'},
+        ),
+      );
+
+      final response = await dio.post('/auth/anonymous', data: deviceInfo);
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        return {
+          'access_token': data['access_token'],
+          'refresh_token': data['refresh_token'],
+          'token_type': data['token_type'],
+          'user': data['user'],
+        };
+      } else {
+        throw Exception(
+          'Backend anonymous login failed: ${response.statusMessage}',
+        );
+      }
+    } catch (e) {
+      print('Backend anonymous login failed: $e');
+      throw Exception('Backend anonymous login failed: $e');
+    }
+  }
+
   /// Sync user data to Firestore
   Future<void> _syncUserToFirestore(
     firebase_auth.User firebaseUser,

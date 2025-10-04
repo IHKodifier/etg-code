@@ -123,15 +123,26 @@ class QuestionExplanationResponse(BaseModel):
 
 class QuestionAttemptRequest(BaseModel):
     question_id: str
-    selected_answer: str
-    time_taken: float
-    
-    @validator('time_taken')
-    def validate_time_taken(cls, v):
+    session_id: str
+    selected_answers: List[str]
+    time_spent: int  # milliseconds
+    attempt_number: int = 1
+    explanation_shown: bool = False
+    hint_used: bool = False
+    notes: Optional[str] = None
+
+    @validator('time_spent')
+    def validate_time_spent(cls, v):
         if v < 0:
-            raise ValueError('Time taken cannot be negative')
-        if v > 3600:  # 1 hour max
-            raise ValueError('Time taken cannot exceed 1 hour')
+            raise ValueError('Time spent cannot be negative')
+        if v > 3600000:  # 1 hour in milliseconds
+            raise ValueError('Time spent cannot exceed 1 hour')
+        return v
+
+    @validator('attempt_number')
+    def validate_attempt_number(cls, v):
+        if v < 1:
+            raise ValueError('Attempt number must be at least 1')
         return v
 
 class QuestionFilterRequest(BaseModel):
